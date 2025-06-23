@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Plus, Send } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
   inputText: string;

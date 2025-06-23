@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { TrendingUp, Heart, MessageSquare, Users, FileText } from 'lucide-react';
+import { TrendingUp, Heart, MessageSquare, Users, FileText, Calendar } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { DatePicker } from '@/components/ui/date-picker';
 
