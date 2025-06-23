@@ -24,9 +24,7 @@ const Dashboard = () => {
     { word: 'hopeful', size: 'text-2xl', color: 'text-green-400' },
     { word: 'anxious', size: 'text-xl', color: 'text-yellow-400' },
     { word: 'grateful', size: 'text-lg', color: 'text-blue-400' },
-    { word: 'overwhelmed', size: 'text-xl', color: '
-
--orange-400' },
+    { word: 'overwhelmed', size: 'text-xl', color: 'text-orange-400' },
     { word: 'peaceful', size: 'text-lg', color: 'text-purple-400' },
     { word: 'confused', size: 'text-md', color: 'text-red-400' },
     { word: 'excited', size: 'text-lg', color: 'text-pink-400' },
