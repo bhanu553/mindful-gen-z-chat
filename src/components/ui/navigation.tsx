@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Brain } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
@@ -24,9 +24,9 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">E</span>
+                <Brain className="w-5 h-5 text-white" />
               </div>
               <span className="font-semibold text-xl text-foreground">EchoMind</span>
             </Link>

@@ -1,17 +1,11 @@
-
 import { useState } from 'react';
-import { Calendar, TrendingUp, Heart, MessageSquare, Users, FileText } from 'lucide-react';
+import { TrendingUp, Heart, MessageSquare, Users, FileText } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const Dashboard = () => {
-  const [timeFilter, setTimeFilter] = useState('week');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isPremium] = useState(false); // Free user for now
-
-  const timeFilters = [
-    { id: 'today', label: 'Today' },
-    { id: 'week', label: 'This Week' },
-    { id: '30days', label: 'Last 30 Days' }
-  ];
 
   const emotionalStats = {
     positivePercent: 68,
@@ -50,20 +44,13 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-4 sm:mb-0">Your Emotional Journey</h1>
           
-          {/* Time Filter Dropdown */}
-          <div className="relative">
-            <select
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value)}
-              className="bg-secondary border border-border/50 rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pr-8"
-            >
-              {timeFilters.map((filter) => (
-                <option key={filter.id} value={filter.id}>
-                  {filter.label}
-                </option>
-              ))}
-            </select>
-            <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          {/* Date Picker */}
+          <div className="w-full sm:w-auto">
+            <DatePicker
+              date={selectedDate}
+              onDateChange={setSelectedDate}
+              placeholder="Select date to view insights"
+            />
           </div>
         </div>
 
