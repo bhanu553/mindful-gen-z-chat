@@ -14,6 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth =
 
   useEffect(() => {
     if (!loading && requireAuth && !user) {
+      console.log('Protected route: redirecting unauthenticated user to login');
       navigate('/login', { replace: true });
     }
   }, [user, loading, navigate, requireAuth]);

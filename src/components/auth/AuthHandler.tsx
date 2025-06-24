@@ -9,29 +9,31 @@ const AuthHandler = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
+      // Handle both hash and search params for OAuth callback
       const hash = location.hash;
+      const search = location.search;
       
-      if (hash.includes('access_token')) {
+      console.log('AuthHandler - Current location:', { hash, search, pathname: location.pathname });
+      
+      if (hash.includes('access_token') || search.includes('code')) {
         try {
-          const params = new URLSearchParams(hash.substring(1));
-          const access_token = params.get('access_token');
-          const refresh_token = params.get('refresh_token');
+          // Let Supabase handle the OAuth callback automatically
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Error getting session after OAuth:', error);
+            navigate('/', { replace: true });
+            return;
+          }
 
-          if (access_token && refresh_token) {
-            const { error } = await supabase.auth.setSession({
-              access_token,
-              refresh_token
-            });
-
-            if (error) {
-              console.error('Error setting session:', error);
-            } else {
-              // Redirect to home page after successful login
-              navigate('/', { replace: true });
-            }
+          if (data.session) {
+            console.log('OAuth login successful, redirecting to home');
+            // Clear the URL and redirect to home
+            navigate('/', { replace: true });
           }
         } catch (error) {
           console.error('Error handling auth callback:', error);
+          navigate('/', { replace: true });
         }
       }
     };

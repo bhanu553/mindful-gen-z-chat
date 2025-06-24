@@ -18,10 +18,11 @@ const Login = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('Initiating Google sign in...');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://echomind4.vercel.app'
+          redirectTo: window.location.origin
         }
       });
 
@@ -29,7 +30,7 @@ const Login = () => {
         console.error('Error signing in with Google:', error.message);
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error('Unexpected error during Google sign in:', error);
     }
   };
 

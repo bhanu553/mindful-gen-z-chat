@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Star, MessageCircle, BarChart3, Sparkles, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
@@ -10,22 +9,28 @@ const Index = () => {
   const navigate = useNavigate();
 
   const handleStartTherapy = async () => {
+    console.log('Start therapy clicked, user:', user ? 'Logged in' : 'Not logged in');
+    
     if (user) {
       navigate('/therapy');
     } else {
       try {
+        console.log('Redirecting to Google OAuth...');
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: 'https://echomind4.vercel.app/therapy'
+            redirectTo: `${window.location.origin}/therapy`
           }
         });
 
         if (error) {
           console.error('Error signing in:', error);
+          // Fallback to login page if OAuth fails
+          navigate('/login');
         }
       } catch (error) {
         console.error('Unexpected error:', error);
+        navigate('/login');
       }
     }
   };
