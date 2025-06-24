@@ -1,10 +1,14 @@
 
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Menu, X, Brain } from 'lucide-react';
+import { Menu, X, Brain, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -17,6 +21,15 @@ const Navigation = () => {
   const isActive = (path: string) => {
     if (path.includes('#')) return false;
     return location.pathname === path;
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   return (
@@ -52,6 +65,30 @@ const Navigation = () => {
                 )}
               </Link>
             ))}
+            
+            {user && (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  {user.user_metadata?.avatar_url && (
+                    <img 
+                      src={user.user_metadata.avatar_url} 
+                      alt="Profile" 
+                      className="w-8 h-8 rounded-full"
+                    />
+                  )}
+                  <span className="text-sm text-foreground">
+                    {user.user_metadata?.full_name || user.email}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-accent/50 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -88,6 +125,30 @@ const Navigation = () => {
                   )}
                 </Link>
               ))}
+              
+              {user && (
+                <div className="border-t border-border/50 pt-3 mt-3">
+                  <div className="flex items-center space-x-3 px-3 py-2">
+                    {user.user_metadata?.avatar_url && (
+                      <img 
+                        src={user.user_metadata.avatar_url} 
+                        alt="Profile" 
+                        className="w-8 h-8 rounded-full"
+                      />
+                    )}
+                    <span className="text-sm text-foreground">
+                      {user.user_metadata?.full_name || user.email}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors rounded-md flex items-center space-x-2"
+                  >
+                    <LogOut size={16} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
