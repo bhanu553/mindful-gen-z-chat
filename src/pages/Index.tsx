@@ -1,9 +1,35 @@
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Star, MessageCircle, BarChart3, Sparkles, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleStartTherapy = async () => {
+    if (user) {
+      navigate('/therapy');
+    } else {
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: 'https://echomind4.vercel.app/therapy'
+          }
+        });
+
+        if (error) {
+          console.error('Error signing in:', error);
+        }
+      } catch (error) {
+        console.error('Unexpected error:', error);
+      }
+    }
+  };
+
   const features = [
     {
       icon: <MessageCircle className="w-6 h-6" />,
@@ -25,7 +51,7 @@ const Index = () => {
   const testimonials = [
     {
       name: "Sarah M.",
-      text: "EchoMind helped me process my breakup in ways I never thought possible. The AI really gets it.",
+      text: "EchoMind helped me process my emotions in ways I never thought possible. The AI really understands.",
       rating: 5
     },
     {
@@ -50,19 +76,21 @@ const Index = () => {
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
               Your private AI{' '}
-              <span className="text-gradient">therapist</span>
+              <span className="text-gradient bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                therapist
+              </span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Chat, upload, reflect, evolve. EchoMind provides personalized emotional support 
-              for Gen Z dealing with heartbreak, trauma, and life's overwhelming moments.
+              for dealing with heartbreak, trauma, and life's overwhelming moments.
             </p>
-            <Link
-              to="/therapy"
+            <button
+              onClick={handleStartTherapy}
               className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
             >
-              Start Free Therapy
+              {user ? 'Continue Therapy' : 'Start Free Therapy'}
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            </button>
           </div>
         </div>
         
@@ -99,7 +127,7 @@ const Index = () => {
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
             {/* Free Tier */}
-            <div className="gradient-card p-8 rounded-xl border border-border/50 hover:border-primary/20 transition-all duration-300">
+            <div className="gradient-card p-8 rounded-xl border border-border/50 hover:border-primary/20 transition-all duration-300 shadow-sm">
               <h3 className="text-2xl font-bold text-foreground mb-2">Free Tier</h3>
               <p className="text-muted-foreground mb-6">Perfect for getting started</p>
               <div className="space-y-4 mb-8">
@@ -119,18 +147,22 @@ const Index = () => {
                   <CheckCircle className="w-5 h-5 text-green-500" />
                   <span className="text-foreground">Basic emotional dashboard</span>
                 </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-foreground">Current week calendar</span>
+                </div>
               </div>
               <div className="text-3xl font-bold text-foreground mb-4">$0<span className="text-lg text-muted-foreground">/month</span></div>
-              <Link
-                to="/therapy"
-                className="w-full bg-secondary text-foreground py-3 px-6 rounded-lg font-semibold hover:bg-secondary/80 transition-colors block text-center"
+              <button
+                onClick={handleStartTherapy}
+                className="w-full bg-secondary text-foreground py-3 px-6 rounded-lg font-semibold hover:bg-secondary/80 transition-colors"
               >
-                Get Started
-              </Link>
+                {user ? 'Continue Free' : 'Get Started'}
+              </button>
             </div>
 
             {/* Premium Tier */}
-            <div className="gradient-card p-8 rounded-xl border-2 border-primary/50 hover:border-primary transition-all duration-300 relative">
+            <div className="gradient-card p-8 rounded-xl border-2 border-primary/50 hover:border-primary transition-all duration-300 relative shadow-lg">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
                   Most Popular
@@ -145,7 +177,7 @@ const Index = () => {
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-foreground">Trained premium LLM</span>
+                  <span className="text-foreground">Advanced AI therapist</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-500" />
@@ -158,6 +190,10 @@ const Index = () => {
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-500" />
                   <span className="text-foreground">Weekly recap & advice</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-foreground">Full calendar access</span>
                 </div>
               </div>
               <div className="text-3xl font-bold text-foreground mb-4">$19<span className="text-lg text-muted-foreground">/month</span></div>
@@ -179,7 +215,7 @@ const Index = () => {
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className="gradient-card p-6 rounded-xl border border-border/50 hover:border-primary/20 transition-all duration-300"
+                className="gradient-card p-6 rounded-xl border border-border/50 hover:border-primary/20 transition-all duration-300 shadow-sm"
               >
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (

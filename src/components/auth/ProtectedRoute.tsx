@@ -5,17 +5,18 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireAuth?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth = true }) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && requireAuth && !user) {
       navigate('/login', { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, requireAuth]);
 
   if (loading) {
     return (
@@ -25,7 +26,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!user) {
+  if (requireAuth && !user) {
     return null;
   }
 

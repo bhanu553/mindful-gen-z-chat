@@ -8,13 +8,13 @@ import { supabase } from '@/integrations/supabase/client';
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: 'Therapy', path: '/therapy' },
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Summary', path: '/summary', premium: true },
+    { name: 'Therapy', path: '/therapy', requireAuth: true },
+    { name: 'Dashboard', path: '/dashboard', requireAuth: true },
+    { name: 'Summary', path: '/summary', premium: true, requireAuth: true },
     { name: 'Pricing', path: '/#pricing' },
   ];
 
@@ -26,9 +26,38 @@ const Navigation = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Error logging out:', error);
+    }
+  };
+
+  const handleNavClick = (item: any) => {
+    if (item.requireAuth && !user) {
+      navigate('/login');
+      return;
+    }
+    if (item.premium && !isPremium) {
+      // Could show premium modal here
+      return;
+    }
+    navigate(item.path);
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'https://echomind4.vercel.app'
+        }
+      });
+
+      if (error) {
+        console.error('Error signing in with Google:', error.message);
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
     }
   };
 
@@ -47,26 +76,36 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive(item.path)
-                    ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                } ${item.premium ? 'relative' : ''}`}
-              >
-                {item.name}
-                {item.premium && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-1 rounded-full">
-                    PRO
-                  </span>
-                )}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              if (item.premium && !isPremium) {
+                return (
+                  <div key={item.name} className="relative">
+                    <span className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground cursor-not-allowed">
+                      {item.name}
+                    </span>
+                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-1 rounded-full">
+                      PRO
+                    </span>
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => handleNavClick(item)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive(item.path)
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
+                >
+                  {item.name}
+                </button>
+              );
+            })}
             
-            {user && (
+            {user ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   {user.user_metadata?.avatar_url && (
@@ -79,6 +118,11 @@ const Navigation = () => {
                   <span className="text-sm text-foreground">
                     {user.user_metadata?.full_name || user.email}
                   </span>
+                  {isPremium && (
+                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-1 rounded-full font-semibold">
+                      PRO
+                    </span>
+                  )}
                 </div>
                 <button
                   onClick={handleLogout}
@@ -88,6 +132,13 @@ const Navigation = () => {
                   <LogOut size={18} />
                 </button>
               </div>
+            ) : (
+              <button
+                onClick={handleGoogleSignIn}
+                className="bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+              >
+                Sign in with Google
+              </button>
             )}
           </div>
 
@@ -107,26 +158,29 @@ const Navigation = () => {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border/50">
               {navItems.map((item) => (
-                <Link
+                <button
                   key={item.name}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  onClick={() => {
+                    handleNavClick(item);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors ${
                     isActive(item.path)
                       ? 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
+                  disabled={item.premium && !isPremium}
                 >
                   {item.name}
-                  {item.premium && (
+                  {item.premium && !isPremium && (
                     <span className="ml-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-1 rounded-full">
                       PRO
                     </span>
                   )}
-                </Link>
+                </button>
               ))}
               
-              {user && (
+              {user ? (
                 <div className="border-t border-border/50 pt-3 mt-3">
                   <div className="flex items-center space-x-3 px-3 py-2">
                     {user.user_metadata?.avatar_url && (
@@ -139,6 +193,11 @@ const Navigation = () => {
                     <span className="text-sm text-foreground">
                       {user.user_metadata?.full_name || user.email}
                     </span>
+                    {isPremium && (
+                      <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-1 rounded-full">
+                        PRO
+                      </span>
+                    )}
                   </div>
                   <button
                     onClick={handleLogout}
@@ -148,6 +207,13 @@ const Navigation = () => {
                     <span>Logout</span>
                   </button>
                 </div>
+              ) : (
+                <button
+                  onClick={handleGoogleSignIn}
+                  className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-2 rounded-lg font-medium mx-3 my-2"
+                >
+                  Sign in with Google
+                </button>
               )}
             </div>
           </div>

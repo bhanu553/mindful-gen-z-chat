@@ -27,7 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={
-              <ProtectedRoute>
+              <ProtectedRoute requireAuth={false}>
                 <Index />
               </ProtectedRoute>
             } />

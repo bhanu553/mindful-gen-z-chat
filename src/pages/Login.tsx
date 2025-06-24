@@ -53,15 +53,15 @@ const Login = () => {
             <span className="font-semibold text-2xl text-foreground">EchoMind</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-foreground mb-2">Welcome Back</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to EchoMind</h1>
           <p className="text-muted-foreground mb-8">
-            Sign in to continue your emotional healing journey
+            Your private AI therapist for emotional healing and growth
           </p>
 
           {/* Google Sign In Button */}
           <button
             onClick={handleGoogleSignIn}
-            className="w-full bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center space-x-3 font-medium"
+            className="w-full bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center space-x-3 font-medium shadow-sm"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
