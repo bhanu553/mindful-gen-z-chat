@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { TrendingUp, Heart, MessageSquare, Users, FileText, Calendar } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import CalendarWithNotes from '@/components/ui/calendar-with-notes';
+import PaymentModal from '@/components/ui/payment-modal';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard = () => {
   const { isPremium } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const emotionalStats = {
     positivePercent: 68,
@@ -44,7 +46,7 @@ const Dashboard = () => {
           <div 
             className="fixed inset-0 z-0"
             style={{
-              backgroundImage: `url(/lovable-uploads/47a39df2-9cce-4cf8-970f-4c0ea3c8d10c.png)`,
+              backgroundImage: `url(/lovable-uploads/9498b951-ab8b-489a-a382-bf1622a84998.png)`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
@@ -63,14 +65,14 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
-            <div className={isPremium ? 'backdrop-blur-xl bg-white/10 p-6 rounded-2xl border border-white/20 shadow-xl' : ''}>
+            <div className={isPremium ? 'backdrop-blur-md bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg' : ''}>
               <h1 className="text-3xl font-bold text-foreground mb-2">Your Emotional Journey</h1>
               {isPremium && (
                 <div className="flex items-center space-x-2">
                   <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-sm px-3 py-1 rounded-full font-semibold">
                     PRO
                   </span>
-                  <span className="text-white/90">Premium insights active</span>
+                  <span className={isPremium ? 'text-gray-800' : 'text-white/90'}>Premium insights active</span>
                 </div>
               )}
             </div>
@@ -83,7 +85,7 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className={`p-6 rounded-2xl shadow-lg ${
                   isPremium 
-                    ? 'backdrop-blur-xl bg-white/70 border border-white/20' 
+                    ? 'backdrop-blur-md bg-white/70 border border-white/20' 
                     : 'gradient-card border border-border/50'
                 }`}>
                   <div className="flex items-center space-x-3">
@@ -103,7 +105,7 @@ const Dashboard = () => {
 
                 <div className={`p-6 rounded-2xl shadow-lg ${
                   isPremium 
-                    ? 'backdrop-blur-xl bg-white/70 border border-white/20' 
+                    ? 'backdrop-blur-md bg-white/70 border border-white/20' 
                     : 'gradient-card border border-border/50'
                 }`}>
                   <div className="flex items-center space-x-3">
@@ -123,7 +125,7 @@ const Dashboard = () => {
 
                 <div className={`p-6 rounded-2xl shadow-lg ${
                   isPremium 
-                    ? 'backdrop-blur-xl bg-white/70 border border-white/20' 
+                    ? 'backdrop-blur-md bg-white/70 border border-white/20' 
                     : 'gradient-card border border-border/50'
                 }`}>
                   <div className="flex items-center space-x-3">
@@ -143,7 +145,7 @@ const Dashboard = () => {
 
                 <div className={`p-6 rounded-2xl shadow-lg ${
                   isPremium 
-                    ? 'backdrop-blur-xl bg-white/70 border border-white/20' 
+                    ? 'backdrop-blur-md bg-white/70 border border-white/20' 
                     : 'gradient-card border border-border/50'
                 }`}>
                   <div className="flex items-center space-x-3">
@@ -163,7 +165,7 @@ const Dashboard = () => {
               {/* Emotion Word Cloud */}
               <div className={`p-6 rounded-2xl shadow-lg ${
                 isPremium 
-                  ? 'backdrop-blur-xl bg-white/70 border border-white/20' 
+                  ? 'backdrop-blur-md bg-white/70 border border-white/20' 
                   : 'gradient-card border border-border/50'
               }`}>
                 <h2 className={`text-xl font-semibold mb-4 ${isPremium ? 'text-gray-800' : 'text-foreground'}`}>
@@ -184,7 +186,7 @@ const Dashboard = () => {
               {/* Mood Trend */}
               <div className={`p-6 rounded-2xl shadow-lg ${
                 isPremium 
-                  ? 'backdrop-blur-xl bg-white/70 border border-white/20' 
+                  ? 'backdrop-blur-md bg-white/70 border border-white/20' 
                   : 'gradient-card border border-border/50'
               }`}>
                 <h2 className={`text-xl font-semibold mb-4 ${isPremium ? 'text-gray-800' : 'text-foreground'}`}>
@@ -215,7 +217,7 @@ const Dashboard = () => {
             <div className="lg:col-span-1">
               <div className={`${
                 isPremium 
-                  ? 'backdrop-blur-xl bg-white/70 border border-white/20 rounded-2xl p-4 shadow-lg' 
+                  ? 'backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl p-4 shadow-lg' 
                   : ''
               }`}>
                 <CalendarWithNotes
@@ -263,7 +265,10 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                <button className="bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
+                <button 
+                  onClick={() => setShowPaymentModal(true)}
+                  className="bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                >
                   Upgrade to Premium - $19/month
                 </button>
               </div>
@@ -271,6 +276,12 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal 
+        open={showPaymentModal} 
+        onOpenChange={setShowPaymentModal} 
+      />
     </div>
   );
 };

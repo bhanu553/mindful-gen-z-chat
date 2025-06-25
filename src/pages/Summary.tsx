@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Calendar, TrendingUp, Lightbulb, Heart, ChevronDown, Lock, StickyNote } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
+import PaymentModal from '@/components/ui/payment-modal';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Summary = () => {
   const { isPremium } = useAuth();
   const [selectedWeek, setSelectedWeek] = useState('current');
   const [userNote, setUserNote] = useState('');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const weekOptions = [
     { id: 'current', label: 'This Week' },
@@ -90,13 +92,22 @@ const Summary = () => {
                   </div>
                 </div>
                 
-                <button className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
+                <button 
+                  onClick={() => setShowPaymentModal(true)}
+                  className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                >
                   Upgrade to Premium - $19/month
                 </button>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Payment Modal */}
+        <PaymentModal 
+          open={showPaymentModal} 
+          onOpenChange={setShowPaymentModal} 
+        />
       </div>
     );
   }
@@ -107,7 +118,7 @@ const Summary = () => {
       <div 
         className="fixed inset-0 z-0"
         style={{
-          backgroundImage: `url(/lovable-uploads/2bca41ab-88a7-4af9-baf1-aec2057ef55a.png)`,
+          backgroundImage: `url(/lovable-uploads/6e6fc4be-f474-4ad1-91e3-0f8f9984aa64.png)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -121,13 +132,13 @@ const Summary = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-            <div className="backdrop-blur-xl bg-white/10 p-6 rounded-2xl border border-white/20 shadow-xl">
-              <h1 className="text-3xl font-bold text-white mb-2">Therapy Summary</h1>
+            <div className="backdrop-blur-md bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg">
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Therapy Summary</h1>
               <div className="flex items-center space-x-2">
                 <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-sm px-3 py-1 rounded-full font-semibold">
                   PRO
                 </span>
-                <span className="text-white/90">Premium insights</span>
+                <span className="text-gray-700">Premium insights</span>
               </div>
             </div>
             
@@ -136,7 +147,7 @@ const Summary = () => {
               <select
                 value={selectedWeek}
                 onChange={(e) => setSelectedWeek(e.target.value)}
-                className="backdrop-blur-xl bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pr-8"
+                className="backdrop-blur-md bg-white/70 border border-white/30 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pr-8"
               >
                 {weekOptions.map((option) => (
                   <option key={option.id} value={option.id} className="text-gray-800">
@@ -144,12 +155,12 @@ const Summary = () => {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70 pointer-events-none" />
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
             </div>
           </div>
 
           {/* Main Summary - Notepad Style */}
-          <div className="backdrop-blur-xl bg-amber-50/90 border border-amber-200/50 rounded-2xl shadow-2xl mb-8 relative">
+          <div className="backdrop-blur-md bg-amber-50/90 border border-amber-200/50 rounded-2xl shadow-2xl mb-8 relative max-w-3xl mx-auto">
             {/* Notepad Lines */}
             <div className="absolute inset-0 opacity-20 pointer-events-none">
               {Array.from({ length: 15 }, (_, i) => (
@@ -180,8 +191,8 @@ const Summary = () => {
           </div>
 
           {/* User Note Section - Sticky Note Style */}
-          <div className="relative mb-8">
-            <div className="backdrop-blur-xl bg-yellow-100/90 border border-yellow-200/50 rounded-2xl shadow-lg transform rotate-1 hover:rotate-0 transition-transform">
+          <div className="relative mb-8 max-w-lg mx-auto">
+            <div className="backdrop-blur-md bg-yellow-100/90 border border-yellow-200/50 rounded-2xl shadow-lg transform rotate-1 hover:rotate-0 transition-transform">
               <div className="p-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <StickyNote className="w-5 h-5 text-yellow-600" />
@@ -198,7 +209,7 @@ const Summary = () => {
           </div>
 
           {/* Emotional Trends */}
-          <div className="backdrop-blur-xl bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg mb-8">
+          <div className="backdrop-blur-md bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg mb-8">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-green-500/20 rounded-lg">
                 <TrendingUp className="w-6 h-6 text-green-600" />
@@ -220,7 +231,7 @@ const Summary = () => {
           </div>
 
           {/* Next Steps */}
-          <div className="backdrop-blur-xl bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg mb-8">
+          <div className="backdrop-blur-md bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg mb-8">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-yellow-500/20 rounded-lg">
                 <Lightbulb className="w-6 h-6 text-yellow-600" />
@@ -240,7 +251,7 @@ const Summary = () => {
           </div>
 
           {/* AI Therapist Notes */}
-          <div className="backdrop-blur-xl bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg">
+          <div className="backdrop-blur-md bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-purple-500/20 rounded-lg">
                 <Calendar className="w-6 h-6 text-purple-600" />
