@@ -11,9 +11,6 @@ import Index from "./pages/Index";
 import Therapy from "./pages/Therapy";
 import Dashboard from "./pages/Dashboard";
 import Summary from "./pages/Summary";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -49,9 +46,6 @@ const App = () => (
                 <Summary />
               </ProtectedRoute>
             } />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/contact" element={<Contact />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
