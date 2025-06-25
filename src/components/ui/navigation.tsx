@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Menu, X, Brain, LogOut } from 'lucide-react';
@@ -15,7 +14,7 @@ const Navigation = () => {
     { name: 'Therapy', path: '/therapy', requireAuth: true },
     { name: 'Dashboard', path: '/dashboard', requireAuth: true },
     { name: 'Summary', path: '/summary', premium: true, requireAuth: true },
-    { name: 'Pricing', path: '/#pricing' },
+    { name: 'Pricing', path: '#pricing', scroll: true },
   ];
 
   const isActive = (path: string) => {
@@ -33,6 +32,25 @@ const Navigation = () => {
   };
 
   const handleNavClick = (item: any) => {
+    if (item.scroll) {
+      // Handle smooth scrolling to pricing section
+      if (location.pathname !== '/') {
+        navigate('/');
+        setTimeout(() => {
+          const element = document.getElementById('pricing');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        const element = document.getElementById('pricing');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+      return;
+    }
+    
     if (item.requireAuth && !user) {
       navigate('/login');
       return;

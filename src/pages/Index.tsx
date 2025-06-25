@@ -1,274 +1,325 @@
-
-import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, Star, MessageCircle, BarChart3, Sparkles, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowRight, Brain, Heart, MessageSquare, TrendingUp, Shield, Sparkles, Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  const heroImages = [
+    '/lovable-uploads/7b219328-62cd-48c3-ba2a-f138629bc9db.png',
+    '/lovable-uploads/a3872cd3-caf3-42ac-99bb-15e21499e310.png',
+    '/lovable-uploads/4e0d3477-805c-4e57-b52c-82fe4a8d1c4f.png',
+    '/lovable-uploads/07533b71-b782-4088-844e-83d3b08837e7.png',
+    '/lovable-uploads/63bfd61c-32c7-4ddb-aa9a-6c5a6d885cc6.png'
+  ];
 
-  const handleStartTherapy = async () => {
-    console.log('Start therapy clicked, user:', user ? 'Logged in' : 'Not logged in');
-    
-    if (user) {
-      navigate('/therapy');
-    } else {
-      try {
-        console.log('Redirecting to Google OAuth...');
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/therapy`
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
+  // PayPal integration effect
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://www.paypal.com/sdk/js?client-id=sb&vault=true&intent=subscription';
+    script.async = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (window.paypal) {
+        window.paypal.Buttons({
+          style: {
+            shape: 'pill',
+            color: 'gold',
+            layout: 'vertical',
+            label: 'subscribe'
+          },
+          createSubscription: function(data, actions) {
+            return actions.subscription.create({
+              'plan_id': 'P-7VR18749FA1234512LXUYT5Q'
+            });
+          },
+          onApprove: function(data, actions) {
+            alert('Test subscription completed! ID: ' + data.subscriptionID);
           }
-        });
-
-        if (error) {
-          console.error('Error signing in:', error);
-          // Fallback to login page if OAuth fails
-          navigate('/login');
-        }
-      } catch (error) {
-        console.error('Unexpected error:', error);
-        navigate('/login');
+        }).render('#paypal-button-container');
       }
-    }
-  };
+    };
 
-  const features = [
-    {
-      icon: <MessageCircle className="w-6 h-6" />,
-      title: "Emotional AI Guidance",
-      description: "Advanced AI trained specifically for emotional support and therapy"
-    },
-    {
-      icon: <BarChart3 className="w-6 h-6" />,
-      title: "Mood Insights Dashboard", 
-      description: "Track your emotional patterns and see your growth over time"
-    },
-    {
-      icon: <Sparkles className="w-6 h-6" />,
-      title: "Free to Start",
-      description: "Begin your healing journey today, cancel anytime"
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Sarah M.",
-      text: "EchoMind helped me process my emotions in ways I never thought possible. The AI really understands.",
-      rating: 5
-    },
-    {
-      name: "Alex K.", 
-      text: "Finally, therapy that doesn't feel intimidating. The different modes help me tackle different emotions.",
-      rating: 5
-    },
-    {
-      name: "Jordan T.",
-      text: "The insights dashboard showed me patterns I never noticed. It's like having a therapist available 24/7.",
-      rating: 5
-    }
-  ];
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 w-full h-full z-[-10]"
-        style={{
-          backgroundImage: `url('/lovable-uploads/7b219328-62cd-48c3-ba2a-f138629bc9db.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      />
-      
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/60 z-[-5]" />
-      
+    <div className="min-h-screen">
       <Navigation />
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Your private AI{' '}
-              <span className="text-gradient bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                therapist
-              </span>
-            </h1>
-            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Chat, upload, reflect, evolve. EchoMind provides personalized emotional support 
-              for dealing with heartbreak, trauma, and life's overwhelming moments.
-            </p>
-            <button
-              onClick={handleStartTherapy}
-              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
+      {/* Hero Section with Rotating Background */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Images */}
+        {heroImages.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              backgroundImage: `url(${image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+        ))}
+        
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/50" />
+        
+        {/* Content */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="flex justify-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Brain className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            Your AI Companion for
+            <span className="text-gradient block">Emotional Wellness</span>
+          </h1>
+          
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+            Navigate life's challenges with personalized AI therapy. Get instant support, 
+            track your emotional journey, and discover insights that help you thrive.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link 
+              to="/therapy" 
+              className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 flex items-center justify-center group"
             >
-              {user ? 'Continue Therapy' : 'Start Free Therapy'}
+              Start Your Journey
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
+            <Link 
+              to="/dashboard" 
+              className="glass-effect text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all duration-300"
+            >
+              View Dashboard
+            </Link>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/60 rounded-full mt-2"></div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 relative">
+      <section className="py-20 gradient-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Emotional healing, reimagined
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="glass-effect p-6 rounded-xl border border-white/20 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10"
-              >
-                <div className="text-primary mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-white/80">{feature.description}</p>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Why Choose EchoMind?
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Experience the future of emotional wellness with our AI-powered platform
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+              <div className="p-3 bg-blue-500/20 rounded-lg w-fit mb-4">
+                <MessageSquare className="w-8 h-8 text-blue-400" />
               </div>
-            ))}
+              <h3 className="text-xl font-semibold text-foreground mb-3">24/7 AI Support</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Get instant emotional support whenever you need it. Our AI is always here to listen and guide you through difficult moments.
+              </p>
+            </div>
+
+            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+              <div className="p-3 bg-green-500/20 rounded-lg w-fit mb-4">
+                <TrendingUp className="w-8 h-8 text-green-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Mood Tracking</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Understand your emotional patterns with advanced analytics and personalized insights into your mental wellness journey.
+              </p>
+            </div>
+
+            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+              <div className="p-3 bg-purple-500/20 rounded-lg w-fit mb-4">
+                <Heart className="w-8 h-8 text-purple-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Personalized Care</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Receive tailored therapeutic approaches based on your unique needs, preferences, and emotional responses.
+              </p>
+            </div>
+
+            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+              <div className="p-3 bg-yellow-500/20 rounded-lg w-fit mb-4">
+                <Shield className="w-8 h-8 text-yellow-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Privacy First</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Your conversations are encrypted and secure. We prioritize your privacy and maintain strict confidentiality standards.
+              </p>
+            </div>
+
+            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+              <div className="p-3 bg-pink-500/20 rounded-lg w-fit mb-4">
+                <Sparkles className="w-8 h-8 text-pink-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Evidence-Based</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Our AI uses proven therapeutic techniques including CBT, mindfulness, and positive psychology approaches.
+              </p>
+            </div>
+
+            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+              <div className="p-3 bg-indigo-500/20 rounded-lg w-fit mb-4">
+                <Brain className="w-8 h-8 text-indigo-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Continuous Learning</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Our AI continuously improves and adapts to provide increasingly personalized and effective support.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-16 relative">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Choose your healing journey
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Free Tier */}
-            <div className="glass-effect p-8 rounded-xl border border-white/20 hover:border-primary/30 transition-all duration-300 shadow-sm">
-              <h3 className="text-2xl font-bold text-white mb-2">Free Tier</h3>
-              <p className="text-white/80 mb-6">Perfect for getting started</p>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">5 media uploads/day</span>
+      <section id="pricing" className="py-20 gradient-bg">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Choose Your Plan
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Start your emotional wellness journey with our flexible pricing options
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Plan */}
+            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
+                <div className="text-4xl font-bold text-foreground mb-4">
+                  $0<span className="text-lg font-normal text-muted-foreground">/month</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">50 AI messages/day</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">4 AI Therapy Modes</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">Basic emotional dashboard</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">Current week calendar</span>
-                </div>
+                <p className="text-muted-foreground">Perfect for getting started</p>
               </div>
-              <div className="text-3xl font-bold text-white mb-4">$0<span className="text-lg text-white/70">/month</span></div>
-              <button
-                onClick={handleStartTherapy}
-                className="w-full bg-white/20 text-white py-3 px-6 rounded-lg font-semibold hover:bg-white/30 transition-colors backdrop-blur-sm"
+
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Basic AI conversations</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Limited mood tracking</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Basic insights</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Community support</span>
+                </li>
+              </ul>
+
+              <Link 
+                to="/therapy" 
+                className="w-full bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors block text-center"
               >
-                {user ? 'Continue Free' : 'Get Started'}
-              </button>
+                Get Started Free
+              </Link>
             </div>
 
-            {/* Premium Tier */}
-            <div className="glass-effect p-8 rounded-xl border-2 border-primary/50 hover:border-primary transition-all duration-300 relative shadow-lg">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+            {/* Premium Plan */}
+            <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
                   Most Popular
                 </span>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Premium Tier</h3>
-              <p className="text-white/80 mb-6">Unlock your full potential</p>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">Unlimited uploads & messages</span>
+
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-foreground mb-2">Premium</h3>
+                <div className="text-4xl font-bold text-foreground mb-4">
+                  $19<span className="text-lg font-normal text-muted-foreground">/month</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">Advanced AI therapist</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">Deep emotional analysis</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">People Analysis insights</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">Weekly recap & advice</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-white">Full calendar access</span>
-                </div>
+                <p className="text-muted-foreground">Everything you need for optimal wellness</p>
               </div>
-              <div className="text-3xl font-bold text-white mb-4">$19<span className="text-lg text-white/70">/month</span></div>
-              <button className="w-full bg-gradient-to-r from-primary to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
-                Upgrade Now
+
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Unlimited AI conversations</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Advanced mood analytics</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Personalized insights</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Weekly progress reports</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Priority support</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Export your data</span>
+                </li>
+              </ul>
+
+              <div id="paypal-button-container" className="mb-4"></div>
+              
+              <button className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
+                Upgrade to Premium
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-16 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Stories of healing
+      {/* CTA Section */}
+      <section className="py-20 gradient-bg">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+            Ready to Transform Your Emotional Wellness?
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className="glass-effect p-6 rounded-xl border border-white/20 hover:border-primary/30 transition-all duration-300 shadow-sm"
-              >
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-white mb-4 italic">"{testimonial.text}"</p>
-                <p className="text-white/70 font-semibold">— {testimonial.name}</p>
-              </div>
-            ))}
-          </div>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Join thousands of users who have already started their journey to better mental health with EchoMind's AI-powered support.
+          </p>
+          <Link 
+            to="/therapy" 
+            className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
+          >
+            Start Your Free Trial Today
+            <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-white/20 py-12 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">E</span>
-              </div>
-              <span className="font-semibold text-xl text-white">EchoMind</span>
-            </div>
-            <div className="flex space-x-6 text-white/70">
-              <a href="#" className="hover:text-white transition-colors">About</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-white/20 text-center text-white/70">
-            <p>&copy; 2024 EchoMind. Your safe space for emotional healing.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

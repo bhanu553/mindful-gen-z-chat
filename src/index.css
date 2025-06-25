@@ -1,5 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -41,6 +42,10 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -67,5 +72,41 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .handwriting {
+    font-family: 'Kalam', cursive;
+  }
+
+  .backdrop-blur-xl {
+    backdrop-filter: blur(20px);
+  }
+
+  .therapy-bg-reflect {
+    background-image: url('/lovable-uploads/a3872cd3-caf3-42ac-99bb-15e21499e310.png');
+    background-size: cover;
+    background-position: center;
+    transition: all 0.5s ease;
+  }
+
+  .therapy-bg-recover {
+    background-image: url('/lovable-uploads/4e0d3477-805c-4e57-b52c-82fe4a8d1c4f.png');
+    background-size: cover;
+    background-position: center;
+    transition: all 0.5s ease;
+  }
+
+  .therapy-bg-rebuild {
+    background-image: url('/lovable-uploads/07533b71-b782-4088-844e-83d3b08837e7.png');
+    background-size: cover;
+    background-position: center;
+    transition: all 0.5s ease;
+  }
+
+  .therapy-bg-evolve {
+    background-image: url('/lovable-uploads/63bfd61c-32c7-4ddb-aa9a-6c5a6d885cc6.png');
+    background-size: cover;
+    background-position: center;
+    transition: all 0.5s ease;
   }
 }
