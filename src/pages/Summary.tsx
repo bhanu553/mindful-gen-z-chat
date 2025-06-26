@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Calendar, TrendingUp, Lightbulb, Heart, ChevronDown, Lock, StickyNote } from 'lucide-react';
+import { Calendar, TrendingUp, Lightbulb, Heart, Lock, StickyNote } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import PaymentModal from '@/components/ui/payment-modal';
 import CalendarWithNotes from '@/components/ui/calendar-with-notes';
@@ -8,17 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Summary = () => {
   const { isPremium } = useAuth();
-  const [selectedWeek, setSelectedWeek] = useState('current');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [userNote, setUserNote] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-
-  const weekOptions = [
-    { id: 'current', label: 'This Week' },
-    { id: 'last', label: 'Last Week' },
-    { id: '2weeks', label: '2 Weeks Ago' },
-    { id: '3weeks', label: '3 Weeks Ago' }
-  ];
 
   const premiumSummaryData = {
     weekHighlights: [
@@ -134,7 +126,7 @@ const Summary = () => {
         
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+          <div className="mb-8">
             <div className="backdrop-blur-md bg-white/70 p-6 rounded-2xl border border-white/20 shadow-lg">
               <h1 className="text-3xl font-bold text-gray-800 mb-2">Therapy Summary</h1>
               <div className="flex items-center space-x-2">
@@ -143,22 +135,6 @@ const Summary = () => {
                 </span>
                 <span className="text-gray-700">Premium insights</span>
               </div>
-            </div>
-            
-            {/* Week Selector */}
-            <div className="relative mt-4 sm:mt-0">
-              <select
-                value={selectedWeek}
-                onChange={(e) => setSelectedWeek(e.target.value)}
-                className="backdrop-blur-md bg-white/70 border border-white/30 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pr-8"
-              >
-                {weekOptions.map((option) => (
-                  <option key={option.id} value={option.id} className="text-gray-800">
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
             </div>
           </div>
 
