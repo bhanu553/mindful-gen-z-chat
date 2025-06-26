@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -69,16 +68,15 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
               } finally {
                 setIsProcessing(false);
               }
-            },
-            onError: function(err: any) {
-              console.error('PayPal error:', err);
-              toast({
-                title: "Payment Error",
-                description: "There was an issue with PayPal. Please try again.",
-                variant: "destructive"
-              });
             }
-          }).render('#paypal-button-container');
+          }).render('#paypal-button-container').catch((err: any) => {
+            console.error('PayPal render error:', err);
+            toast({
+              title: "Payment Error",
+              description: "There was an issue loading PayPal. Please try again.",
+              variant: "destructive"
+            });
+          });
         }
       };
       document.head.appendChild(script);
