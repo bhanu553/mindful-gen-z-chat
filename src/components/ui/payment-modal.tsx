@@ -19,9 +19,9 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
 
   useEffect(() => {
     if (open && paymentMethod === 'paypal') {
-      // Load PayPal SDK with live client ID
+      // Load PayPal SDK with the provided live client ID
       const script = document.createElement('script');
-      script.src = 'https://www.paypal.com/sdk/js?client-id=AafUMDFk_bynZe0U8CCVhPer8HcNyxPIXQtRxIrT6riwNEn9qUR0MyYAfY94LTjRR-yZcIs6IQHT8T36&vault=true&intent=subscription&currency=USD';
+      script.src = 'https://www.paypal.com/sdk/js?client-id=AafUMDFk_bynZe0U8CCVhPer8HcNyxPIXQtRxIrT6riwNEn9qUR0MyYAfY94LTjRR-yZcIs6IQHT8T36&vault=true&intent=capture&currency=USD';
       script.async = true;
       script.onload = () => {
         if (window.paypal && document.getElementById('paypal-button-container')) {
@@ -31,16 +31,24 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                 shape: 'pill',
                 color: 'gold',
                 layout: 'vertical',
-                label: 'subscribe'
+                label: 'pay'
               },
-              createSubscription: function(data: any, actions: any) {
-                return actions.subscription.create({
-                  'plan_id': 'P-19' // This would be your actual PayPal plan ID for $19/month
+              createOrder: function(data: any, actions: any) {
+                return actions.order.create({
+                  purchase_units: [{
+                    amount: {
+                      value: '19.00'
+                    },
+                    description: 'EchoMind Premium Subscription - $19/month'
+                  }]
                 });
               },
               onApprove: async function(data: any, actions: any) {
                 setIsProcessing(true);
                 try {
+                  const details = await actions.order.capture();
+                  console.log('PayPal payment completed:', details);
+
                   // Update user's premium status in Supabase
                   if (user) {
                     const { error } = await supabase
@@ -50,11 +58,12 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
 
                     if (error) {
                       console.error('Error updating premium status:', error);
+                      throw error;
                     }
                   }
 
                   toast({
-                    title: "You're now a Premium user! 🎉",
+                    title: "You've been upgraded to Premium! 🎉",
                     description: "Your premium features have been activated!",
                   });
                   onOpenChange(false);
@@ -70,6 +79,15 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                 } finally {
                   setIsProcessing(false);
                 }
+              },
+              onError: function(err: any) {
+                console.error('PayPal error:', err);
+                toast({
+                  title: "Payment Error",
+                  description: "There was an issue with PayPal. Please try again.",
+                  variant: "destructive"
+                });
+                setIsProcessing(false);
               }
             }).render('#paypal-button-container');
           } catch (err: any) {
@@ -82,10 +100,20 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
           }
         }
       };
+      script.onerror = () => {
+        console.error('Failed to load PayPal SDK');
+        toast({
+          title: "Payment Error",
+          description: "Failed to load PayPal. Please check your internet connection.",
+          variant: "destructive"
+        });
+      };
       document.head.appendChild(script);
 
       return () => {
-        document.head.removeChild(script);
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
       };
     }
   }, [open, paymentMethod, user, toast, onOpenChange]);
@@ -105,11 +133,12 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
 
           if (error) {
             console.error('Error updating premium status:', error);
+            throw error;
           }
         }
 
         toast({
-          title: "You're now a Premium user! 🎉",
+          title: "You've been upgraded to Premium! 🎉",
           description: "Your premium features have been activated!",
         });
         onOpenChange(false);
@@ -138,13 +167,31 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
           <p className="text-center text-muted-foreground">
             Unlock enhanced insights and premium features for $19/month
           </p>
-          <div className="text-center text-sm text-muted-foreground mt-2">
-            <div>Premium: 300 messages/day • 25 uploads/day</div>
-            <div>Free: 50 messages/day • 5 uploads/day</div>
-          </div>
         </DialogHeader>
         
         <div className="space-y-6 mt-6">
+          {/* Pricing Comparison */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-semibold text-gray-800 mb-2">🆓 Free Plan</div>
+                <ul className="text-gray-600 space-y-1">
+                  <li>• 50 messages/day</li>
+                  <li>• 5 uploads/day</li>
+                </ul>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-800 mb-2">💎 Premium Plan</div>
+                <ul className="text-gray-600 space-y-1">
+                  <li>• 300 messages/day</li>
+                  <li>• 25 uploads/day</li>
+                  <li>• Full analytics</li>
+                  <li>• Advanced insights</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Payment Method Selector */}
           <div className="flex space-x-4">
             <button
@@ -185,11 +232,11 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                 <div className="text-center">
                   <div className="text-blue-800 font-semibold mb-2">PayPal Checkout</div>
                   <div className="text-sm text-blue-600 mb-4">
-                    Secure subscription payment via PayPal
+                    Secure one-time payment via PayPal - $19.00
                   </div>
                   <div id="paypal-button-container"></div>
                   {isProcessing && (
-                    <div className="mt-2 text-sm text-blue-600">Processing your subscription...</div>
+                    <div className="mt-2 text-sm text-blue-600">Processing your payment...</div>
                   )}
                 </div>
               </div>
