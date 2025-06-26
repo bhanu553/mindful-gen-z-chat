@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -33,7 +32,7 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                 layout: 'vertical',
                 label: 'pay'
               },
-              createOrder: function(data: any, actions: any) {
+              createOrder: async function(data: any, actions: any) {
                 return actions.order.create({
                   purchase_units: [{
                     amount: {
