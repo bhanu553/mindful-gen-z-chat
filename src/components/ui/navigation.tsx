@@ -1,13 +1,13 @@
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Menu, X, Brain, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isPremium } = useAuth();
+  const { user, isPremium, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -23,12 +23,7 @@ const Navigation = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/', { replace: true });
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+    await signOut();
   };
 
   const handleNavClick = (item: any) => {
@@ -67,7 +62,7 @@ const Navigation = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://echomind4.vercel.app'
+          redirectTo: window.location.origin
         }
       });
 

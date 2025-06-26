@@ -17,6 +17,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isPremium: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   isPremium: false,
+  signOut: async () => {},
 });
 
 export const useAuth = () => {
@@ -62,12 +64,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signOut = async () => {
+    try {
+      console.log('Signing out user...');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+      } else {
+        console.log('User signed out successfully');
+        // Clear local state
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        // Redirect to home page
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Unexpected error during sign out:', error);
+    }
+  };
+
+  const handleUrlTokens = async () => {
+    // Check for access token in URL hash (for OAuth redirects)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    
+    if (accessToken && refreshToken) {
+      try {
+        console.log('Found tokens in URL, setting session...');
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        
+        if (error) {
+          console.error('Error setting session from URL tokens:', error);
+        } else {
+          console.log('Session set from URL tokens successfully');
+          // Clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (error) {
+        console.error('Error handling URL tokens:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
         console.log('Initializing auth...');
+        
+        // Handle URL tokens first
+        await handleUrlTokens();
         
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -105,7 +157,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            await fetchProfile(session.user.id);
+            // Use setTimeout to prevent potential callback deadlock
+            setTimeout(() => {
+              fetchProfile(session.user.id);
+            }, 0);
           } else {
             setProfile(null);
           }
@@ -130,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isPremium = profile?.is_premium || profile?.email === 'ucchishth31@gmail.com' || false;
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, isPremium }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isPremium, signOut }}>
       {children}
     </AuthContext.Provider>
   );

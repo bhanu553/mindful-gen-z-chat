@@ -1,10 +1,13 @@
+
 import { useState, useEffect } from 'react';
 import { ArrowRight, Brain, Heart, MessageSquare, TrendingUp, Shield, Sparkles, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
+import PaymentModal from '@/components/ui/payment-modal';
 
 const Index = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   const heroImages = [
     '/lovable-uploads/7b219328-62cd-48c3-ba2a-f138629bc9db.png',
@@ -21,41 +24,6 @@ const Index = () => {
 
     return () => clearInterval(interval);
   }, [heroImages.length]);
-
-  // PayPal integration effect
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://www.paypal.com/sdk/js?client-id=sb&vault=true&intent=subscription';
-    script.async = true;
-    document.body.appendChild(script);
-
-    script.onload = () => {
-      if (window.paypal) {
-        window.paypal.Buttons({
-          style: {
-            shape: 'pill',
-            color: 'gold',
-            layout: 'vertical',
-            label: 'subscribe'
-          },
-          createSubscription: function(data, actions) {
-            return actions.subscription.create({
-              'plan_id': 'P-7VR18749FA1234512LXUYT5Q'
-            });
-          },
-          onApprove: async function(data, actions) {
-            alert('Test subscription completed! ID: ' + data.subscriptionID);
-          }
-        }).render('#paypal-button-container');
-      }
-    };
-
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
 
   return (
     <div className="min-h-screen">
@@ -264,7 +232,7 @@ const Index = () => {
                 <div className="text-4xl font-bold text-foreground mb-4">
                   $19<span className="text-lg font-normal text-muted-foreground">/month</span>
                 </div>
-                <p className="text-muted-foreground">Everything you need for optimal wellness</p>
+                <p className="text-muted-foreground">300 messages/day, 25 media uploads, advanced emotional insights</p>
               </div>
 
               <ul className="space-y-4 mb-8">
@@ -293,10 +261,11 @@ const Index = () => {
                   <span className="text-foreground">Export your data</span>
                 </li>
               </ul>
-
-              <div id="paypal-button-container" className="mb-4"></div>
               
-              <button className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+              >
                 Upgrade to Premium
               </button>
             </div>
@@ -322,6 +291,9 @@ const Index = () => {
           </Link>
         </div>
       </section>
+
+      {/* Payment Modal */}
+      <PaymentModal open={showPaymentModal} onOpenChange={setShowPaymentModal} />
     </div>
   );
 };
