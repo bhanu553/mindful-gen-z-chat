@@ -17,8 +17,12 @@ const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCo
   const { isPremium } = useAuth();
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
-  const messagesLeft = isPremium ? '∞' : Math.max(0, 50 - messageCount);
-  const canSendMessage = isPremium || messageCount < 50;
+  // Updated limits for premium users
+  const maxMessages = isPremium ? 300 : 50;
+  const maxUploads = isPremium ? 25 : 5;
+  
+  const messagesLeft = isPremium ? '∞' : Math.max(0, maxMessages - messageCount);
+  const canSendMessage = isPremium || messageCount < maxMessages;
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -30,7 +34,9 @@ const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCo
   };
 
   const handleUploadSuccess = (fileUrl: string) => {
-    setUploadedImages(prev => [...prev, fileUrl]);
+    if (uploadedImages.length < maxUploads) {
+      setUploadedImages(prev => [...prev, fileUrl]);
+    }
   };
 
   const removeImage = (index: number) => {
@@ -90,7 +96,7 @@ const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCo
       <div className="flex justify-between items-center text-sm">
         <p className="text-muted-foreground">
           {isPremium ? (
-            <span className="text-green-400">✨ Premium: Unlimited messages & uploads</span>
+            <span className="text-green-400">✨ Premium: {maxMessages} messages & {maxUploads} uploads per day</span>
           ) : (
             <>
               <span className={cn(
@@ -100,7 +106,7 @@ const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCo
               </span>
               {messagesLeft === 0 && (
                 <span className="text-yellow-400 ml-2">
-                  - Upgrade to Premium for unlimited messaging
+                  - Upgrade to Premium for 300 messages per day
                 </span>
               )}
             </>

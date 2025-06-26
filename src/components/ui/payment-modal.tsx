@@ -1,8 +1,10 @@
 
-import { useState } from 'react';
-import { X, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PaymentModalProps {
   open: boolean;
@@ -11,28 +13,118 @@ interface PaymentModalProps {
 
 const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'card'>('paypal');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handlePayPalPayment = () => {
-    // Simulate PayPal payment success
-    setTimeout(() => {
-      toast({
-        title: "Welcome to EchoMind Premium 🎉",
-        description: "Your premium features have been activated!",
-      });
-      onOpenChange(false);
-    }, 1500);
-  };
+  useEffect(() => {
+    if (open && paymentMethod === 'paypal') {
+      // Load PayPal SDK with live client ID
+      const script = document.createElement('script');
+      script.src = 'https://www.paypal.com/sdk/js?client-id=AafUMDFk_bynZe0U8CCVhPer8HcNyxPIXQtRxIrT6riwNEn9qUR0MyYAfY94LTjRR-yZcIs6IQHT8T36&vault=true&intent=subscription&currency=USD';
+      script.async = true;
+      script.onload = () => {
+        if (window.paypal && document.getElementById('paypal-button-container')) {
+          window.paypal.Buttons({
+            style: {
+              shape: 'pill',
+              color: 'gold',
+              layout: 'vertical',
+              label: 'subscribe'
+            },
+            createSubscription: function(data: any, actions: any) {
+              return actions.subscription.create({
+                'plan_id': 'P-19' // This would be your actual PayPal plan ID for $19/month
+              });
+            },
+            onApprove: async function(data: any, actions: any) {
+              setIsProcessing(true);
+              try {
+                // Update user's premium status in Supabase
+                if (user) {
+                  const { error } = await supabase
+                    .from('profiles')
+                    .update({ is_premium: true })
+                    .eq('id', user.id);
 
-  const handleCardPayment = () => {
-    // Simulate card payment success
-    setTimeout(() => {
-      toast({
-        title: "Welcome to EchoMind Premium 🎉",
-        description: "Your premium features have been activated!",
-      });
-      onOpenChange(false);
-    }, 1500);
+                  if (error) {
+                    console.error('Error updating premium status:', error);
+                  }
+                }
+
+                toast({
+                  title: "You're now a Premium user! 🎉",
+                  description: "Your premium features have been activated!",
+                });
+                onOpenChange(false);
+                // Refresh the page to update premium status
+                window.location.reload();
+              } catch (error) {
+                console.error('Payment processing error:', error);
+                toast({
+                  title: "Payment Error",
+                  description: "There was an issue processing your payment. Please try again.",
+                  variant: "destructive"
+                });
+              } finally {
+                setIsProcessing(false);
+              }
+            },
+            onError: function(err: any) {
+              console.error('PayPal error:', err);
+              toast({
+                title: "Payment Error",
+                description: "There was an issue with PayPal. Please try again.",
+                variant: "destructive"
+              });
+            }
+          }).render('#paypal-button-container');
+        }
+      };
+      document.head.appendChild(script);
+
+      return () => {
+        document.head.removeChild(script);
+      };
+    }
+  }, [open, paymentMethod, user, toast, onOpenChange]);
+
+  const handleCardPayment = async () => {
+    setIsProcessing(true);
+    
+    // Simulate card payment processing
+    setTimeout(async () => {
+      try {
+        // Update user's premium status in Supabase
+        if (user) {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ is_premium: true })
+            .eq('id', user.id);
+
+          if (error) {
+            console.error('Error updating premium status:', error);
+          }
+        }
+
+        toast({
+          title: "You're now a Premium user! 🎉",
+          description: "Your premium features have been activated!",
+        });
+        onOpenChange(false);
+        // Refresh the page to update premium status
+        window.location.reload();
+      } catch (error) {
+        console.error('Payment processing error:', error);
+        toast({
+          title: "Payment Error",
+          description: "There was an issue processing your payment. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    }, 2000);
   };
 
   return (
@@ -45,6 +137,10 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
           <p className="text-center text-muted-foreground">
             Unlock enhanced insights and premium features for $19/month
           </p>
+          <div className="text-center text-sm text-muted-foreground mt-2">
+            <div>Premium: 300 messages/day • 25 uploads/day</div>
+            <div>Free: 50 messages/day • 5 uploads/day</div>
+          </div>
         </DialogHeader>
         
         <div className="space-y-6 mt-6">
@@ -52,11 +148,12 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
           <div className="flex space-x-4">
             <button
               onClick={() => setPaymentMethod('paypal')}
+              disabled={isProcessing}
               className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                 paymentMethod === 'paypal'
                   ? 'border-primary bg-primary/10'
                   : 'border-gray-200 hover:border-gray-300'
-              }`}
+              } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className="text-center">
                 <div className="text-blue-600 font-semibold">PayPal</div>
@@ -66,11 +163,12 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
             
             <button
               onClick={() => setPaymentMethod('card')}
+              disabled={isProcessing}
               className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                 paymentMethod === 'card'
                   ? 'border-primary bg-primary/10'
                   : 'border-gray-200 hover:border-gray-300'
-              }`}
+              } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className="text-center">
                 <CreditCard className="w-6 h-6 mx-auto mb-1 text-gray-600" />
@@ -86,14 +184,12 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                 <div className="text-center">
                   <div className="text-blue-800 font-semibold mb-2">PayPal Checkout</div>
                   <div className="text-sm text-blue-600 mb-4">
-                    You'll be redirected to PayPal to complete your subscription
+                    Secure subscription payment via PayPal
                   </div>
-                  <button
-                    onClick={handlePayPalPayment}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors"
-                  >
-                    Continue with PayPal
-                  </button>
+                  <div id="paypal-button-container"></div>
+                  {isProcessing && (
+                    <div className="mt-2 text-sm text-blue-600">Processing your subscription...</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -104,14 +200,20 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <div className="space-y-4">
+                  <div className="text-center text-sm text-gray-600 mb-4">
+                    {/* Comment: Stripe/Razorpay integration will go here */}
+                    Demo Mode - Card payment simulation
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Card Number
                     </label>
                     <input
                       type="text"
-                      placeholder="1234 5678 9012 3456"
+                      placeholder="4242 4242 4242 4242"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      disabled={isProcessing}
                     />
                   </div>
                   
@@ -122,8 +224,9 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                       </label>
                       <input
                         type="text"
-                        placeholder="MM/YY"
+                        placeholder="12/25"
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        disabled={isProcessing}
                       />
                     </div>
                     <div>
@@ -134,15 +237,17 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                         type="text"
                         placeholder="123"
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        disabled={isProcessing}
                       />
                     </div>
                   </div>
                   
                   <button
                     onClick={handleCardPayment}
-                    className="w-full bg-gradient-to-r from-primary to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all"
+                    disabled={isProcessing}
+                    className="w-full bg-gradient-to-r from-primary to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Subscribe for $19/month
+                    {isProcessing ? 'Processing...' : 'Subscribe for $19/month'}
                   </button>
                 </div>
               </div>
