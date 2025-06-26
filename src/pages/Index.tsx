@@ -43,7 +43,7 @@ const Index = () => {
               'plan_id': 'P-7VR18749FA1234512LXUYT5Q'
             });
           },
-          onApprove: function(data, actions) {
+          onApprove: async function(data, actions) {
             alert('Test subscription completed! ID: ' + data.subscriptionID);
           }
         }).render('#paypal-button-container');
