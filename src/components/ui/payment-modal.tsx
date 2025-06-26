@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -24,59 +25,61 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
       script.async = true;
       script.onload = () => {
         if (window.paypal && document.getElementById('paypal-button-container')) {
-          window.paypal.Buttons({
-            style: {
-              shape: 'pill',
-              color: 'gold',
-              layout: 'vertical',
-              label: 'subscribe'
-            },
-            createSubscription: function(data: any, actions: any) {
-              return actions.subscription.create({
-                'plan_id': 'P-19' // This would be your actual PayPal plan ID for $19/month
-              });
-            },
-            onApprove: async function(data: any, actions: any) {
-              setIsProcessing(true);
-              try {
-                // Update user's premium status in Supabase
-                if (user) {
-                  const { error } = await supabase
-                    .from('profiles')
-                    .update({ is_premium: true })
-                    .eq('id', user.id);
+          try {
+            window.paypal.Buttons({
+              style: {
+                shape: 'pill',
+                color: 'gold',
+                layout: 'vertical',
+                label: 'subscribe'
+              },
+              createSubscription: function(data: any, actions: any) {
+                return actions.subscription.create({
+                  'plan_id': 'P-19' // This would be your actual PayPal plan ID for $19/month
+                });
+              },
+              onApprove: async function(data: any, actions: any) {
+                setIsProcessing(true);
+                try {
+                  // Update user's premium status in Supabase
+                  if (user) {
+                    const { error } = await supabase
+                      .from('profiles')
+                      .update({ is_premium: true })
+                      .eq('id', user.id);
 
-                  if (error) {
-                    console.error('Error updating premium status:', error);
+                    if (error) {
+                      console.error('Error updating premium status:', error);
+                    }
                   }
-                }
 
-                toast({
-                  title: "You're now a Premium user! 🎉",
-                  description: "Your premium features have been activated!",
-                });
-                onOpenChange(false);
-                // Refresh the page to update premium status
-                window.location.reload();
-              } catch (error) {
-                console.error('Payment processing error:', error);
-                toast({
-                  title: "Payment Error",
-                  description: "There was an issue processing your payment. Please try again.",
-                  variant: "destructive"
-                });
-              } finally {
-                setIsProcessing(false);
+                  toast({
+                    title: "You're now a Premium user! 🎉",
+                    description: "Your premium features have been activated!",
+                  });
+                  onOpenChange(false);
+                  // Refresh the page to update premium status
+                  window.location.reload();
+                } catch (error) {
+                  console.error('Payment processing error:', error);
+                  toast({
+                    title: "Payment Error",
+                    description: "There was an issue processing your payment. Please try again.",
+                    variant: "destructive"
+                  });
+                } finally {
+                  setIsProcessing(false);
+                }
               }
-            }
-          }).render('#paypal-button-container').catch((err: any) => {
+            }).render('#paypal-button-container');
+          } catch (err: any) {
             console.error('PayPal render error:', err);
             toast({
               title: "Payment Error",
               description: "There was an issue loading PayPal. Please try again.",
               variant: "destructive"
             });
-          });
+          }
         }
       };
       document.head.appendChild(script);
