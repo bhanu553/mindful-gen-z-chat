@@ -117,17 +117,17 @@ const Summary = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Premium Background */}
+      {/* Premium Background - Same as Dashboard */}
       <div 
         className="fixed inset-0 z-0"
         style={{
-          backgroundImage: `url(/lovable-uploads/6e6fc4be-f474-4ad1-91e3-0f8f9984aa64.png)`,
+          backgroundImage: `url(/lovable-uploads/9498b951-ab8b-489a-a382-bf1622a84998.png)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}
       />
-      <div className="fixed inset-0 bg-black/40 z-0" />
+      <div className="fixed inset-0 bg-black/50 z-0" />
       
       <div className="relative z-10">
         <Navigation />
@@ -272,7 +272,7 @@ const Summary = () => {
               </div>
             </div>
 
-            {/* Right Column - Calendar */}
+            {/* Right Column - Calendar - Same styling as Dashboard */}
             <div className="lg:col-span-1">
               <div className="backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl p-4 shadow-lg">
                 <CalendarWithNotes
