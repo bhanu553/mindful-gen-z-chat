@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, MessageCircle, Calendar, X, Menu, Pen, Trash2, Check, XIcon } from 'lucide-react';
+import { Plus, MessageCircle, Calendar, X, Menu, Pen, Trash2, Check, XIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,7 @@ const EnhancedTherapySidebar = ({
   const [newSessionTitle, setNewSessionTitle] = useState('');
   const [selectedMode, setSelectedMode] = useState<TherapyMode>('Reflect');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const modeConfig = {
     Reflect: { icon: '🧠', color: 'text-purple-500', bg: 'bg-purple-500/10' },
@@ -161,20 +162,54 @@ const EnhancedTherapySidebar = ({
     return format(new Date(dateString), 'MMM d, yyyy');
   };
 
+  const handleCollapse = () => {
+    setIsCollapsed(true);
+  };
+
+  const handleExpand = () => {
+    setIsCollapsed(false);
+  };
+
+  // Floating toggle button when sidebar is collapsed
+  if (isCollapsed) {
+    return (
+      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50">
+        <Button
+          onClick={handleExpand}
+          className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/20 hover:bg-black/60 transition-all duration-300 shadow-lg hover:shadow-xl"
+        >
+          <ChevronRight className="w-5 h-5 text-white" />
+        </Button>
+      </div>
+    );
+  }
+
   const sidebarContent = (
     <div className="h-full flex flex-col">
-      {/* Header */}
+      {/* Header with collapse button */}
       <div className="p-4 border-b border-white/20">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-white">Therapy Sessions</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggle}
-            className="md:hidden text-white hover:bg-white/10"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center space-x-2">
+            {/* Collapse button for desktop */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCollapse}
+              className="hidden md:flex text-white hover:bg-white/10"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            {/* Close button for mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="md:hidden text-white hover:bg-white/10"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
         
         {/* New Session Button */}
@@ -354,7 +389,7 @@ const EnhancedTherapySidebar = ({
       {/* Sidebar */}
       <div className={`
         fixed md:relative z-50 h-full w-80 bg-black/30 backdrop-blur-md border-r border-white/20
-        transition-transform duration-300 ease-in-out
+        transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {sidebarContent}
