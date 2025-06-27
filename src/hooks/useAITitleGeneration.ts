@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAITitleGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -8,33 +9,44 @@ export const useAITitleGeneration = () => {
     setIsGenerating(true);
     
     try {
-      // Simulate AI title generation based on content and mode
-      // In a real implementation, this would call an AI service
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // If we have messages, use AI to generate a meaningful title
+      if (messages.length > 0) {
+        const { data, error } = await supabase.functions.invoke('generate-title', {
+          body: {
+            messages: messages.slice(0, 3), // Use first 3 messages for context
+            mode
+          }
+        });
+
+        if (!error && data?.title) {
+          return data.title;
+        }
+      }
       
+      // Fallback to contextual titles based on mode
       const modeContext = {
-        'Reflect': ['Self-Discovery', 'Inner Reflection', 'Mindful Journey', 'Personal Insight'],
-        'Recover': ['Healing Path', 'Recovery Journey', 'Emotional Healing', 'Restoration'],
-        'Rebuild': ['New Beginnings', 'Rebuilding Life', 'Fresh Start', 'Transformation'],
-        'Evolve': ['Growth Journey', 'Evolution', 'Personal Development', 'Advancement']
+        'Reflect': ['Self-Discovery Journey', 'Inner Reflection', 'Mindful Exploration', 'Personal Insight Session'],
+        'Recover': ['Healing Path', 'Recovery Journey', 'Emotional Restoration', 'Processing Session'],
+        'Rebuild': ['New Beginnings', 'Rebuilding Life', 'Fresh Start Journey', 'Transformation Path'],
+        'Evolve': ['Growth Journey', 'Evolution Process', 'Personal Development', 'Advancement Session']
       };
 
       const contextWords = modeContext[mode as keyof typeof modeContext] || ['Therapy Session'];
       const randomContext = contextWords[Math.floor(Math.random() * contextWords.length)];
       
-      // Generate title based on first message content (simplified)
-      const firstMessage = messages[0] || '';
-      const keywords = ['relationship', 'anxiety', 'depression', 'stress', 'family', 'work', 'fear', 'confidence'];
-      const foundKeyword = keywords.find(keyword => firstMessage.toLowerCase().includes(keyword));
-      
-      if (foundKeyword) {
-        return `${foundKeyword.charAt(0).toUpperCase() + foundKeyword.slice(1)} ${randomContext}`;
-      }
-      
       return randomContext;
     } catch (error) {
       console.error('Error generating title:', error);
-      return `${mode} Session`;
+      
+      // Fallback based on mode
+      const fallbacks = {
+        'Reflect': 'Reflection Session',
+        'Recover': 'Recovery Session', 
+        'Rebuild': 'Rebuilding Session',
+        'Evolve': 'Growth Session'
+      };
+      
+      return fallbacks[mode as keyof typeof fallbacks] || 'Therapy Session';
     } finally {
       setIsGenerating(false);
     }
