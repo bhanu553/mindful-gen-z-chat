@@ -8,7 +8,6 @@ export interface TherapySession {
   id: string;
   title: string;
   mode: string;
-  messages: any[];
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -47,7 +46,6 @@ export const useTherapySessions = () => {
         id: session.id,
         title: session.title,
         mode: session.mode,
-        messages: session.messages || [],
         created_at: session.created_at,
         updated_at: session.updated_at,
         user_id: session.user_id
@@ -76,8 +74,7 @@ export const useTherapySessions = () => {
         .insert({
           user_id: user.id,
           mode: mode as 'Reflect' | 'Recover' | 'Rebuild' | 'Evolve',
-          title,
-          messages: []
+          title
         })
         .select()
         .single();
@@ -92,7 +89,6 @@ export const useTherapySessions = () => {
         id: data.id,
         title: data.title,
         mode: data.mode,
-        messages: data.messages || [],
         created_at: data.created_at,
         updated_at: data.updated_at,
         user_id: data.user_id
@@ -116,7 +112,6 @@ export const useTherapySessions = () => {
       const dbUpdates: any = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.mode !== undefined) dbUpdates.mode = updates.mode;
-      if (updates.messages !== undefined) dbUpdates.messages = updates.messages;
 
       const { error } = await supabase
         .from('therapy_sessions')
@@ -149,6 +144,20 @@ export const useTherapySessions = () => {
     if (!user) return;
 
     try {
+      // First delete all messages for this session
+      const { error: messagesError } = await supabase
+        .from('therapy_messages')
+        .delete()
+        .eq('session_id', sessionId)
+        .eq('user_id', user.id);
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+        toast.error('Failed to delete session messages');
+        return;
+      }
+
+      // Then delete the session
       const { error } = await supabase
         .from('therapy_sessions')
         .delete()
@@ -173,26 +182,11 @@ export const useTherapySessions = () => {
     }
   };
 
-  const addMessageToSession = async (sessionId: string, message: any) => {
-    if (!user) return;
-
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
-
-    const updatedMessages = [...session.messages, message];
-    await updateSession(sessionId, { messages: updatedMessages });
-  };
-
-  const generateSessionTitle = (messages: any[]) => {
-    if (messages.length === 0) return 'New Session';
+  const generateSessionTitle = (firstMessage: string) => {
+    if (!firstMessage?.trim()) return 'New Session';
     
-    const firstUserMessage = messages.find(msg => msg.isUser && msg.text);
-    if (firstUserMessage) {
-      const text = firstUserMessage.text.substring(0, 50);
-      return text.length < firstUserMessage.text.length ? `${text}...` : text;
-    }
-    
-    return 'New Session';
+    const text = firstMessage.trim().substring(0, 50);
+    return text.length < firstMessage.length ? `${text}...` : text;
   };
 
   return {
@@ -203,7 +197,6 @@ export const useTherapySessions = () => {
     createSession,
     updateSession,
     deleteSession,
-    addMessageToSession,
     generateSessionTitle,
     fetchSessions
   };

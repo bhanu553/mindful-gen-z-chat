@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +10,6 @@ interface TherapySession {
   id: string;
   title: string;
   mode: string;
-  messages: any[];
   created_at: string;
   updated_at: string;
 }
@@ -57,7 +55,6 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
         id: session.id,
         title: session.title,
         mode: session.mode,
-        messages: session.messages || [],
         created_at: session.created_at,
         updated_at: session.updated_at
       }));
@@ -80,8 +77,7 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
         .insert({
           user_id: user.id,
           mode: 'Reflect' as const,
-          title: 'New Session',
-          messages: []
+          title: 'New Session'
         })
         .select()
         .single();
@@ -96,7 +92,6 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
         id: data.id,
         title: data.title,
         mode: data.mode,
-        messages: data.messages || [],
         created_at: data.created_at,
         updated_at: data.updated_at
       };
@@ -114,6 +109,20 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
     if (!user) return;
 
     try {
+      // First delete all messages for this session
+      const { error: messagesError } = await supabase
+        .from('therapy_messages')
+        .delete()
+        .eq('session_id', sessionId)
+        .eq('user_id', user.id);
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+        toast.error('Failed to delete session messages');
+        return;
+      }
+
+      // Then delete the session
       const { error } = await supabase
         .from('therapy_sessions')
         .delete()
