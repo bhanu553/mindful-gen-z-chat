@@ -52,7 +52,17 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
         return;
       }
 
-      setSessions(data || []);
+      // Transform data to match interface
+      const transformedData = (data || []).map(session => ({
+        id: session.id,
+        title: session.title,
+        mode: session.mode,
+        messages: session.messages || [],
+        created_at: session.created_at,
+        updated_at: session.updated_at
+      }));
+
+      setSessions(transformedData);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       toast.error('Failed to load therapy sessions');
@@ -69,7 +79,7 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
         .from('therapy_sessions')
         .insert({
           user_id: user.id,
-          mode: 'Reflect',
+          mode: 'Reflect' as const,
           title: 'New Session',
           messages: []
         })
@@ -82,7 +92,15 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
         return;
       }
 
-      const newSession = data as TherapySession;
+      const newSession: TherapySession = {
+        id: data.id,
+        title: data.title,
+        mode: data.mode,
+        messages: data.messages || [],
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
       setSessions(prev => [newSession, ...prev]);
       onSessionSelect(newSession);
       toast.success('New therapy session created');

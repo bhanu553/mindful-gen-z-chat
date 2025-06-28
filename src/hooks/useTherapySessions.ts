@@ -42,11 +42,22 @@ export const useTherapySessions = () => {
         return;
       }
 
-      setSessions(data || []);
+      // Transform data to match TherapySession interface
+      const transformedData = (data || []).map(session => ({
+        id: session.id,
+        title: session.title,
+        mode: session.mode,
+        messages: session.messages || [],
+        created_at: session.created_at,
+        updated_at: session.updated_at,
+        user_id: session.user_id
+      }));
+
+      setSessions(transformedData);
       
       // If no current session and we have sessions, select the most recent one
-      if (!currentSession && data && data.length > 0) {
-        setCurrentSession(data[0]);
+      if (!currentSession && transformedData.length > 0) {
+        setCurrentSession(transformedData[0]);
       }
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -64,7 +75,7 @@ export const useTherapySessions = () => {
         .from('therapy_sessions')
         .insert({
           user_id: user.id,
-          mode,
+          mode: mode as 'Reflect' | 'Recover' | 'Rebuild' | 'Evolve',
           title,
           messages: []
         })
@@ -77,7 +88,16 @@ export const useTherapySessions = () => {
         return null;
       }
 
-      const newSession = data as TherapySession;
+      const newSession: TherapySession = {
+        id: data.id,
+        title: data.title,
+        mode: data.mode,
+        messages: data.messages || [],
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        user_id: data.user_id
+      };
+
       setSessions(prev => [newSession, ...prev]);
       setCurrentSession(newSession);
       return newSession;
@@ -92,9 +112,15 @@ export const useTherapySessions = () => {
     if (!user) return;
 
     try {
+      // Only update fields that exist in the database
+      const dbUpdates: any = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.mode !== undefined) dbUpdates.mode = updates.mode;
+      if (updates.messages !== undefined) dbUpdates.messages = updates.messages;
+
       const { error } = await supabase
         .from('therapy_sessions')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', sessionId)
         .eq('user_id', user.id);
 
