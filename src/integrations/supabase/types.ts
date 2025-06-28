@@ -39,6 +39,68 @@ export type Database = {
         }
         Relationships: []
       }
+      therapy_messages: {
+        Row: {
+          content: string
+          id: string
+          sender: Database["public"]["Enums"]["message_sender"]
+          session_id: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          id?: string
+          sender: Database["public"]["Enums"]["message_sender"]
+          session_id: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          id?: string
+          sender?: Database["public"]["Enums"]["message_sender"]
+          session_id?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapy_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "therapy_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapy_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          mode: Database["public"]["Enums"]["therapy_mode"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mode: Database["public"]["Enums"]["therapy_mode"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mode?: Database["public"]["Enums"]["therapy_mode"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       uploads: {
         Row: {
           created_at: string
@@ -104,7 +166,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      message_sender: "user" | "ai"
+      therapy_mode: "Reflect" | "Recover" | "Rebuild" | "Evolve"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -219,6 +282,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      message_sender: ["user", "ai"],
+      therapy_mode: ["Reflect", "Recover", "Rebuild", "Evolve"],
+    },
   },
 } as const
