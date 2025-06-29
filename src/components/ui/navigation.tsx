@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,7 +32,7 @@ const Navigation = () => {
 
   return (
     <>
-      <nav className="bg-black/20 backdrop-blur-md border-b border-white/10 relative z-40">
+      <nav className="bg-black/20 backdrop-blur-md border-b border-white/10 relative z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
@@ -125,10 +126,12 @@ const Navigation = () => {
         </div>
       </nav>
       
-      <PaymentModal 
-        open={showPaymentModal} 
-        onOpenChange={setShowPaymentModal}
-      />
+      {showPaymentModal && (
+        <PaymentModal 
+          isOpen={showPaymentModal} 
+          onClose={() => setShowPaymentModal(false)} 
+        />
+      )}
     </>
   );
 };
