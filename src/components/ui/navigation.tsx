@@ -1,238 +1,138 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+
 import { useState } from 'react';
-import { Menu, X, Brain, LogOut } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LogOut, User, CreditCard, BarChart3 } from 'lucide-react';
+import PaymentModal from '@/components/ui/payment-modal';
 
 const Navigation = () => {
-  const location = useLocation();
+  const { user, signOut, isPremium } = useAuth();
   const navigate = useNavigate();
-  const { user, isPremium, signOut } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const navItems = [
-    { name: 'Therapy', path: '/therapy', requireAuth: true },
-    { name: 'Dashboard', path: '/dashboard', requireAuth: true },
-    { name: 'Summary', path: '/summary', premium: true, requireAuth: true },
-    { name: 'Pricing', path: '#pricing', scroll: true },
-  ];
-
-  const isActive = (path: string) => {
-    if (path.includes('#')) return false;
-    return location.pathname === path;
-  };
-
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     await signOut();
+    navigate('/');
   };
 
-  const handleNavClick = (item: any) => {
-    if (item.scroll) {
-      // Handle smooth scrolling to pricing section
-      if (location.pathname !== '/') {
-        navigate('/');
-        setTimeout(() => {
-          const element = document.getElementById('pricing');
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 100);
-      } else {
-        const element = document.getElementById('pricing');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
-      return;
-    }
-    
-    if (item.requireAuth && !user) {
-      navigate('/login');
-      return;
-    }
-    if (item.premium && !isPremium) {
-      // Could show premium modal here
-      return;
-    }
-    navigate(item.path);
+  const handleUpgrade = () => {
+    setShowPaymentModal(true);
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-
-      if (error) {
-        console.error('Error signing in with Google:', error.message);
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-    }
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-card/50 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
+    <>
+      <nav className="bg-black/20 backdrop-blur-md border-b border-white/10 relative z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center space-x-8">
+              <div className="flex-shrink-0 flex items-center">
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                  MindfulAI
+                </span>
               </div>
-              <span className="font-semibold text-xl text-foreground">EchoMind</span>
-            </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => {
-              if (item.premium && !isPremium) {
-                return (
-                  <div key={item.name} className="relative">
-                    <span className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground cursor-not-allowed">
-                      {item.name}
-                    </span>
-                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-1 rounded-full">
-                      PRO
-                    </span>
-                  </div>
-                );
-              }
-
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavClick(item)}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
-                >
-                  {item.name}
-                </button>
-              );
-            })}
-            
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  {user.user_metadata?.avatar_url && (
-                    <img 
-                      src={user.user_metadata.avatar_url} 
-                      alt="Profile" 
-                      className="w-8 h-8 rounded-full"
-                    />
-                  )}
-                  <span className="text-sm text-foreground">
-                    {user.user_metadata?.full_name || user.email}
-                  </span>
-                  {isPremium && (
-                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-1 rounded-full font-semibold">
-                      PRO
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-accent/50 transition-colors"
-                  title="Logout"
-                >
-                  <LogOut size={18} />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleGoogleSignIn}
-                className="bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-              >
-                Sign in with Google
-              </button>
-            )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-muted-foreground hover:text-foreground p-2"
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border/50">
-              {navItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => {
-                    handleNavClick(item);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
-                  disabled={item.premium && !isPremium}
-                >
-                  {item.name}
-                  {item.premium && !isPremium && (
-                    <span className="ml-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-1 rounded-full">
-                      PRO
-                    </span>
-                  )}
-                </button>
-              ))}
-              
-              {user ? (
-                <div className="border-t border-border/50 pt-3 mt-3">
-                  <div className="flex items-center space-x-3 px-3 py-2">
-                    {user.user_metadata?.avatar_url && (
-                      <img 
-                        src={user.user_metadata.avatar_url} 
-                        alt="Profile" 
-                        className="w-8 h-8 rounded-full"
-                      />
-                    )}
-                    <span className="text-sm text-foreground">
-                      {user.user_metadata?.full_name || user.email}
-                    </span>
-                    {isPremium && (
-                      <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-1 rounded-full">
-                        PRO
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors rounded-md flex items-center space-x-2"
+              {user && (
+                <div className="hidden md:flex space-x-8">
+                  <Button
+                    variant={isActive('/therapy') ? 'secondary' : 'ghost'}
+                    onClick={() => navigate('/therapy')}
+                    className="text-white hover:text-white"
                   >
-                    <LogOut size={16} />
-                    <span>Logout</span>
-                  </button>
+                    Therapy
+                  </Button>
+                  <Button
+                    variant={isActive('/dashboard') ? 'secondary' : 'ghost'}
+                    onClick={() => navigate('/dashboard')}
+                    className="text-white hover:text-white"
+                  >
+                    Dashboard
+                  </Button>
+                  <Button
+                    variant={isActive('/summary') ? 'secondary' : 'ghost'}
+                    onClick={() => navigate('/summary')}
+                    className="text-white hover:text-white"
+                  >
+                    Summary
+                  </Button>
                 </div>
-              ) : (
-                <button
-                  onClick={handleGoogleSignIn}
-                  className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-2 rounded-lg font-medium mx-3 my-2"
+              )}
+            </div>
+
+            <div className="flex items-center space-x-4">
+              {!user ? (
+                <Button
+                  onClick={() => navigate('/login')}
+                  variant="outline"
+                  className="text-white border-white/20 hover:bg-white/10"
                 >
-                  Sign in with Google
-                </button>
+                  Sign In
+                </Button>
+              ) : (
+                <>
+                  {!isPremium && (
+                    <Button
+                      onClick={handleUpgrade}
+                      className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:from-yellow-500 hover:to-orange-600 font-semibold"
+                    >
+                      Upgrade to Pro
+                    </Button>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name} />
+                          <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-500 text-white">
+                            {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 bg-black/90 backdrop-blur-md border border-white/20" align="end">
+                      <DropdownMenuItem onClick={() => navigate('/dashboard')} className="text-white hover:bg-white/10">
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/summary')} className="text-white hover:bg-white/10">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Analytics
+                      </DropdownMenuItem>
+                      {!isPremium && (
+                        <DropdownMenuItem onClick={handleUpgrade} className="text-white hover:bg-white/10">
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          Upgrade
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={handleSignOut} className="text-white hover:bg-white/10">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               )}
             </div>
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+      </nav>
+      
+      {showPaymentModal && (
+        <PaymentModal 
+          isOpen={showPaymentModal} 
+          onClose={() => setShowPaymentModal(false)} 
+        />
+      )}
+    </>
   );
 };
 
