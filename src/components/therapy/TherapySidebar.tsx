@@ -198,7 +198,7 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
   if (!user) return null;
 
   return (
-    <div className={`fixed left-0 top-0 h-full z-20 transition-all duration-300 ${
+    <div className={`fixed left-0 top-0 h-full z-[60] transition-all duration-300 ${
       isCollapsed ? 'w-12' : 'w-80'
     }`}>
       {/* Sidebar */}
@@ -212,7 +212,7 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-white/80 hover:text-white hover:bg-white/10"
+            className="text-white/80 hover:text-white hover:bg-white/10 flex-shrink-0"
           >
             {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </Button>
