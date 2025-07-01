@@ -1,299 +1,281 @@
-
-import { useState, useEffect } from 'react';
-import { ArrowRight, Brain, Heart, MessageSquare, TrendingUp, Shield, Sparkles, Check } from 'lucide-react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Check, Heart, Lightbulb, ShieldCheck, MessageSquare, UploadCloud, Brain, Crown } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import PaymentModal from '@/components/ui/payment-modal';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  
-  const heroImages = [
-    '/lovable-uploads/7b219328-62cd-48c3-ba2a-f138629bc9db.png',
-    '/lovable-uploads/a3872cd3-caf3-42ac-99bb-15e21499e310.png',
-    '/lovable-uploads/4e0d3477-805c-4e57-b52c-82fe4a8d1c4f.png',
-    '/lovable-uploads/07533b71-b782-4088-844e-83d3b08837e7.png',
-    '/lovable-uploads/63bfd61c-32c7-4ddb-aa9a-6c5a6d885cc6.png'
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [heroImages.length]);
+  const { user, isPremium } = useAuth();
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       <Navigation />
       
-      {/* Hero Section with Rotating Background */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Images */}
-        {heroImages.map((image, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-            }`}
-            style={{
-              backgroundImage: `url(${image})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat'
-            }}
-          />
-        ))}
-        
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/50" />
-        
-        {/* Content */}
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex justify-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Brain className="w-8 h-8 text-white" />
-            </div>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Your AI Companion for
-            <span className="text-gradient block">Emotional Wellness</span>
+      {/* Hero Section */}
+      <section className="py-24 text-center">
+        <div className="container mx-auto px-4">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Unlock Your Inner Potential with AI-Powered Emotional Support
           </h1>
-          
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Navigate life's challenges with personalized AI therapy. Get instant support, 
-            track your emotional journey, and discover insights that help you thrive.
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-12">
+            EchoMind provides personalized therapy and emotional guidance using advanced AI algorithms. Start your journey towards a happier, healthier you today.
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/therapy" 
-              className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 flex items-center justify-center group"
-            >
-              Start Your Journey
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <div className="flex justify-center space-x-4">
+            <Link to="/therapy">
+              <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-purple-600 hover:to-primary text-white">
+                Explore Therapy Modes
+              </Button>
             </Link>
-            <Link 
-              to="/dashboard" 
-              className="glass-effect text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all duration-300"
-            >
-              View Dashboard
-            </Link>
-          </div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/60 rounded-full mt-2"></div>
+            {user ? (
+              <Link to="/dashboard">
+                <Button size="lg" variant="outline">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/login">
+                <Button size="lg" variant="outline">
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 gradient-bg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-card/50 backdrop-blur-md">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Why Choose EchoMind?
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Empowering Features for 
+              <span className="text-gradient"> Emotional Growth</span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Experience the future of emotional wellness with our AI-powered platform
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Discover the tools and resources to support your mental wellbeing.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
-              <div className="p-3 bg-blue-500/20 rounded-lg w-fit mb-4">
-                <MessageSquare className="w-8 h-8 text-blue-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">24/7 AI Support</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Get instant emotional support whenever you need it. Our AI is always here to listen and guide you through difficult moments.
-              </p>
-            </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Personalized Therapy */}
+            <Card className="gradient-card p-6 border-2 border-border/50 hover:border-primary/50 transition-all duration-300">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Brain className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl mb-2">Personalized Therapy</CardTitle>
+                <CardDescription className="text-muted-foreground">AI-driven therapy tailored to your needs.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-primary mr-3" />
+                    <span>Customized treatment plans</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-primary mr-3" />
+                    <span>Real-time progress tracking</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-primary mr-3" />
+                    <span>24/7 access to support</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
 
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
-              <div className="p-3 bg-green-500/20 rounded-lg w-fit mb-4">
-                <TrendingUp className="w-8 h-8 text-green-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Mood Tracking</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Understand your emotional patterns with advanced analytics and personalized insights into your mental wellness journey.
-              </p>
-            </div>
+            {/* Mood Tracking */}
+            <Card className="gradient-card p-6 border-2 border-border/50 hover:border-green-500/50 transition-all duration-300">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Heart className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl mb-2">Mood Tracking</CardTitle>
+                <CardDescription className="text-muted-foreground">Monitor your emotional state and identify patterns.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-3" />
+                    <span>Daily mood logging</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-3" />
+                    <span>Insights into emotional trends</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-3" />
+                    <span>Personalized recommendations</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
 
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
-              <div className="p-3 bg-purple-500/20 rounded-lg w-fit mb-4">
-                <Heart className="w-8 h-8 text-purple-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Personalized Care</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Receive tailored therapeutic approaches based on your unique needs, preferences, and emotional responses.
-              </p>
-            </div>
-
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
-              <div className="p-3 bg-yellow-500/20 rounded-lg w-fit mb-4">
-                <Shield className="w-8 h-8 text-yellow-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Privacy First</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Your conversations are encrypted and secure. We prioritize your privacy and maintain strict confidentiality standards.
-              </p>
-            </div>
-
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
-              <div className="p-3 bg-pink-500/20 rounded-lg w-fit mb-4">
-                <Sparkles className="w-8 h-8 text-pink-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Evidence-Based</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Our AI uses proven therapeutic techniques including CBT, mindfulness, and positive psychology approaches.
-              </p>
-            </div>
-
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
-              <div className="p-3 bg-indigo-500/20 rounded-lg w-fit mb-4">
-                <Brain className="w-8 h-8 text-indigo-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Continuous Learning</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Our AI continuously improves and adapts to provide increasingly personalized and effective support.
-              </p>
-            </div>
+            {/* Secure Uploads */}
+            <Card className="gradient-card p-6 border-2 border-border/50 hover:border-yellow-500/50 transition-all duration-300">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ShieldCheck className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl mb-2">Secure Uploads</CardTitle>
+                <CardDescription className="text-muted-foreground">Share your thoughts and feelings in a safe environment.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-yellow-500 mr-3" />
+                    <span>Encrypted file storage</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-yellow-500 mr-3" />
+                    <span>Anonymous data processing</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-yellow-500 mr-3" />
+                    <span>Privacy-focused design</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 gradient-bg">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="pricing" className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Choose Your Plan
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Choose Your Path to 
+              <span className="text-gradient"> Emotional Wellness</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Start your emotional wellness journey with our flexible pricing options
+              Start your journey with our free plan or unlock advanced features with Premium
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
-                <div className="text-4xl font-bold text-foreground mb-4">
-                  $0<span className="text-lg font-normal text-muted-foreground">/month</span>
-                </div>
-                <p className="text-muted-foreground">Perfect for getting started</p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Basic AI conversations</span>
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Limited mood tracking</span>
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Basic insights</span>
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Community support</span>
-                </li>
-              </ul>
-
-              <Link 
-                to="/therapy" 
-                className="w-full bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors block text-center"
-              >
-                Get Started Free
-              </Link>
-            </div>
+            <Link to="/pricing/free" className="group">
+              <Card className="gradient-card p-8 border-2 border-border/50 hover:border-primary/50 transition-all duration-300 group-hover:scale-105 cursor-pointer">
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Heart className="w-8 h-8 text-white" />
+                  </div>
+                  <CardTitle className="text-2xl mb-2">Free Plan</CardTitle>
+                  <div className="text-3xl font-bold mb-2">$0</div>
+                  <p className="text-muted-foreground">Forever free</p>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-green-500 mr-3" />
+                      <span>50 messages per day</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-green-500 mr-3" />
+                      <span>5 uploads per day</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-green-500 mr-3" />
+                      <span>Basic emotional support</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-green-500 mr-3" />
+                      <span>Core therapy modes</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Premium Plan */}
-            <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  Most Popular
-                </span>
-              </div>
-
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-foreground mb-2">Premium</h3>
-                <div className="text-4xl font-bold text-foreground mb-4">
-                  $19<span className="text-lg font-normal text-muted-foreground">/month</span>
+            <Link to="/pricing/premium" className="group">
+              <Card className="gradient-card p-8 border-2 border-primary/50 hover:border-primary transition-all duration-300 group-hover:scale-105 cursor-pointer relative overflow-hidden">
+                <div className="absolute top-4 right-4">
+                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-3 py-1 rounded-full font-semibold">
+                    POPULAR
+                  </span>
                 </div>
-                <p className="text-muted-foreground">300 messages/day, 25 media uploads, advanced emotional insights</p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Unlimited AI conversations</span>
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Advanced mood analytics</span>
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Personalized insights</span>
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Weekly progress reports</span>
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Priority support</span>
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Export your data</span>
-                </li>
-              </ul>
-              
-              <button
-                onClick={() => setShowPaymentModal(true)}
-                className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-              >
-                Upgrade to Premium
-              </button>
-            </div>
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Crown className="w-8 h-8 text-white" />
+                  </div>
+                  <CardTitle className="text-2xl mb-2">Premium Plan</CardTitle>
+                  <div className="text-3xl font-bold mb-2">$19</div>
+                  <p className="text-muted-foreground">per month</p>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-primary mr-3" />
+                      <span>300 messages per day</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-primary mr-3" />
+                      <span>25 uploads per day</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-primary mr-3" />
+                      <span>Advanced analytics</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-primary mr-3" />
+                      <span>Priority support</span>
+                    </li>
+                    <li className="flex items-center">
+                      <Check className="w-5 h-5 text-primary mr-3" />
+                      <span>Export conversations</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 gradient-bg">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-            Ready to Transform Your Emotional Wellness?
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of users who have already started their journey to better mental health with EchoMind's AI-powered support.
+      <section className="py-20 bg-card/50 backdrop-blur-md">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold mb-8">Ready to Transform Your Emotional Wellbeing?</h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-12">
+            Join EchoMind today and start your personalized journey towards a happier, healthier you.
           </p>
-          <Link 
-            to="/therapy" 
-            className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
-          >
-            Start Your Free Trial Today
-            <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          <div className="flex justify-center space-x-4">
+            {user ? (
+              <>
+                {isPremium ? (
+                  <Link to="/dashboard">
+                    <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-purple-600 hover:to-primary text-white">
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button size="lg" onClick={() => setPaymentModalOpen(true)}>
+                    Upgrade to Premium
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Link to="/login">
+                <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-purple-600 hover:to-primary text-white">
+                  Sign In to Get Started
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* Payment Modal */}
-      <PaymentModal open={showPaymentModal} onOpenChange={setShowPaymentModal} />
+      <PaymentModal 
+        open={paymentModalOpen} 
+        onOpenChange={setPaymentModalOpen} 
+      />
     </div>
   );
 };
