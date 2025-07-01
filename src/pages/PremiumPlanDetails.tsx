@@ -42,7 +42,7 @@ const PremiumPlanDetails = () => {
           onCancel: (data) => {
             console.log('Subscription cancelled:', data);
           }
-        }).render(paypalRef.current);
+        }).render('#paypal-button-container');
       }
     });
     document.body.appendChild(script);
@@ -194,7 +194,7 @@ const PremiumPlanDetails = () => {
             </div>
             
             <div className="max-w-md mx-auto">
-              <div ref={paypalRef} className="mb-4"></div>
+              <div id="paypal-button-container" className="mb-4"></div>
               <p className="text-center text-sm text-muted-foreground">
                 <Shield className="w-4 h-4 inline mr-1" />
                 Secured by PayPal • Cancel anytime
