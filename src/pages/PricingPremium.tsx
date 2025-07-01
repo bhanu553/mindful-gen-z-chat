@@ -69,8 +69,7 @@ const PricingPremium = () => {
               shape: 'pill',
               color: 'gold',
               layout: 'vertical',
-              label: 'pay',
-              height: 50
+              label: 'pay'
             },
             createOrder: async function(data: any, actions: any) {
               return actions.order.create({
