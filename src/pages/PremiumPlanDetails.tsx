@@ -3,9 +3,11 @@ import { useEffect, useRef } from 'react';
 import { ArrowRight, Check, Crown, Sparkles, Brain, TrendingUp, Shield, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PremiumPlanDetails = () => {
   const paypalRef = useRef<HTMLDivElement>(null);
+  const { user, isPremium } = useAuth();
 
   const markUserAsPremium = async () => {
     // This function would connect to Supabase to mark user as premium
@@ -14,45 +16,56 @@ const PremiumPlanDetails = () => {
   };
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://www.paypal.com/sdk/js?client-id=AafUMDFk_bynZe0U8CCVhPer8HcNyxPIXQtRxIrT6riwNEn9qUR0MyYAfY94LTjRR-yZcIs6IQHT8T36&vault=true&intent=subscription';
-    script.addEventListener('load', () => {
-      if (window.paypal && paypalRef.current) {
-        window.paypal.Buttons({
-          style: {
-            shape: 'rect',
-            color: 'gold',
-            layout: 'vertical',
-            label: 'subscribe'
-          },
-          createSubscription: (data, actions) => {
-            return actions.subscription.create({
-              plan_id: 'your-paypal-plan-id' // Replace with your actual PayPal plan ID
-            });
-          },
-          onApprove: async (data, actions) => {
-            console.log('Subscription approved:', data);
-            await markUserAsPremium();
-            alert('Welcome to Premium! Your subscription is now active.');
-          },
-          onError: (err) => {
-            console.error('PayPal error:', err);
-            alert('There was an error processing your payment. Please try again.');
-          },
-          onCancel: (data) => {
-            console.log('Subscription cancelled:', data);
-          }
-        }).render('#paypal-button-container');
-      }
-    });
-    document.body.appendChild(script);
+    // Only load PayPal if user is not premium and is logged in
+    if (!isPremium && user) {
+      const script = document.createElement('script');
+      script.src = 'https://www.paypal.com/sdk/js?client-id=AafUMDFk_bynZe0U8CCVhPer8HcNyxPIXQtRxIrT6riwNEn9qUR0MyYAfY94LTjRR-yZcIs6IQHT8T36&vault=true&intent=capture&currency=USD';
+      script.addEventListener('load', () => {
+        if (window.paypal && document.getElementById('paypal-button-container')) {
+          window.paypal.Buttons({
+            style: {
+              shape: 'rect',
+              color: 'gold',
+              layout: 'vertical',
+              label: 'pay'
+            },
+            createOrder: (data, actions) => {
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: '19.00'
+                  },
+                  description: 'EchoMind Premium Plan - $19 one-time payment'
+                }]
+              });
+            },
+            onApprove: async (data, actions) => {
+              console.log('Payment approved:', data);
+              const details = await actions.order.capture();
+              console.log('Payment captured:', details);
+              await markUserAsPremium();
+              alert('Welcome to Premium! Your upgrade is now active.');
+              window.location.reload(); // Refresh to update premium status
+            },
+            onError: (err) => {
+              console.error('PayPal error:', err);
+              alert('There was an error processing your payment. Please try again.');
+            },
+            onCancel: (data) => {
+              console.log('Payment cancelled:', data);
+            }
+          }).render('#paypal-button-container');
+        }
+      });
+      document.body.appendChild(script);
 
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
+      return () => {
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+      };
+    }
+  }, [isPremium, user]);
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -77,7 +90,7 @@ const PremiumPlanDetails = () => {
               Premium Plan
             </h1>
             <div className="text-3xl font-bold text-foreground mb-4">
-              $19<span className="text-lg font-normal text-muted-foreground">/month</span>
+              $19<span className="text-lg font-normal text-muted-foreground"> one-time</span>
             </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               The complete emotional wellness experience for those serious about their mental health journey and personal growth.
@@ -186,33 +199,72 @@ const PremiumPlanDetails = () => {
             </div>
           </div>
 
-          {/* Payment Section */}
-          <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Start Your Premium Journey</h2>
-              <p className="text-muted-foreground">Unlock the full potential of AI-powered emotional wellness</p>
+          {/* Premium Status or Payment Section */}
+          {isPremium ? (
+            <div className="gradient-card p-8 rounded-lg border-2 border-green-500/50 shadow-lg mb-8 text-center">
+              <Crown className="w-12 h-12 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-foreground mb-2">You're Already Premium!</h2>
+              <p className="text-muted-foreground">You have access to all premium features. Start your therapy session now.</p>
+              <Link 
+                to="/therapy" 
+                className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group mt-4"
+              >
+                Start Therapy Session
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
-            
-            <div className="max-w-md mx-auto">
-              <div id="paypal-button-container" className="mb-4"></div>
-              <p className="text-center text-sm text-muted-foreground">
-                <Shield className="w-4 h-4 inline mr-1" />
-                Secured by PayPal • Cancel anytime
-              </p>
+          ) : user ? (
+            <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-foreground mb-2">Upgrade to Premium</h2>
+                <p className="text-muted-foreground">Unlock the full potential of AI-powered emotional wellness</p>
+              </div>
+              
+              <div className="max-w-md mx-auto">
+                <div id="paypal-button-container" className="mb-4"></div>
+                <p className="text-center text-sm text-muted-foreground">
+                  <Shield className="w-4 h-4 inline mr-1" />
+                  Secured by PayPal • One-time payment
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8 text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-2">Ready to Get Started?</h2>
+              <p className="text-muted-foreground mb-6">Sign in to upgrade to Premium or start with our Free plan</p>
+              <div className="space-y-4">
+                <Link 
+                  to="/login" 
+                  className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
+                >
+                  Sign In to Upgrade
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <div className="text-muted-foreground">or</div>
+                <Link 
+                  to="/therapy" 
+                  className="inline-flex items-center bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors"
+                >
+                  Try Free Plan
+                  <Heart className="ml-2 w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Alternative CTA */}
-          <div className="text-center">
-            <p className="text-muted-foreground mb-4">Need to try it first?</p>
-            <Link 
-              to="/dashboard" 
-              className="inline-flex items-center bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors"
-            >
-              Start with Free Plan
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
-          </div>
+          {!isPremium && (
+            <div className="text-center">
+              <p className="text-muted-foreground mb-4">Want to try it first?</p>
+              <Link 
+                to="/therapy" 
+                className="inline-flex items-center bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors"
+              >
+                Start with Free Plan
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

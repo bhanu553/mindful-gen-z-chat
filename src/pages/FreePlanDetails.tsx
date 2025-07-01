@@ -111,7 +111,7 @@ const FreePlanDetails = () => {
           {/* CTA */}
           <div className="text-center">
             <Link 
-              to="/dashboard" 
+              to="/therapy" 
               className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
             >
               Start Your Free Journey

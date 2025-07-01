@@ -54,8 +54,16 @@ const App = () => (
                     <Summary />
                   </ProtectedRoute>
                 } />
-                <Route path="/free-plan-details" element={<FreePlanDetails />} />
-                <Route path="/premium-plan-details" element={<PremiumPlanDetails />} />
+                <Route path="/free-plan-details" element={
+                  <ProtectedRoute requireAuth={false}>
+                    <FreePlanDetails />
+                  </ProtectedRoute>
+                } />
+                <Route path="/premium-plan-details" element={
+                  <ProtectedRoute requireAuth={false}>
+                    <PremiumPlanDetails />
+                  </ProtectedRoute>
+                } />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/contact" element={<Contact />} />
