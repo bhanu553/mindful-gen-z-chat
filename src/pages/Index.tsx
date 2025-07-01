@@ -195,24 +195,24 @@ const Index = () => {
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Basic AI conversations</span>
+                  <span className="text-foreground">50 messages/day</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Limited mood tracking</span>
+                  <span className="text-foreground">5 uploads/day</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Basic insights</span>
+                  <span className="text-foreground">Basic emotional AI support</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Community support</span>
+                  <span className="text-foreground">Dynamic Mode Switching (Reflect, Recover, Rebuild, Evolve)</span>
                 </li>
               </ul>
 
               <Link 
-                to="/therapy" 
+                to="/free-plan-details" 
                 className="w-full bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors block text-center"
               >
                 Get Started Free
@@ -232,42 +232,46 @@ const Index = () => {
                 <div className="text-4xl font-bold text-foreground mb-4">
                   $19<span className="text-lg font-normal text-muted-foreground">/month</span>
                 </div>
-                <p className="text-muted-foreground">300 messages/day, 25 media uploads, advanced emotional insights</p>
+                <p className="text-muted-foreground">Complete emotional wellness experience</p>
               </div>
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Unlimited AI conversations</span>
+                  <span className="text-foreground">300 messages/day</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Advanced mood analytics</span>
+                  <span className="text-foreground">25 uploads/day</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Personalized insights</span>
+                  <span className="text-foreground">Dynamic Mode Switching (Reflect, Recover, Rebuild, Evolve)</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Weekly progress reports</span>
+                  <span className="text-foreground">Full memory storage for therapy sessions</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Priority support</span>
+                  <span className="text-foreground">Past conversation recall</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Export your data</span>
+                  <span className="text-foreground">Early access to future features</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-3" />
+                  <span className="text-foreground">Dedicated growth insights</span>
                 </li>
               </ul>
               
-              <button
-                onClick={() => setShowPaymentModal(true)}
-                className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+              <Link
+                to="/premium-plan-details"
+                className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 block text-center"
               >
                 Upgrade to Premium
-              </button>
+              </Link>
             </div>
           </div>
         </div>

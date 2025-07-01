@@ -17,6 +17,8 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import FreePlanDetails from "./pages/FreePlanDetails";
+import PremiumPlanDetails from "./pages/PremiumPlanDetails";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,8 @@ const App = () => (
                     <Summary />
                   </ProtectedRoute>
                 } />
+                <Route path="/free-plan-details" element={<FreePlanDetails />} />
+                <Route path="/premium-plan-details" element={<PremiumPlanDetails />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/contact" element={<Contact />} />
