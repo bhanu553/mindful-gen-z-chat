@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -231,8 +232,8 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
               </Button>
             </div>
 
-            {/* Sessions List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {/* Sessions List with Smooth Scrolling */}
+            <div className="flex-1 scrollable-container p-4 space-y-2">
               {loading ? (
                 <div className="text-white/60 text-center py-8">Loading sessions...</div>
               ) : sessions.length === 0 ? (
