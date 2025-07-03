@@ -51,7 +51,7 @@ export default async function handler(req, res) {
 
     // Detect optimal mode from message content
     const detectedMode = currentMode || detectOptimalMode(message);
-    console.log('Detected mode:', detectedMode);
+    console.log('Detected mode:', detectedMode, 'for message:', message.substring(0, 50));
 
     // Find or create session
     let session;
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
         .single();
 
       if (sessionError || !existingSession) {
-        console.error('Session not found, creating new one');
+        console.log('Session not found, creating new one');
         session = null;
       } else {
         session = existingSession;
@@ -143,9 +143,10 @@ export default async function handler(req, res) {
       { role: 'user', content: message }
     ];
 
-    console.log('Sending request to OpenAI with', openAIMessages.length, 'messages');
+    console.log('Making OpenAI API call with', openAIMessages.length, 'messages');
+    console.log('System prompt for', detectedMode, 'mode:', systemPrompt.substring(0, 100) + '...');
 
-    // Call OpenAI GPT-4o-mini
+    // Call OpenAI GPT-4o
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -153,21 +154,29 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: openAIMessages,
-        temperature: 0.7,
+        temperature: 0.8,
         max_tokens: 500,
+        stream: false
       }),
     });
 
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text();
-      console.error('OpenAI API error:', errorText);
+      console.error('OpenAI API error:', openAIResponse.status, errorText);
       return res.status(500).json({ error: 'AI service temporarily unavailable' });
     }
 
     const openAIData = await openAIResponse.json();
+    
+    if (!openAIData.choices || !openAIData.choices[0] || !openAIData.choices[0].message) {
+      console.error('Invalid OpenAI response structure:', openAIData);
+      return res.status(500).json({ error: 'Invalid AI response' });
+    }
+
     const aiReply = openAIData.choices[0].message.content;
+    console.log('OpenAI response received:', aiReply.substring(0, 100) + '...');
 
     // Calculate sentiment score for user message
     const sentimentScore = calculateSentiment(message);

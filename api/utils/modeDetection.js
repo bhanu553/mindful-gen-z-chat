@@ -4,11 +4,13 @@ export function detectOptimalMode(userMessage) {
   
   const lower = userMessage.toLowerCase();
   
-  // Recover mode keywords - trauma, healing, pain
+  // Recover mode keywords - trauma, healing, pain (highest priority for safety)
   const recoverKeywords = [
     'trauma', 'healing', 'hurt', 'difficult past', 'abuse', 'grief', 'loss',
     'recovering', 'heal', 'painful', 'wounded', 'damaged', 'broken',
-    'getting over', 'i\'m broken', 'can\'t forget', 'haunted', 'flashback'
+    'getting over', 'i\'m broken', 'can\'t forget', 'haunted', 'flashback',
+    'my father abused me', 'my mother hurt me', 'was abused', 'sexual abuse',
+    'domestic violence', 'ptsd', 'nightmares', 'triggered'
   ];
   
   // Rebuild mode keywords - identity, relationships, boundaries
@@ -16,7 +18,8 @@ export function detectOptimalMode(userMessage) {
     'identity', 'relationship', 'boundaries', 'rebuild', 'reconstruct',
     'establish', 'create new', 'start over', 'foundation', 'structure',
     'who am i', 'don\'t know myself', 'lost myself', 'redefine',
-    'boundary', 'toxic', 'codependent'
+    'boundary', 'toxic', 'codependent', 'i don\'t know who i am anymore',
+    'lost my identity', 'rebuild my life', 'toxic relationship'
   ];
   
   // Evolve mode keywords - goals, future, growth, transformation
@@ -24,14 +27,16 @@ export function detectOptimalMode(userMessage) {
     'goals', 'future', 'potential', 'stuck', 'growth', 'develop', 'improve',
     'advance', 'progress', 'next level', 'ambition', 'dreams', 'aspirations',
     'transform', 'change', 'vision', 'breakthrough', 'limiting beliefs',
-    'want to become', 'achieve', 'succeed'
+    'want to become', 'achieve', 'succeed', 'i want to start a new life',
+    'new beginning', 'fresh start', 'life goals', 'career change'
   ];
   
   // Reflect mode keywords - emotions, confusion, introspection
   const reflectKeywords = [
     'i feel', 'confused', 'why do i', 'don\'t understand',
     'processing', 'thinking about', 'emotional', 'feelings',
-    'wondering', 'introspect', 'self-aware'
+    'wondering', 'introspect', 'self-aware', 'i feel like',
+    'not good enough', 'feel lost', 'feel empty', 'feel overwhelmed'
   ];
   
   // Check for recover mode (highest priority for safety)
