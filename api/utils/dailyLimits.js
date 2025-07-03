@@ -9,7 +9,7 @@ export async function checkDailyLimit(supabase, userId) {
       .eq('user_id', userId)
       .eq('role', 'user')
       .gte('created_at', `${today}T00:00:00.000Z`)
-      .lt('created_at', `${today}T23:59:59.999Z`);
+      .lt('created_at', `${today + 1}T00:00:00.000Z`);
       
     if (error) {
       console.error('Error checking daily limit:', error);

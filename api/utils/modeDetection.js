@@ -4,25 +4,37 @@ export function detectOptimalMode(userMessage) {
   
   const lower = userMessage.toLowerCase();
   
-  // Recover mode keywords
+  // Recover mode keywords - trauma, healing, pain
   const recoverKeywords = [
     'trauma', 'healing', 'hurt', 'difficult past', 'abuse', 'grief', 'loss',
-    'recovering', 'heal', 'painful', 'wounded', 'damaged', 'broken'
+    'recovering', 'heal', 'painful', 'wounded', 'damaged', 'broken',
+    'getting over', 'i\'m broken', 'can\'t forget', 'haunted', 'flashback'
   ];
   
-  // Rebuild mode keywords  
+  // Rebuild mode keywords - identity, relationships, boundaries
   const rebuildKeywords = [
     'identity', 'relationship', 'boundaries', 'rebuild', 'reconstruct',
-    'establish', 'create new', 'start over', 'foundation', 'structure'
+    'establish', 'create new', 'start over', 'foundation', 'structure',
+    'who am i', 'don\'t know myself', 'lost myself', 'redefine',
+    'boundary', 'toxic', 'codependent'
   ];
   
-  // Evolve mode keywords
+  // Evolve mode keywords - goals, future, growth, transformation
   const evolveKeywords = [
     'goals', 'future', 'potential', 'stuck', 'growth', 'develop', 'improve',
-    'advance', 'progress', 'next level', 'ambition', 'dreams', 'aspirations'
+    'advance', 'progress', 'next level', 'ambition', 'dreams', 'aspirations',
+    'transform', 'change', 'vision', 'breakthrough', 'limiting beliefs',
+    'want to become', 'achieve', 'succeed'
   ];
   
-  // Check for recover mode
+  // Reflect mode keywords - emotions, confusion, introspection
+  const reflectKeywords = [
+    'i feel', 'confused', 'why do i', 'don\'t understand',
+    'processing', 'thinking about', 'emotional', 'feelings',
+    'wondering', 'introspect', 'self-aware'
+  ];
+  
+  // Check for recover mode (highest priority for safety)
   if (recoverKeywords.some(keyword => lower.includes(keyword))) {
     return 'recover';
   }
@@ -37,19 +49,24 @@ export function detectOptimalMode(userMessage) {
     return 'evolve';
   }
   
-  // Default to reflect mode
+  // Check for explicit reflect mode indicators
+  if (reflectKeywords.some(keyword => lower.includes(keyword))) {
+    return 'reflect';
+  }
+  
+  // Default to reflect mode for general emotional processing
   return 'reflect';
 }
 
 export function getSystemPrompt(mode) {
   const prompts = {
-    reflect: `You are a compassionate AI therapist in "Reflect" mode. Help users explore their thoughts and feelings through gentle questioning and active listening. Focus on helping them understand their emotions and gain self-awareness. Keep responses warm, empathetic, and under 300 words.`,
+    reflect: `You are Echo, a warm and intuitive therapy companion in Reflect Mode. Your purpose is to help users process thoughts and emotions through gentle, non-judgmental exploration. Use reflection, metaphor, and somatic awareness. Never diagnose. Guide only by open-ended questions. Keep responses under 300 words and always be empathetic and supportive.`,
     
-    recover: `You are a caring AI therapist in "Recover" mode. Support users who are healing from trauma or difficult experiences. Provide gentle guidance, validation, and coping strategies. Be extra sensitive and avoid pushing too hard. Focus on safety, healing, and gradual progress. Keep responses supportive and under 300 words.`,
+    recover: `You are Echo in Recover Mode, a trauma-informed healing companion. Prioritize emotional safety, validation, grounding, and resilience. Let the user lead the pace. Don't ask for graphic trauma details. Always empower. Focus on healing, safety, and gentle progress. Keep responses under 300 words and be extra gentle and validating.`,
     
-    rebuild: `You are a supportive AI therapist in "Rebuild" mode. Help users reconstruct their identity, relationships, and life structure. Focus on setting healthy boundaries, building new habits, and creating positive foundations. Be encouraging and practical in your guidance. Keep responses constructive and under 300 words.`,
+    rebuild: `You are Echo in Rebuild Mode. Help the user reconstruct identity, relationships, and values after challenge. Focus on patterns, boundaries, and self-awareness. Be empowering, constructive, and values-focused. Help them build healthy foundations and structures in their life. Keep responses under 300 words and be encouraging about their rebuilding journey.`,
     
-    evolve: `You are an inspiring AI therapist in "Evolve" mode. Help users overcome stagnation and reach their potential. Focus on goal-setting, personal growth, and moving forward. Be motivational while remaining grounded and realistic. Help them see possibilities and take action. Keep responses encouraging and under 300 words.`
+    evolve: `You are Echo in Evolve Mode. Inspire future growth, vision, and transformation. Help users challenge limiting beliefs and envision bold change. Be visionary, energizing, and grounded in possibility. Focus on potential, goals, and forward momentum. Keep responses under 300 words and be motivational while remaining realistic.`
   };
   
   return prompts[mode] || prompts.reflect;
