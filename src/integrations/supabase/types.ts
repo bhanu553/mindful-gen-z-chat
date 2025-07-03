@@ -9,6 +9,109 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          mode: string | null
+          role: string
+          sentiment_score: number | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          mode?: string | null
+          role: string
+          sentiment_score?: number | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          mode?: string | null
+          role?: string
+          sentiment_score?: number | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string | null
+          current_mode: string | null
+          id: string
+          message_count: number | null
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_mode?: string | null
+          id?: string
+          message_count?: number | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_mode?: string | null
+          id?: string
+          message_count?: number | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      mode_transitions: {
+        Row: {
+          id: string
+          new_mode: string | null
+          old_mode: string | null
+          session_id: string | null
+          switched_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          new_mode?: string | null
+          old_mode?: string | null
+          session_id?: string | null
+          switched_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          new_mode?: string | null
+          old_mode?: string | null
+          session_id?: string | null
+          switched_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mode_transitions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
