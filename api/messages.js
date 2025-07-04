@@ -4,7 +4,7 @@ import { checkDailyLimit } from './utils/dailyLimits.js';
 import { detectOptimalMode, getSystemPrompt } from './utils/modeDetection.js';
 import { calculateSentiment } from './utils/sentiment.js';
 
-const OPENAI_API_KEY = process.env.OPEN_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export default async function handler(req, res) {
   setCorsHeaders(res);

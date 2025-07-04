@@ -1,7 +1,7 @@
 
 import { detectOptimalMode, getSystemPrompt } from './utils/modeDetection.js';
 
-const OPENAI_API_KEY = process.env.OPEN_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

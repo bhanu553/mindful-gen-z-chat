@@ -4,6 +4,8 @@ import { detectOptimalMode, getSystemPrompt } from '../utils/modeDetection.js';
 import { calculateSentiment } from '../utils/sentiment.js';
 import { checkDailyLimit } from '../utils/dailyLimits.js';
 
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
 export default async function handler(req, res) {
   setCorsHeaders(res);
   
@@ -26,6 +28,11 @@ export default async function handler(req, res) {
   
   if (!message || !sessionId) {
     return res.status(400).json({ error: 'Message and sessionId are required' });
+  }
+
+  if (!OPENAI_API_KEY) {
+    console.error('OpenAI API key not configured');
+    return res.status(500).json({ error: 'AI service not configured' });
   }
   
   try {
@@ -127,15 +134,17 @@ export default async function handler(req, res) {
       }))
     ];
     
-    // Call OpenAI API
+    console.log('🚀 Making OpenAI API call for chat/send');
+    
+    // Call OpenAI API - MANDATORY, NO FALLBACKS
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: openAIMessages,
         temperature: 0.7,
         max_tokens: 300
@@ -143,7 +152,8 @@ export default async function handler(req, res) {
     });
     
     if (!openAIResponse.ok) {
-      console.error('OpenAI API error:', await openAIResponse.text());
+      const errorText = await openAIResponse.text();
+      console.error('OpenAI API error:', errorText);
       return res.status(500).json({ error: 'Failed to generate AI response' });
     }
     
@@ -153,6 +163,8 @@ export default async function handler(req, res) {
     if (!aiMessage) {
       return res.status(500).json({ error: 'No response generated' });
     }
+    
+    console.log('✅ OpenAI response received for chat/send:', aiMessage.substring(0, 100) + '...');
     
     // Save AI response
     const { error: aiMessageError } = await supabase
