@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
     // Test cases for mode detection
     const testCases = [
-      { message: "I feel so alone", expectedMode: "reflect" },
+      { message: "I feel disconnected from everyone lately", expectedMode: "reflect" },
       { message: "My childhood trauma affects me", expectedMode: "recover" },
       { message: "I don't know who I am anymore", expectedMode: "rebuild" },
       { message: "I want to become my best self", expectedMode: "evolve" }
@@ -21,10 +21,15 @@ export default async function handler(req, res) {
 
     const diagnostic = {
       status: "success",
+      openaiAPIUsed: true,
       openaiConnected: !!OPENAI_API_KEY,
+      apiKeyPresent: !!OPENAI_API_KEY,
       hardcodedRepliesRemoved: true,
+      hardcodedMessagesFound: [],
       modeTests: {},
-      finalTestReply: null
+      finalTestReply: null,
+      systemPromptUsed: null,
+      errors: []
     };
 
     // Test mode detection
@@ -46,10 +51,12 @@ export default async function handler(req, res) {
     // Test OpenAI connection with a simple request
     if (OPENAI_API_KEY) {
       try {
-        const testMessage = "I feel overwhelmed today";
+        const testMessage = "I feel disconnected from everyone lately";
         const testMode = detectOptimalMode(testMessage);
         const systemPrompt = getSystemPrompt(testMode);
+        diagnostic.systemPromptUsed = systemPrompt;
 
+        console.log('🚀 Testing OpenAI API call...');
         const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -70,26 +77,53 @@ export default async function handler(req, res) {
         if (openAIResponse.ok) {
           const openAIData = await openAIResponse.json();
           if (openAIData.choices && openAIData.choices[0] && openAIData.choices[0].message) {
-            diagnostic.finalTestReply = openAIData.choices[0].message.content;
-            console.log('✅ OpenAI test successful:', diagnostic.finalTestReply.substring(0, 100));
+            const reply = openAIData.choices[0].message.content;
+            diagnostic.finalTestReply = reply;
+            
+            // Validate this is NOT a hardcoded response
+            const hardcodedPatterns = [
+              "I'm here to help you",
+              "Let's talk about that",
+              "How are you feeling",
+              systemPrompt // Make sure system prompt isn't returned as reply
+            ];
+            
+            const foundHardcoded = hardcodedPatterns.find(pattern => 
+              reply.toLowerCase().includes(pattern.toLowerCase())
+            );
+            
+            if (foundHardcoded) {
+              diagnostic.hardcodedMessagesFound.push(foundHardcoded);
+              diagnostic.hardcodedRepliesRemoved = false;
+              diagnostic.status = "error";
+              diagnostic.errors.push(`Hardcoded reply detected: ${foundHardcoded}`);
+            }
+            
+            console.log('✅ OpenAI test successful:', reply.substring(0, 100));
           } else {
             diagnostic.status = "error";
-            diagnostic.error = "Invalid OpenAI response structure";
+            diagnostic.errors.push("Invalid OpenAI response structure");
+            diagnostic.openaiConnected = false;
           }
         } else {
+          const errorText = await openAIResponse.text();
           diagnostic.status = "error";
-          diagnostic.error = `OpenAI API error: ${openAIResponse.status}`;
+          diagnostic.errors.push(`OpenAI API error: ${openAIResponse.status} - ${errorText}`);
           diagnostic.openaiConnected = false;
+          diagnostic.openaiAPIUsed = false;
         }
       } catch (error) {
         diagnostic.status = "error";
-        diagnostic.error = `OpenAI connection failed: ${error.message}`;
+        diagnostic.errors.push(`OpenAI connection failed: ${error.message}`);
         diagnostic.openaiConnected = false;
+        diagnostic.openaiAPIUsed = false;
       }
     } else {
       diagnostic.status = "error";
-      diagnostic.error = "OpenAI API key not configured";
+      diagnostic.errors.push("OpenAI API key not configured");
       diagnostic.openaiConnected = false;
+      diagnostic.apiKeyPresent = false;
+      diagnostic.openaiAPIUsed = false;
     }
 
     console.log('🔍 Diagnostic complete:', diagnostic.status);
@@ -99,9 +133,14 @@ export default async function handler(req, res) {
     console.error('❌ Diagnostic error:', error);
     return res.status(500).json({
       status: "error",
-      error: error.message,
+      openaiAPIUsed: false,
       openaiConnected: false,
-      hardcodedRepliesRemoved: false
+      apiKeyPresent: false,
+      hardcodedRepliesRemoved: false,
+      hardcodedMessagesFound: [],
+      errors: [error.message],
+      modeTests: {},
+      finalTestReply: null
     });
   }
 }

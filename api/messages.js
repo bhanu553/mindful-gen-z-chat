@@ -146,7 +146,7 @@ export default async function handler(req, res) {
     console.log('🚀 Making OpenAI API call with', openAIMessages.length, 'messages');
     console.log('📝 System prompt for', detectedMode, 'mode:', systemPrompt.substring(0, 100) + '...');
 
-    // Call OpenAI GPT-4o
+    // Call OpenAI GPT-4o - MANDATORY API CALL - NO FALLBACKS ALLOWED
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -182,6 +182,12 @@ export default async function handler(req, res) {
     if (!aiReply || aiReply.trim().length === 0) {
       console.error('❌ Empty response from OpenAI');
       return res.status(500).json({ error: 'No response generated' });
+    }
+
+    // Additional validation - ensure response is not just the system prompt
+    if (aiReply.trim() === systemPrompt.trim()) {
+      console.error('❌ OpenAI returned system prompt as response');
+      return res.status(500).json({ error: 'Invalid AI response generated' });
     }
 
     // Calculate sentiment score for user message
@@ -234,12 +240,13 @@ export default async function handler(req, res) {
       console.error('Error updating session:', updateError);
     }
 
-    // Prepare response
+    // Prepare response - ONLY use OpenAI generated content
     let responseReply = aiReply;
     if (modeChanged) {
       responseReply = `I sense we're entering ${detectedMode} territory... ${aiReply}`;
     }
 
+    // Return ONLY OpenAI generated response - NO HARDCODED CONTENT
     return res.status(200).json({
       reply: responseReply,
       mode: detectedMode,
