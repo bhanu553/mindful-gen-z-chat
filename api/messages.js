@@ -51,7 +51,7 @@ export default async function handler(req, res) {
 
     // Detect optimal mode from message content
     const detectedMode = currentMode || detectOptimalMode(message);
-    console.log('Detected mode:', detectedMode, 'for message:', message.substring(0, 50));
+    console.log('🧠 Mode Detection:', detectedMode, 'for message:', message.substring(0, 50));
 
     // Find or create session
     let session;
@@ -143,8 +143,8 @@ export default async function handler(req, res) {
       { role: 'user', content: message }
     ];
 
-    console.log('Making OpenAI API call with', openAIMessages.length, 'messages');
-    console.log('System prompt for', detectedMode, 'mode:', systemPrompt.substring(0, 100) + '...');
+    console.log('🚀 Making OpenAI API call with', openAIMessages.length, 'messages');
+    console.log('📝 System prompt for', detectedMode, 'mode:', systemPrompt.substring(0, 100) + '...');
 
     // Call OpenAI GPT-4o
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -164,19 +164,25 @@ export default async function handler(req, res) {
 
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text();
-      console.error('OpenAI API error:', openAIResponse.status, errorText);
+      console.error('❌ OpenAI API error:', openAIResponse.status, errorText);
       return res.status(500).json({ error: 'AI service temporarily unavailable' });
     }
 
     const openAIData = await openAIResponse.json();
     
     if (!openAIData.choices || !openAIData.choices[0] || !openAIData.choices[0].message) {
-      console.error('Invalid OpenAI response structure:', openAIData);
+      console.error('❌ Invalid OpenAI response structure:', openAIData);
       return res.status(500).json({ error: 'Invalid AI response' });
     }
 
     const aiReply = openAIData.choices[0].message.content;
-    console.log('OpenAI response received:', aiReply.substring(0, 100) + '...');
+    console.log('✅ OpenAI response received:', aiReply.substring(0, 100) + '...');
+
+    // Validate that we got a real response, not a system prompt or error
+    if (!aiReply || aiReply.trim().length === 0) {
+      console.error('❌ Empty response from OpenAI');
+      return res.status(500).json({ error: 'No response generated' });
+    }
 
     // Calculate sentiment score for user message
     const sentimentScore = calculateSentiment(message);
@@ -242,7 +248,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Messages API error:', error);
+    console.error('❌ Messages API error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
