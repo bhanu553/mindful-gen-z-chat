@@ -33,9 +33,9 @@ const PremiumPlanDetails = () => {
               return actions.order.create({
                 purchase_units: [{
                   amount: {
-                    value: '19.00'
+                    value: '9.99'
                   },
-                  description: 'EchoMind Premium Plan - $19 one-time payment'
+                  description: 'EchoMind Premium Plan - $9.99 monthly subscription'
                 }]
               });
             },
@@ -90,7 +90,7 @@ const PremiumPlanDetails = () => {
               Premium Plan
             </h1>
             <div className="text-3xl font-bold text-foreground mb-4">
-              $19<span className="text-lg font-normal text-muted-foreground"> one-time</span>
+              $9.99<span className="text-lg font-normal text-muted-foreground"> per month</span>
             </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               The complete emotional wellness experience for those serious about their mental health journey and personal growth.
@@ -217,21 +217,21 @@ const PremiumPlanDetails = () => {
             <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-foreground mb-2">Upgrade to Premium</h2>
-                <p className="text-muted-foreground">Unlock the full potential of AI-powered emotional wellness</p>
+                <p className="text-muted-foreground">Unlock the full potential of AI-powered emotional wellness for just $9.99/month</p>
               </div>
               
               <div className="max-w-md mx-auto">
                 <div id="paypal-button-container" className="mb-4"></div>
                 <p className="text-center text-sm text-muted-foreground">
                   <Shield className="w-4 h-4 inline mr-1" />
-                  Secured by PayPal • One-time payment
+                  Secured by PayPal • Monthly subscription
                 </p>
               </div>
             </div>
           ) : (
             <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8 text-center">
               <h2 className="text-2xl font-bold text-foreground mb-2">Ready to Get Started?</h2>
-              <p className="text-muted-foreground mb-6">Sign in to upgrade to Premium or start with our Free plan</p>
+              <p className="text-muted-foreground mb-6">Sign in to upgrade to Premium for $9.99/month or start with our Free plan</p>
               <div className="space-y-4">
                 <Link 
                   to="/login" 
