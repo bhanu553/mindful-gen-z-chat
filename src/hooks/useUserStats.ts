@@ -31,7 +31,7 @@ export const useUserStats = () => {
         throw new Error('No authentication token available');
       }
 
-      const response = await fetch('/api/user/stats', {
+      const response = await fetch('/api/user?type=stats', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
