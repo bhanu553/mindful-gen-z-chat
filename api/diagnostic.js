@@ -57,6 +57,10 @@ export default async function handler(req, res) {
         diagnostic.systemPromptUsed = systemPrompt;
 
         console.log('🚀 Testing OpenAI API call...');
+        console.log('🔑 API Key present:', !!OPENAI_API_KEY);
+        console.log('🧠 Detected mode:', testMode);
+        console.log('📋 System prompt length:', systemPrompt.length);
+        
         const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {

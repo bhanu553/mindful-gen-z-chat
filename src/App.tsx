@@ -19,6 +19,7 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import FreePlanDetails from "./pages/FreePlanDetails";
 import PremiumPlanDetails from "./pages/PremiumPlanDetails";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,11 @@ const App = () => (
                 <Route path="/premium-plan-details" element={
                   <ProtectedRoute requireAuth={false}>
                     <PremiumPlanDetails />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <Admin />
                   </ProtectedRoute>
                 } />
                 <Route path="/terms" element={<Terms />} />

@@ -257,7 +257,7 @@ const Dashboard = () => {
                   onClick={() => setShowPaymentModal(true)}
                   className="bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
                 >
-                  Upgrade to Premium - $19/month
+                  Upgrade to Premium - $9.99/month
                 </button>
               </div>
             </div>

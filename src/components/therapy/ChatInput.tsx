@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserStats } from '@/hooks/useUserStats';
 import FileUpload from './FileUpload';
 import { cn } from '@/lib/utils';
 
@@ -15,14 +16,23 @@ interface ChatInputProps {
 
 const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCount = 0 }: ChatInputProps) => {
   const { isPremium } = useAuth();
+  const { stats, refresh: refreshStats } = useUserStats();
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   // Updated limits for premium users
   const maxMessages = isPremium ? 300 : 50;
   const maxUploads = isPremium ? 25 : 5;
   
-  const messagesLeft = isPremium ? '∞' : Math.max(0, maxMessages - messageCount);
-  const canSendMessage = isPremium || messageCount < maxMessages;
+  // Use real stats if available, fallback to local counter
+  const actualMessagesUsed = stats?.messagesUsedToday ?? messageCount;
+  const messagesLeft = isPremium ? '∞' : Math.max(0, maxMessages - actualMessagesUsed);
+  const canSendMessage = isPremium || actualMessagesUsed < maxMessages;
+
+  // Refresh stats periodically
+  useEffect(() => {
+    const interval = setInterval(refreshStats, 30000); // Every 30 seconds
+    return () => clearInterval(interval);
+  }, [refreshStats]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -102,9 +112,9 @@ const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCo
               <span className={cn(
                 messagesLeft === 0 ? "text-red-400" : "text-foreground"
               )}>
-                {messagesLeft} messages left today
+                {stats ? `${stats.remainingMessages}` : messagesLeft} messages left today
               </span>
-              {messagesLeft === 0 && (
+              {(stats?.remainingMessages === 0 || messagesLeft === 0) && (
                 <span className="text-yellow-400 ml-2">
                   - Upgrade to Premium for 300 messages per day
                 </span>
