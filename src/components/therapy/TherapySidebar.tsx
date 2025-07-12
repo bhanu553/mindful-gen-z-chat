@@ -203,17 +203,19 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
       isCollapsed ? 'w-12' : 'w-80'
     }`}>
       {/* Sidebar */}
-      <div className="h-full glass-effect border-r border-white/20 backdrop-blur-md flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-white/20 flex items-center justify-between">
+      <div className="h-full glass-effect border-r border-white/20 backdrop-blur-md flex flex-col bg-black/30 lg:bg-black/20">
+        {/* Header - Mobile Optimized */}
+        <div className="p-3 lg:p-4 border-b border-white/20 flex items-center justify-between min-h-[60px]">
           {!isCollapsed && (
-            <h2 className="text-white font-semibold">Therapy Sessions</h2>
+            <h2 className="text-white font-semibold text-base lg:text-lg tracking-wide">
+              Therapy Sessions
+            </h2>
           )}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-white/80 hover:text-white hover:bg-white/10 flex-shrink-0"
+            className="text-white/80 hover:text-white hover:bg-white/10 flex-shrink-0 w-8 h-8 lg:w-auto lg:h-auto rounded-full"
           >
             {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </Button>
@@ -221,106 +223,119 @@ const TherapySidebar: React.FC<TherapySidebarProps> = ({ onSessionSelect, curren
 
         {!isCollapsed && (
           <>
-            {/* New Session Button */}
-            <div className="p-4 border-b border-white/20">
+            {/* New Session Button - Mobile Responsive */}
+            <div className="p-3 lg:p-4 border-b border-white/20">
               <Button
                 onClick={createNewSession}
-                className="w-full bg-primary/80 hover:bg-primary text-white border border-white/20"
+                className="w-full bg-primary/80 hover:bg-primary text-white border border-white/20 h-10 lg:h-11 text-sm lg:text-base font-medium min-w-0 transition-all duration-200 hover:scale-[1.02]"
               >
-                <Plus size={16} className="mr-2" />
-                New Therapy
+                <Plus size={16} className="mr-2 flex-shrink-0" />
+                <span className="truncate">New Therapy</span>
               </Button>
             </div>
 
-            {/* Sessions List with Smooth Scrolling */}
-            <div className="flex-1 scrollable-container p-4 space-y-2">
+            {/* Sessions List with Enhanced Mobile Scrolling */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 lg:p-4 space-y-2 max-h-[calc(100vh-140px)] lg:max-h-none scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
               {loading ? (
-                <div className="text-white/60 text-center py-8">Loading sessions...</div>
+                <div className="text-white/60 text-center py-8 text-sm lg:text-base">
+                  Loading sessions...
+                </div>
               ) : sessions.length === 0 ? (
-                <div className="text-white/60 text-center py-8">
+                <div className="text-white/60 text-center py-8 px-2 text-sm lg:text-base">
                   No therapy sessions yet. Click + to begin.
                 </div>
               ) : (
-                sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className={`group p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
-                      currentSessionId === session.id
-                        ? 'bg-white/20 border-white/40'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                    }`}
-                    onClick={() => onSessionSelect(session)}
-                  >
-                    {editingId === session.id ? (
-                      <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-                        <Input
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          className="bg-white/10 border-white/20 text-white text-sm"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveTitle(session.id);
-                            if (e.key === 'Escape') cancelEditing();
-                          }}
-                          autoFocus
-                        />
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            onClick={() => saveTitle(session.id)}
-                            className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
-                          >
-                            Save
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={cancelEditing}
-                            className="text-white/80 hover:text-white text-xs px-2 py-1"
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-medium text-sm truncate mb-1">
-                              {session.title}
-                            </h3>
-                            <p className="text-white/60 text-xs">
-                              {formatDate(session.created_at)}
-                            </p>
-                          </div>
-                          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="space-y-2">
+                  {sessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className={`group p-3 lg:p-3 rounded-lg cursor-pointer transition-all duration-200 border animate-fade-in ${
+                        currentSessionId === session.id
+                          ? 'bg-white/20 border-white/40 shadow-lg'
+                          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]'
+                      }`}
+                      onClick={() => onSessionSelect(session)}
+                    >
+                      {editingId === session.id ? (
+                        <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                          <Input
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            className="bg-white/10 border-white/20 text-white text-sm h-8 lg:h-9"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveTitle(session.id);
+                              if (e.key === 'Escape') cancelEditing();
+                            }}
+                            autoFocus
+                          />
+                          <div className="flex space-x-2">
                             <Button
                               size="sm"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEditing(session);
-                              }}
-                              className="text-white/60 hover:text-white hover:bg-white/10 p-1 h-6 w-6"
+                              onClick={() => saveTitle(session.id)}
+                              className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 h-7"
                             >
-                              <Edit2 size={12} />
+                              Save
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteSession(session.id);
-                              }}
-                              className="text-red-400 hover:text-red-300 hover:bg-red-500/20 p-1 h-6 w-6"
+                              onClick={cancelEditing}
+                              className="text-white/80 hover:text-white text-xs px-3 py-1 h-7"
                             >
-                              <Trash2 size={12} />
+                              Cancel
                             </Button>
                           </div>
                         </div>
-                      </>
-                    )}
-                  </div>
-                ))
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-white font-medium text-sm lg:text-sm truncate mb-1 leading-tight">
+                                {session.title}
+                              </h3>
+                              <div className="flex items-center gap-2">
+                                <p className="text-white/60 text-xs">
+                                  {formatDate(session.created_at)}
+                                </p>
+                                {/* Mode indicator dot */}
+                                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                  session.mode === 'Reflect' ? 'bg-purple-400' :
+                                  session.mode === 'Recover' ? 'bg-blue-400' :
+                                  session.mode === 'Rebuild' ? 'bg-green-400' :
+                                  'bg-yellow-400'
+                                }`} />
+                              </div>
+                            </div>
+                            <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startEditing(session);
+                                }}
+                                className="text-white/60 hover:text-white hover:bg-white/10 p-1 h-6 w-6 rounded-md"
+                              >
+                                <Edit2 size={11} />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteSession(session.id);
+                                }}
+                                className="text-red-400 hover:text-red-300 hover:bg-red-500/20 p-1 h-6 w-6 rounded-md"
+                              >
+                                <Trash2 size={11} />
+                              </Button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </>
