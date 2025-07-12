@@ -326,12 +326,15 @@ export default async function handler(req, res) {
       }
 
       // Return ONLY OpenAI generated response - NO HARDCODED CONTENT
-      return res.status(200).json({
+      const finalResponse = {
         reply: responseReply,
         mode: detectedMode,
         sessionId: session.id,
         remainingMessages: Math.max(0, 50 - (limitCheck.messageCount + 1))
-      });
+      };
+      
+      console.log('🎯 Final API Response:', JSON.stringify(finalResponse, null, 2));
+      return res.status(200).json(finalResponse);
     }
     
     return res.status(405).json({ error: 'Method not allowed' });
