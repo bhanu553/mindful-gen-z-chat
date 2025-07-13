@@ -29,25 +29,28 @@ export const useTherapySessions = () => {
     if (!user) return;
 
     try {
+      console.log('🔍 Fetching sessions for user:', user.id);
       const { data, error } = await supabase
-        .from('therapy_sessions')
+        .from('chat_sessions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching sessions:', error);
+        console.error('❌ Error fetching sessions:', error);
         toast.error('Failed to load therapy sessions');
         return;
       }
 
+      console.log('📋 Found', data?.length || 0, 'sessions');
+
       // Transform data to match TherapySession interface
       const transformedData = (data || []).map(session => ({
         id: session.id,
-        title: session.title,
-        mode: session.mode,
+        title: session.title || 'Untitled Session',
+        mode: session.current_mode || 'reflect',
         created_at: session.created_at,
-        updated_at: session.updated_at,
+        updated_at: session.created_at, // chat_sessions doesn't have updated_at
         user_id: session.user_id
       }));
 
@@ -65,32 +68,36 @@ export const useTherapySessions = () => {
     }
   };
 
-  const createSession = async (mode: string = 'Reflect', title: string = 'New Session') => {
+  const createSession = async (mode: string = 'reflect', title: string = 'New Session') => {
     if (!user) return null;
 
     try {
+      console.log('📝 Creating new session:', { mode, title });
       const { data, error } = await supabase
-        .from('therapy_sessions')
+        .from('chat_sessions')
         .insert({
           user_id: user.id,
-          mode: mode as 'Reflect' | 'Recover' | 'Rebuild' | 'Evolve',
-          title
+          current_mode: mode,
+          title,
+          message_count: 0
         })
         .select()
         .single();
 
       if (error) {
-        console.error('Error creating session:', error);
+        console.error('❌ Error creating session:', error);
         toast.error('Failed to create new session');
         return null;
       }
 
+      console.log('✅ Session created successfully:', data.id);
+
       const newSession: TherapySession = {
         id: data.id,
         title: data.title,
-        mode: data.mode,
+        mode: data.current_mode,
         created_at: data.created_at,
-        updated_at: data.updated_at,
+        updated_at: data.created_at,
         user_id: data.user_id
       };
 
@@ -111,10 +118,10 @@ export const useTherapySessions = () => {
       // Only update fields that exist in the database
       const dbUpdates: any = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
-      if (updates.mode !== undefined) dbUpdates.mode = updates.mode;
+      if (updates.mode !== undefined) dbUpdates.current_mode = updates.mode;
 
       const { error } = await supabase
-        .from('therapy_sessions')
+        .from('chat_sessions')
         .update(dbUpdates)
         .eq('id', sessionId)
         .eq('user_id', user.id);
@@ -146,7 +153,7 @@ export const useTherapySessions = () => {
     try {
       // First delete all messages for this session
       const { error: messagesError } = await supabase
-        .from('therapy_messages')
+        .from('chat_messages')
         .delete()
         .eq('session_id', sessionId)
         .eq('user_id', user.id);
@@ -159,7 +166,7 @@ export const useTherapySessions = () => {
 
       // Then delete the session
       const { error } = await supabase
-        .from('therapy_sessions')
+        .from('chat_sessions')
         .delete()
         .eq('id', sessionId)
         .eq('user_id', user.id);
