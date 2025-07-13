@@ -30,30 +30,33 @@ const BackendDiagnostic = () => {
     setDiagnosticError(null);
     
     try {
+      console.log('🔍 Running diagnostic via /api/diagnostic...');
       const response = await fetch('/api/diagnostic');
       if (!response.ok) {
-        throw new Error(`Diagnostic failed: ${response.status}`);
+        throw new Error(`Diagnostic failed: ${response.status} ${response.statusText}`);
       }
       
       const result = await response.json();
+      console.log('✅ Diagnostic result:', result);
       setDiagnostic(result);
     } catch (error) {
+      console.error('❌ Diagnostic error:', error);
       setDiagnosticError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setDiagnosticLoading(false);
     }
   };
 
-  const getStatusIcon = (status: 'healthy' | 'unhealthy' | 'checking') => {
+  function getStatusIcon(status: 'healthy' | 'unhealthy' | 'checking') {
     switch (status) {
       case 'healthy': return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'unhealthy': return <XCircle className="h-4 w-4 text-red-500" />;
       case 'checking': return <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />;
       default: return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
-  };
+  }
 
-  const getStatusColor = (status: string | boolean) => {
+  function getStatusColor(status: string | boolean) {
     if (typeof status === 'boolean') {
       return status ? 'bg-green-500' : 'bg-red-500';
     }
@@ -65,7 +68,7 @@ const BackendDiagnostic = () => {
       case 'checking': return 'bg-yellow-500';
       default: return 'bg-gray-500';
     }
-  };
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -256,14 +259,8 @@ const BackendDiagnostic = () => {
             {[
               '/api/health',
               '/api/diagnostic', 
-              '/api/messages',
-              '/api/chat/send',
-              '/api/user/stats',
-              '/api/messages/history',
-              '/api/sessions/new',
-              '/api/sessions/list',
-              '/api/sessions/delete',
-              '/api/version'
+              '/api/version',
+              'Supabase Edge Function: therapy-api'
             ].map((endpoint) => (
               <div key={endpoint} className="p-3 border rounded-lg">
                 <code className="text-sm">{endpoint}</code>

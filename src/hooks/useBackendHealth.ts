@@ -1,39 +1,39 @@
+
 import { useState, useEffect } from 'react';
 
 interface HealthCheck {
-  status: 'healthy' | 'unhealthy' | 'checking';
-  details: any;
+  status: 'healthy' | 'unhealthy';
+  details: Record<string, any>;
 }
 
-interface HealthStatus {
-  timestamp: string;
+interface HealthData {
   status: 'healthy' | 'unhealthy' | 'checking';
-  checks: {
-    openai: HealthCheck;
-    supabase: HealthCheck;
-    environment: HealthCheck;
-  };
+  timestamp: string;
+  checks: Record<string, HealthCheck>;
 }
 
 export const useBackendHealth = () => {
-  const [health, setHealth] = useState<HealthStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [health, setHealth] = useState<HealthData | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const checkHealth = async () => {
+  const fetchHealth = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-      
+      console.log('🏥 Fetching health check from /api/health...');
       const response = await fetch('/api/health');
       
       if (!response.ok) {
-        throw new Error(`Health check failed: ${response.status}`);
+        throw new Error(`Health check failed: ${response.status} ${response.statusText}`);
       }
       
-      const healthData = await response.json();
-      setHealth(healthData);
+      const data = await response.json();
+      console.log('✅ Health check successful:', data);
+      setHealth(data);
     } catch (err) {
+      console.error('❌ Health check error:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
       setHealth(null);
     } finally {
@@ -42,13 +42,13 @@ export const useBackendHealth = () => {
   };
 
   useEffect(() => {
-    checkHealth();
+    fetchHealth();
   }, []);
 
   return {
     health,
     loading,
     error,
-    refresh: checkHealth
+    refresh: fetchHealth
   };
 };
