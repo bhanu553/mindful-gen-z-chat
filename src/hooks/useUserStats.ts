@@ -39,7 +39,7 @@ export const useUserStats = () => {
 
       console.log('🔐 Auth token obtained, calling getUserStats API...');
 
-      const response = await fetch('/supabase/functions/v1/therapy-api?action=getUserStats', {
+      const response = await fetch('https://tvjqpmxugitehucwhdbk.supabase.co/functions/v1/therapy-api?action=getUserStats', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

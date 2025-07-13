@@ -73,6 +73,8 @@ serve(async (req) => {
       hasSupabaseUrl: !!supabaseUrl,
       hasServiceKey: !!supabaseServiceKey,
       hasOpenAIKey: !!openaiApiKey,
+      supabaseUrl: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'missing',
+      openaiKeyPrefix: openaiApiKey ? openaiApiKey.substring(0, 10) + '...' : 'missing'
     })
 
     if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
@@ -105,13 +107,16 @@ serve(async (req) => {
 
     // Verify user with auth token
     const token = authHeader.replace('Bearer ', '')
-    console.log('🔐 Verifying auth token...')
+    console.log('🔐 Verifying auth token:', token.substring(0, 20) + '...')
     
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
       console.error('❌ Authentication failed:', authError?.message)
-      return new Response(JSON.stringify({ error: 'Invalid authentication' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Invalid authentication',
+        details: authError?.message 
+      }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -229,10 +234,12 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
       messageLength: message?.length, 
       sessionId, 
       mode,
-      userId 
+      userId,
+      messagePreview: message?.substring(0, 50) + '...'
     })
 
     if (!message || !sessionId) {
+      console.error('❌ Missing required fields:', { hasMessage: !!message, hasSessionId: !!sessionId })
       return new Response(JSON.stringify({ error: 'Message and sessionId are required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -245,13 +252,22 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
 
-    const { count: messageCount } = await supabase
+    console.log('📅 Date range:', {
+      startOfDay: startOfDay.toISOString(),
+      endOfDay: endOfDay.toISOString()
+    })
+
+    const { count: messageCount, error: countError } = await supabase
       .from('chat_messages')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('role', 'user')
       .gte('created_at', startOfDay.toISOString())
       .lt('created_at', endOfDay.toISOString())
+
+    if (countError) {
+      console.error('❌ Error checking message count:', countError)
+    }
 
     console.log('📊 Daily message count:', messageCount)
 
@@ -277,7 +293,10 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     if (sessionError || !session) {
       console.error('❌ Session not found or access denied:', sessionError)
-      return new Response(JSON.stringify({ error: 'Session not found' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Session not found',
+        details: sessionError?.message 
+      }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -287,13 +306,17 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     // Get recent message history for context
     console.log('📚 Fetching conversation history...')
-    const { data: recentMessages } = await supabase
+    const { data: recentMessages, error: messagesError } = await supabase
       .from('chat_messages')
       .select('role, content')
       .eq('session_id', sessionId)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(10)
+
+    if (messagesError) {
+      console.error('❌ Error fetching messages:', messagesError)
+    }
 
     const conversationHistory = (recentMessages || [])
       .reverse()
@@ -315,7 +338,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
       { role: 'user', content: message }
     ]
 
-    console.log('🤖 Calling OpenAI API with GPT-4o...')
+    console.log('🤖 Calling OpenAI API with GPT-4.1...')
     console.log('📝 Message count for OpenAI:', openAIMessages.length)
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -325,7 +348,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-2025-04-14',
         messages: openAIMessages,
         temperature: 0.8,
         max_tokens: 500,
@@ -336,10 +359,14 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text()
-      console.error('❌ OpenAI API error:', errorText)
+      console.error('❌ OpenAI API error:', {
+        status: openAIResponse.status,
+        statusText: openAIResponse.statusText,
+        error: errorText
+      })
       return new Response(JSON.stringify({ 
         error: 'AI service temporarily unavailable',
-        details: errorText
+        details: `OpenAI API returned ${openAIResponse.status}: ${errorText}`
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -347,7 +374,18 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     }
 
     const openAIData = await openAIResponse.json()
-    const aiReply = openAIData.choices[0].message.content
+    const aiReply = openAIData.choices?.[0]?.message?.content
+
+    if (!aiReply) {
+      console.error('❌ Invalid OpenAI response:', openAIData)
+      return new Response(JSON.stringify({ 
+        error: 'Invalid AI response received',
+        details: 'AI did not provide a response'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     console.log('✅ OpenAI response received, length:', aiReply?.length)
 
@@ -403,11 +441,15 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     // Update session message count
     console.log('📊 Updating session message count...')
-    await supabase
+    const { error: updateError } = await supabase
       .from('chat_sessions')
       .update({ message_count: session.message_count + 1 })
       .eq('id', sessionId)
       .eq('user_id', userId)
+
+    if (updateError) {
+      console.error('❌ Error updating session:', updateError)
+    }
 
     console.log('✅ Message exchange completed successfully')
 

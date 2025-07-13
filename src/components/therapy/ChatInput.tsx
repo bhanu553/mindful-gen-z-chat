@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Paperclip } from 'lucide-react';
 import FileUpload from './FileUpload';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatInputProps {
   inputText: string;
@@ -20,22 +21,23 @@ const ChatInput = ({
   disabled = false,
   messageCount = 0 
 }: ChatInputProps) => {
+  const { isPremium } = useAuth();
   const [showFileUpload, setShowFileUpload] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const maxFreeMessages = 50;
-  const remainingMessages = Math.max(0, maxFreeMessages - messageCount);
+  const maxMessages = isPremium ? 300 : 50;
+  const remainingMessages = Math.max(0, maxMessages - messageCount);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (!disabled && inputText.trim()) {
+      if (!disabled && inputText.trim() && remainingMessages > 0) {
         onSendMessage();
       }
     }
   };
 
   const handleSend = () => {
-    if (!disabled && inputText.trim()) {
+    if (!disabled && inputText.trim() && remainingMessages > 0) {
       onSendMessage();
     }
   };
@@ -45,6 +47,7 @@ const ChatInput = ({
       {/* Message Counter */}
       <div className="flex items-center justify-between text-sm text-white/60">
         <span>Messages remaining today: {remainingMessages}</span>
+        <span>{messageCount}/{maxMessages} used</span>
       </div>
 
       {/* File Upload */}
@@ -62,9 +65,9 @@ const ChatInput = ({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Share what's on your mind..."
-            disabled={disabled}
-            className="min-h-[60px] max-h-32 resize-none bg-white/10 border-white/20 text-white placeholder-white/60 backdrop-blur-sm focus:bg-white/15 focus:border-white/30 transition-all duration-200"
+            placeholder={remainingMessages > 0 ? "Share what's on your mind..." : "Daily limit reached"}
+            disabled={disabled || remainingMessages <= 0}
+            className="min-h-[60px] max-h-32 resize-none bg-white/10 border-white/20 text-white placeholder-white/60 backdrop-blur-sm focus:bg-white/15 focus:border-white/30 transition-all duration-200 disabled:opacity-50"
           />
         </div>
         
@@ -74,7 +77,8 @@ const ChatInput = ({
             variant="ghost"
             size="sm"
             onClick={() => setShowFileUpload(!showFileUpload)}
-            className="text-white/70 hover:text-white hover:bg-white/10 w-10 h-10 rounded-full transition-all duration-200"
+            disabled={remainingMessages <= 0}
+            className="text-white/70 hover:text-white hover:bg-white/10 w-10 h-10 rounded-full transition-all duration-200 disabled:opacity-50"
           >
             <Paperclip size={16} />
           </Button>
@@ -97,7 +101,7 @@ const ChatInput = ({
       
       {remainingMessages <= 0 && (
         <div className="text-red-400 text-sm text-center">
-          Daily message limit reached. Upgrade to premium for unlimited messages.
+          Daily message limit reached. {isPremium ? 'Premium limit exceeded.' : 'Upgrade to premium for unlimited messages.'}
         </div>
       )}
     </div>
