@@ -23,7 +23,9 @@ export default async function handler(req, res) {
   try {
     if (type === 'usage') {
       // Usage data
-      const today = new Date().toISOString().slice(0, 10);
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const startOfNextDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
       
       // Get daily message count
       const { count: messageCount, error: messageError } = await supabase
@@ -31,8 +33,8 @@ export default async function handler(req, res) {
         .select('id', { count: 'exact' })
         .eq('user_id', user.id)
         .eq('role', 'user')
-        .gte('created_at', `${today}T00:00:00.000Z`)
-        .lt('created_at', `${today + 1}T00:00:00.000Z`);
+        .gte('created_at', startOfDay)
+        .lt('created_at', startOfNextDay);
         
       if (messageError) {
         console.error('Error fetching message count:', messageError);
@@ -44,8 +46,8 @@ export default async function handler(req, res) {
         .from('uploads')
         .select('id', { count: 'exact' })
         .eq('user_id', user.id)
-        .gte('created_at', `${today}T00:00:00.000Z`)
-        .lt('created_at', `${today + 1}T00:00:00.000Z`);
+        .gte('created_at', startOfDay)
+        .lt('created_at', startOfNextDay);
         
       // Don't fail if uploads table doesn't exist
       const uploads = uploadError ? 0 : (uploadCount || 0);
@@ -94,15 +96,17 @@ export default async function handler(req, res) {
       });
     } else {
       // Stats data (default)
-      const today = new Date().toISOString().slice(0, 10);
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const startOfNextDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
       
       const { count: messagesUsedToday, error: messageError } = await supabase
         .from('chat_messages')
         .select('id', { count: 'exact' })
         .eq('user_id', user.id)
         .eq('role', 'user')
-        .gte('created_at', `${today}T00:00:00.000Z`)
-        .lt('created_at', `${today + 1}T00:00:00.000Z`);
+        .gte('created_at', startOfDay)
+        .lt('created_at', startOfNextDay);
         
       if (messageError) {
         console.error('Error fetching message count:', messageError);
