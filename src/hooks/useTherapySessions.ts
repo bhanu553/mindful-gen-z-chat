@@ -44,7 +44,7 @@ export const useTherapySessions = () => {
 
       console.log('🔐 Auth token obtained, calling API...');
 
-      const response = await fetch('/supabase/functions/v1/therapy-api?action=getSessions', {
+      const response = await fetch('https://tvjqpmxugitehucwhdbk.supabase.co/functions/v1/therapy-api?action=getSessions', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -112,7 +112,7 @@ export const useTherapySessions = () => {
 
       console.log('🔐 Auth token obtained, calling createSession API...');
 
-      const response = await fetch('/supabase/functions/v1/therapy-api?action=createSession', {
+      const response = await fetch('https://tvjqpmxugitehucwhdbk.supabase.co/functions/v1/therapy-api?action=createSession', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
