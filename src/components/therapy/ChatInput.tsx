@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Paperclip, Image as ImageIcon } from 'lucide-react';
+import { Send, Paperclip } from 'lucide-react';
 import FileUpload from './FileUpload';
 
 interface ChatInputProps {
@@ -50,7 +50,7 @@ const ChatInput = ({
       {/* File Upload */}
       {showFileUpload && (
         <div className="border border-white/20 rounded-lg p-4 bg-white/10 backdrop-blur-sm">
-          <FileUpload onUploadComplete={() => setShowFileUpload(false)} />
+          <FileUpload onUploadSuccess={() => setShowFileUpload(false)} />
         </div>
       )}
 
