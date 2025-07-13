@@ -36,6 +36,12 @@
     --ring: 262.1 83.3% 57.8%;
 
     --radius: 0.5rem;
+
+    /* Therapy Mode Colors */
+    --therapy-reflect: 263 100% 69%;
+    --therapy-recover: 199 65% 65%;
+    --therapy-rebuild: 147 44% 58%;
+    --therapy-evolve: 48 95% 59%;
   }
 
   * {
