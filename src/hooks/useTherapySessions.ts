@@ -30,28 +30,38 @@ export const useTherapySessions = () => {
 
     try {
       console.log('🔍 Fetching sessions for user:', user.id);
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('❌ Error fetching sessions:', error);
-        toast.error('Failed to load therapy sessions');
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      
+      if (!token) {
+        console.error('❌ No auth token available');
+        setLoading(false);
         return;
       }
 
-      console.log('📋 Found', data?.length || 0, 'sessions');
+      const response = await fetch('/api/getSessions', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch sessions');
+      }
+
+      const data = await response.json();
+      console.log('📋 Found', data.sessions?.length || 0, 'sessions');
 
       // Transform data to match TherapySession interface
-      const transformedData = (data || []).map(session => ({
+      const transformedData = (data.sessions || []).map(session => ({
         id: session.id,
         title: session.title || 'Untitled Session',
         mode: session.current_mode || 'reflect',
         created_at: session.created_at,
-        updated_at: session.created_at, // chat_sessions doesn't have updated_at
-        user_id: session.user_id
+        updated_at: session.created_at,
+        user_id: user.id
       }));
 
       setSessions(transformedData);
@@ -61,7 +71,7 @@ export const useTherapySessions = () => {
         setCurrentSession(transformedData[0]);
       }
     } catch (error) {
-      console.error('Error fetching sessions:', error);
+      console.error('❌ Error fetching sessions:', error);
       toast.error('Failed to load therapy sessions');
     } finally {
       setLoading(false);
@@ -73,39 +83,47 @@ export const useTherapySessions = () => {
 
     try {
       console.log('📝 Creating new session:', { mode, title });
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .insert({
-          user_id: user.id,
-          current_mode: mode,
-          title,
-          message_count: 0
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ Error creating session:', error);
-        toast.error('Failed to create new session');
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      
+      if (!token) {
+        console.error('❌ No auth token available');
         return null;
       }
 
-      console.log('✅ Session created successfully:', data.id);
+      const response = await fetch('/api/createSession', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          mode,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create session');
+      }
+
+      const data = await response.json();
+      console.log('✅ Session created successfully:', data.session.id);
 
       const newSession: TherapySession = {
-        id: data.id,
-        title: data.title,
-        mode: data.current_mode,
-        created_at: data.created_at,
-        updated_at: data.created_at,
-        user_id: data.user_id
+        id: data.session.id,
+        title: data.session.title,
+        mode: data.session.current_mode,
+        created_at: data.session.created_at,
+        updated_at: data.session.created_at,
+        user_id: data.session.user_id
       };
 
       setSessions(prev => [newSession, ...prev]);
       setCurrentSession(newSession);
       return newSession;
     } catch (error) {
-      console.error('Error creating session:', error);
+      console.error('❌ Error creating session:', error);
       toast.error('Failed to create new session');
       return null;
     }
