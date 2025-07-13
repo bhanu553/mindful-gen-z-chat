@@ -38,7 +38,7 @@ export const useTherapySessions = () => {
         return;
       }
 
-      const response = await fetch('/api/getSessions', {
+      const response = await fetch('/api/therapy?action=getSessions', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -54,7 +54,6 @@ export const useTherapySessions = () => {
       const data = await response.json();
       console.log('📋 Found', data.sessions?.length || 0, 'sessions');
 
-      // Transform data to match TherapySession interface
       const transformedData = (data.sessions || []).map(session => ({
         id: session.id,
         title: session.title || 'Untitled Session',
@@ -66,7 +65,6 @@ export const useTherapySessions = () => {
 
       setSessions(transformedData);
       
-      // If no current session and we have sessions, select the most recent one
       if (!currentSession && transformedData.length > 0) {
         setCurrentSession(transformedData[0]);
       }
@@ -90,7 +88,7 @@ export const useTherapySessions = () => {
         return null;
       }
 
-      const response = await fetch('/api/createSession', {
+      const response = await fetch('/api/therapy?action=createSession', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -133,7 +131,6 @@ export const useTherapySessions = () => {
     if (!user) return;
 
     try {
-      // Only update fields that exist in the database
       const dbUpdates: any = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.mode !== undefined) dbUpdates.current_mode = updates.mode;
@@ -169,7 +166,6 @@ export const useTherapySessions = () => {
     if (!user) return;
 
     try {
-      // First delete all messages for this session
       const { error: messagesError } = await supabase
         .from('chat_messages')
         .delete()
@@ -182,7 +178,6 @@ export const useTherapySessions = () => {
         return;
       }
 
-      // Then delete the session
       const { error } = await supabase
         .from('chat_sessions')
         .delete()

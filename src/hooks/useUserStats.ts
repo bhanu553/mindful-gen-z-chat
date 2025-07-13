@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,7 +32,7 @@ export const useUserStats = () => {
         throw new Error('No authentication token available');
       }
 
-      const response = await fetch('/api/user?type=stats', {
+      const response = await fetch('/api/therapy?action=getUserStats', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
