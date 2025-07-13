@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -14,51 +14,58 @@ export const useUserStats = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!user) {
-      setStats(null);
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
-      setError(null);
-
       const token = (await supabase.auth.getSession()).data.session?.access_token;
+      
       if (!token) {
-        throw new Error('No authentication token available');
+        console.error('❌ No auth token available for stats');
+        setLoading(false);
+        return;
       }
 
-      const response = await fetch('/api/therapy?action=getUserStats', {
+      const response = await fetch('/supabase/functions/v1/therapy-api?action=getUserStats', {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch user stats: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch user stats');
       }
 
-      const userStats = await response.json();
-      setStats(userStats);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('❌ Error fetching user stats:', error);
+      // Set default stats on error
+      setStats({
+        messagesUsedToday: 0,
+        remainingMessages: 50,
+        totalSessions: 0,
+        isPremium: false
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchStats();
-  }, [user]);
+  }, [fetchStats]);
 
   return {
     stats,
     loading,
-    error,
     refresh: fetchStats
   };
 };

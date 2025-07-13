@@ -38,7 +38,7 @@ export const useTherapySessions = () => {
         return;
       }
 
-      const response = await fetch('/api/therapy?action=getSessions', {
+      const response = await fetch('/supabase/functions/v1/therapy-api?action=getSessions', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -57,7 +57,7 @@ export const useTherapySessions = () => {
       const transformedData = (data.sessions || []).map(session => ({
         id: session.id,
         title: session.title || 'Untitled Session',
-        mode: session.current_mode || 'reflect',
+        mode: session.current_mode || 'evolve',
         created_at: session.created_at,
         updated_at: session.created_at,
         user_id: user.id
@@ -76,7 +76,7 @@ export const useTherapySessions = () => {
     }
   };
 
-  const createSession = async (mode: string = 'reflect', title: string = 'New Session') => {
+  const createSession = async (mode: string = 'evolve', title: string = 'New Session') => {
     if (!user) return null;
 
     try {
@@ -88,7 +88,7 @@ export const useTherapySessions = () => {
         return null;
       }
 
-      const response = await fetch('/api/therapy?action=createSession', {
+      const response = await fetch('/supabase/functions/v1/therapy-api?action=createSession', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
