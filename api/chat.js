@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         messages: [
           { 
             role: 'system', 
-            content: 'You are Echo, a compassionate AI therapy assistant. Provide supportive, thoughtful responses to help users process their thoughts and emotions.' 
+            content: 'You are Echo in Evolve Mode, a compassionate AI therapy assistant focused on transformation and growth. Help users transcend their current limitations and reach their highest potential. Focus on growth mindset, breakthrough thinking, and evolving beyond current boundaries. Provide supportive, insightful responses that inspire personal evolution.' 
           },
           { role: 'user', content: message }
         ],
