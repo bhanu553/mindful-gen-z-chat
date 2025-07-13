@@ -37,10 +37,33 @@ const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCo
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (!disabled && inputText.trim() && canSendMessage) {
-        onSendMessage();
-      }
+      handleSend();
     }
+  };
+
+  const handleSend = () => {
+    console.log('🎯 ChatInput handleSend called');
+    console.log('🎯 Input text:', inputText);
+    console.log('🎯 Can send message:', canSendMessage);
+    console.log('🎯 Is disabled:', disabled);
+    
+    if (!inputText.trim()) {
+      console.log('❌ No input text to send');
+      return;
+    }
+    
+    if (disabled) {
+      console.log('❌ Send disabled');
+      return;
+    }
+    
+    if (!canSendMessage) {
+      console.log('❌ Cannot send message - limit reached');
+      return;
+    }
+    
+    console.log('✅ Calling onSendMessage from parent');
+    onSendMessage();
   };
 
   const handleUploadSuccess = (fileUrl: string) => {
@@ -85,7 +108,10 @@ const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCo
         <div className="flex-1 relative">
           <textarea
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => {
+              console.log('📝 Input text changed:', e.target.value);
+              setInputText(e.target.value);
+            }}
             onKeyPress={handleKeyPress}
             placeholder="Type something you're feeling…"
             className="w-full bg-secondary border border-border/50 rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none min-h-[48px] max-h-32"
@@ -94,7 +120,7 @@ const ChatInput = ({ inputText, setInputText, onSendMessage, disabled, messageCo
             rows={1}
           />
           <button
-            onClick={onSendMessage}
+            onClick={handleSend}
             disabled={!inputText.trim() || disabled || !canSendMessage}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-primary text-white rounded-md hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
