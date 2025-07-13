@@ -73,7 +73,6 @@ serve(async (req) => {
       hasSupabaseUrl: !!supabaseUrl,
       hasServiceKey: !!supabaseServiceKey,
       hasOpenAIKey: !!openaiApiKey,
-      supabaseUrl: supabaseUrl?.substring(0, 30) + '...',
     })
 
     if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
@@ -93,7 +92,6 @@ serve(async (req) => {
 
     // Initialize Supabase client
     const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey)
-    console.log('✅ Supabase client initialized')
 
     // Get auth token from request
     const authHeader = req.headers.get('authorization')
@@ -249,7 +247,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     const { count: messageCount } = await supabase
       .from('chat_messages')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('role', 'user')
       .gte('created_at', startOfDay.toISOString())
@@ -257,7 +255,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('📊 Daily message count:', messageCount)
 
-    if (messageCount >= 50) {
+    if (messageCount && messageCount >= 50) {
       console.log('❌ Daily limit reached for user:', userId)
       return new Response(JSON.stringify({ 
         error: "You've reached the daily message limit for free users.",
@@ -417,7 +415,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
       reply: aiReply,
       mode: mode || 'evolve',
       sessionId,
-      remainingMessages: Math.max(0, 50 - (messageCount + 1))
+      remainingMessages: Math.max(0, 50 - ((messageCount || 0) + 1))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
@@ -537,7 +535,7 @@ async function handleGetUserStats(supabase: any, userId: string) {
     // Get daily message count
     const { count: messageCount } = await supabase
       .from('chat_messages')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('role', 'user')
       .gte('created_at', startOfDay.toISOString())
@@ -546,7 +544,7 @@ async function handleGetUserStats(supabase: any, userId: string) {
     // Get total sessions
     const { count: sessionCount } = await supabase
       .from('chat_sessions')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
     
     const maxMessages = 50 // Free plan limit

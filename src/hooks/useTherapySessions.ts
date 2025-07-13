@@ -42,8 +42,6 @@ export const useTherapySessions = () => {
         return;
       }
 
-      console.log('🔐 Auth token obtained, calling API...');
-
       const response = await fetch('https://tvjqpmxugitehucwhdbk.supabase.co/functions/v1/therapy-api?action=getSessions', {
         method: 'GET',
         headers: {
@@ -57,15 +55,7 @@ export const useTherapySessions = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ getSessions error response:', errorText);
-        
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: errorText };
-        }
-        
-        throw new Error(errorData.error || `HTTP ${response.status}: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
@@ -110,8 +100,6 @@ export const useTherapySessions = () => {
         return null;
       }
 
-      console.log('🔐 Auth token obtained, calling createSession API...');
-
       const response = await fetch('https://tvjqpmxugitehucwhdbk.supabase.co/functions/v1/therapy-api?action=createSession', {
         method: 'POST',
         headers: {
@@ -129,15 +117,7 @@ export const useTherapySessions = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ createSession error response:', errorText);
-        
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: errorText };
-        }
-        
-        throw new Error(errorData.error || `HTTP ${response.status}: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
