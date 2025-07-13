@@ -26,7 +26,11 @@ export const useTherapySessions = () => {
   }, [user]);
 
   const fetchSessions = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('❌ No user found for fetching sessions');
+      setLoading(false);
+      return;
+    }
 
     try {
       console.log('🔍 Fetching sessions for user:', user.id);
@@ -38,6 +42,8 @@ export const useTherapySessions = () => {
         return;
       }
 
+      console.log('🔐 Auth token obtained, calling API...');
+
       const response = await fetch('/supabase/functions/v1/therapy-api?action=getSessions', {
         method: 'GET',
         headers: {
@@ -46,13 +52,24 @@ export const useTherapySessions = () => {
         },
       });
 
+      console.log('📡 getSessions response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch sessions');
+        const errorText = await response.text();
+        console.error('❌ getSessions error response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        
+        throw new Error(errorData.error || `HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('📋 Found', data.sessions?.length || 0, 'sessions');
+      console.log('📋 getSessions response data:', data);
 
       const transformedData = (data.sessions || []).map(session => ({
         id: session.id,
@@ -63,30 +80,37 @@ export const useTherapySessions = () => {
         user_id: user.id
       }));
 
+      console.log('✅ Sessions transformed:', transformedData.length, 'sessions');
       setSessions(transformedData);
       
       if (!currentSession && transformedData.length > 0) {
         setCurrentSession(transformedData[0]);
+        console.log('🎯 Set current session to:', transformedData[0].id);
       }
     } catch (error) {
       console.error('❌ Error fetching sessions:', error);
-      toast.error('Failed to load therapy sessions');
+      toast.error('Failed to load therapy sessions: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const createSession = async (mode: string = 'evolve', title: string = 'New Session') => {
-    if (!user) return null;
+    if (!user) {
+      console.log('❌ No user found for creating session');
+      return null;
+    }
 
     try {
-      console.log('📝 Creating new session:', { mode, title });
+      console.log('📝 Creating new session:', { mode, title, userId: user.id });
       const token = (await supabase.auth.getSession()).data.session?.access_token;
       
       if (!token) {
         console.error('❌ No auth token available');
         return null;
       }
+
+      console.log('🔐 Auth token obtained, calling createSession API...');
 
       const response = await fetch('/supabase/functions/v1/therapy-api?action=createSession', {
         method: 'POST',
@@ -100,13 +124,24 @@ export const useTherapySessions = () => {
         }),
       });
 
+      console.log('📡 createSession response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create session');
+        const errorText = await response.text();
+        console.error('❌ createSession error response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        
+        throw new Error(errorData.error || `HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('✅ Session created successfully:', data.session.id);
+      console.log('✅ createSession response data:', data);
 
       const newSession: TherapySession = {
         id: data.session.id,
@@ -117,12 +152,13 @@ export const useTherapySessions = () => {
         user_id: data.session.user_id
       };
 
+      console.log('🎯 New session created:', newSession.id);
       setSessions(prev => [newSession, ...prev]);
       setCurrentSession(newSession);
       return newSession;
     } catch (error) {
       console.error('❌ Error creating session:', error);
-      toast.error('Failed to create new session');
+      toast.error('Failed to create new session: ' + error.message);
       return null;
     }
   };
@@ -131,6 +167,8 @@ export const useTherapySessions = () => {
     if (!user) return;
 
     try {
+      console.log('📝 Updating session:', sessionId, updates);
+      
       const dbUpdates: any = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.mode !== undefined) dbUpdates.current_mode = updates.mode;
@@ -142,11 +180,12 @@ export const useTherapySessions = () => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error updating session:', error);
-        toast.error('Failed to update session');
+        console.error('❌ Error updating session:', error);
+        toast.error('Failed to update session: ' + error.message);
         return;
       }
 
+      console.log('✅ Session updated successfully');
       setSessions(prev => prev.map(session => 
         session.id === sessionId 
           ? { ...session, ...updates }
@@ -157,8 +196,8 @@ export const useTherapySessions = () => {
         setCurrentSession(prev => prev ? { ...prev, ...updates } : null);
       }
     } catch (error) {
-      console.error('Error updating session:', error);
-      toast.error('Failed to update session');
+      console.error('❌ Error updating session:', error);
+      toast.error('Failed to update session: ' + error.message);
     }
   };
 
@@ -166,6 +205,8 @@ export const useTherapySessions = () => {
     if (!user) return;
 
     try {
+      console.log('🗑️ Deleting session:', sessionId);
+      
       const { error: messagesError } = await supabase
         .from('chat_messages')
         .delete()
@@ -173,8 +214,8 @@ export const useTherapySessions = () => {
         .eq('user_id', user.id);
 
       if (messagesError) {
-        console.error('Error deleting messages:', messagesError);
-        toast.error('Failed to delete session messages');
+        console.error('❌ Error deleting messages:', messagesError);
+        toast.error('Failed to delete session messages: ' + messagesError.message);
         return;
       }
 
@@ -185,11 +226,12 @@ export const useTherapySessions = () => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error deleting session:', error);
-        toast.error('Failed to delete session');
+        console.error('❌ Error deleting session:', error);
+        toast.error('Failed to delete session: ' + error.message);
         return;
       }
 
+      console.log('✅ Session deleted successfully');
       setSessions(prev => prev.filter(session => session.id !== sessionId));
       
       if (currentSession?.id === sessionId) {
@@ -197,8 +239,8 @@ export const useTherapySessions = () => {
         setCurrentSession(remainingSessions.length > 0 ? remainingSessions[0] : null);
       }
     } catch (error) {
-      console.error('Error deleting session:', error);
-      toast.error('Failed to delete session');
+      console.error('❌ Error deleting session:', error);
+      toast.error('Failed to delete session: ' + error.message);
     }
   };
 

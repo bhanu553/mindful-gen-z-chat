@@ -57,21 +57,23 @@ interface Database {
 }
 
 serve(async (req) => {
+  console.log('🚀 Therapy API Request:', req.method, req.url)
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log('🚀 Therapy API called')
-    
+    // Environment variables check
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
 
-    console.log('Environment check:', {
+    console.log('🔍 Environment check:', {
       hasSupabaseUrl: !!supabaseUrl,
       hasServiceKey: !!supabaseServiceKey,
-      hasOpenAIKey: !!openaiApiKey
+      hasOpenAIKey: !!openaiApiKey,
+      supabaseUrl: supabaseUrl?.substring(0, 30) + '...',
     })
 
     if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
@@ -89,7 +91,9 @@ serve(async (req) => {
       })
     }
 
+    // Initialize Supabase client
     const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey)
+    console.log('✅ Supabase client initialized')
 
     // Get auth token from request
     const authHeader = req.headers.get('authorization')
@@ -103,10 +107,12 @@ serve(async (req) => {
 
     // Verify user with auth token
     const token = authHeader.replace('Bearer ', '')
+    console.log('🔐 Verifying auth token...')
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
-      console.error('❌ Authentication failed:', authError)
+      console.error('❌ Authentication failed:', authError?.message)
       return new Response(JSON.stringify({ error: 'Invalid authentication' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -115,11 +121,12 @@ serve(async (req) => {
 
     console.log('✅ User authenticated:', user.id)
 
+    // Parse URL to get action
     const url = new URL(req.url)
     const action = url.searchParams.get('action')
-
     console.log(`📋 Action requested: ${action}`)
 
+    // Route to appropriate handler
     switch (action) {
       case 'createSession':
         return await handleCreateSession(req, supabase, user.id)
@@ -156,6 +163,8 @@ serve(async (req) => {
 })
 
 async function handleCreateSession(req: Request, supabase: any, userId: string) {
+  console.log('📝 Creating new session for user:', userId)
+  
   try {
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -165,7 +174,7 @@ async function handleCreateSession(req: Request, supabase: any, userId: string) 
     }
 
     const { title, mode } = await req.json()
-    console.log('📝 Creating session:', { title, mode, userId })
+    console.log('📝 Session details:', { title, mode, userId })
 
     const sessionData = {
       user_id: userId,
@@ -174,6 +183,7 @@ async function handleCreateSession(req: Request, supabase: any, userId: string) 
       message_count: 0
     }
 
+    console.log('💾 Inserting session into database...')
     const { data: session, error } = await supabase
       .from('chat_sessions')
       .insert(sessionData)
@@ -192,7 +202,6 @@ async function handleCreateSession(req: Request, supabase: any, userId: string) 
     }
 
     console.log('✅ Session created successfully:', session.id)
-
     return new Response(JSON.stringify({ session }), {
       status: 201,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -207,6 +216,8 @@ async function handleCreateSession(req: Request, supabase: any, userId: string) 
 }
 
 async function handleSendMessage(req: Request, supabase: any, userId: string, openaiApiKey: string) {
+  console.log('💬 Processing message for user:', userId)
+  
   try {
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -216,7 +227,12 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     }
 
     const { message, sessionId, mode } = await req.json()
-    console.log('💬 Processing message:', { message: message?.substring(0, 50), sessionId, mode })
+    console.log('💬 Message details:', { 
+      messageLength: message?.length, 
+      sessionId, 
+      mode,
+      userId 
+    })
 
     if (!message || !sessionId) {
       return new Response(JSON.stringify({ error: 'Message and sessionId are required' }), {
@@ -226,6 +242,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     }
 
     // Check daily message limit (50 for free users)
+    console.log('🔍 Checking daily message limit...')
     const today = new Date()
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
@@ -237,6 +254,8 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
       .eq('role', 'user')
       .gte('created_at', startOfDay.toISOString())
       .lt('created_at', endOfDay.toISOString())
+
+    console.log('📊 Daily message count:', messageCount)
 
     if (messageCount >= 50) {
       console.log('❌ Daily limit reached for user:', userId)
@@ -250,6 +269,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     }
 
     // Verify session exists and belongs to user
+    console.log('🔍 Verifying session ownership...')
     const { data: session, error: sessionError } = await supabase
       .from('chat_sessions')
       .select('*')
@@ -258,14 +278,17 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
       .single()
 
     if (sessionError || !session) {
-      console.error('❌ Session not found:', sessionError)
+      console.error('❌ Session not found or access denied:', sessionError)
       return new Response(JSON.stringify({ error: 'Session not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
+    console.log('✅ Session verified:', session.id)
+
     // Get recent message history for context
+    console.log('📚 Fetching conversation history...')
     const { data: recentMessages } = await supabase
       .from('chat_messages')
       .select('role, content')
@@ -281,10 +304,13 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
         content: msg.content
       }))
 
+    console.log('📚 Conversation history length:', conversationHistory.length)
+
     // Get system prompt based on mode
     const systemPrompt = getSystemPrompt(mode || 'evolve')
+    console.log('🎯 Using mode:', mode || 'evolve')
 
-    // Call OpenAI GPT-4o
+    // Prepare OpenAI messages
     const openAIMessages = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory,
@@ -292,6 +318,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     ]
 
     console.log('🤖 Calling OpenAI API with GPT-4o...')
+    console.log('📝 Message count for OpenAI:', openAIMessages.length)
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -307,10 +334,15 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
       }),
     })
 
+    console.log('📡 OpenAI response status:', openAIResponse.status)
+
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text()
       console.error('❌ OpenAI API error:', errorText)
-      return new Response(JSON.stringify({ error: 'AI service temporarily unavailable' }), {
+      return new Response(JSON.stringify({ 
+        error: 'AI service temporarily unavailable',
+        details: errorText
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -319,9 +351,10 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     const openAIData = await openAIResponse.json()
     const aiReply = openAIData.choices[0].message.content
 
-    console.log('✅ OpenAI response received')
+    console.log('✅ OpenAI response received, length:', aiReply?.length)
 
     // Save user message
+    console.log('💾 Saving user message...')
     const { error: userMessageError } = await supabase
       .from('chat_messages')
       .insert({
@@ -334,13 +367,19 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     if (userMessageError) {
       console.error('❌ Error saving user message:', userMessageError)
-      return new Response(JSON.stringify({ error: 'Failed to save user message' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Failed to save user message',
+        details: userMessageError.message
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
+    console.log('✅ User message saved')
+
     // Save AI reply
+    console.log('💾 Saving AI reply...')
     const { error: aiMessageError } = await supabase
       .from('chat_messages')
       .insert({
@@ -353,13 +392,19 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     if (aiMessageError) {
       console.error('❌ Error saving AI message:', aiMessageError)
-      return new Response(JSON.stringify({ error: 'Failed to save AI response' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Failed to save AI response',
+        details: aiMessageError.message
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
+    console.log('✅ AI message saved')
+
     // Update session message count
+    console.log('📊 Updating session message count...')
     await supabase
       .from('chat_sessions')
       .update({ message_count: session.message_count + 1 })
@@ -378,7 +423,10 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     })
   } catch (error) {
     console.error('❌ handleSendMessage error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      stack: error.stack
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
@@ -386,9 +434,9 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 }
 
 async function handleGetSessions(supabase: any, userId: string) {
+  console.log('📋 Fetching sessions for user:', userId)
+  
   try {
-    console.log('📋 Fetching sessions for user:', userId)
-    
     const { data: sessions, error } = await supabase
       .from('chat_sessions')
       .select('id, title, current_mode, message_count, created_at')
@@ -397,14 +445,16 @@ async function handleGetSessions(supabase: any, userId: string) {
 
     if (error) {
       console.error('❌ Error fetching sessions:', error)
-      return new Response(JSON.stringify({ error: 'Failed to fetch sessions' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Failed to fetch sessions',
+        details: error.message
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     console.log('✅ Found sessions:', sessions?.length || 0)
-
     return new Response(JSON.stringify({ sessions: sessions || [] }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
@@ -418,17 +468,16 @@ async function handleGetSessions(supabase: any, userId: string) {
 }
 
 async function handleGetMessages(url: URL, supabase: any, userId: string) {
+  const sessionId = url.searchParams.get('sessionId')
+  console.log('💬 Fetching messages for session:', sessionId, 'user:', userId)
+  
   try {
-    const sessionId = url.searchParams.get('sessionId')
-    
     if (!sessionId) {
       return new Response(JSON.stringify({ error: 'Session ID is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    console.log('💬 Fetching messages for session:', sessionId)
 
     // Verify session belongs to user
     const { data: session, error: sessionError } = await supabase
@@ -439,7 +488,7 @@ async function handleGetMessages(url: URL, supabase: any, userId: string) {
       .single()
 
     if (sessionError || !session) {
-      console.error('❌ Session not found:', sessionError)
+      console.error('❌ Session not found or access denied:', sessionError)
       return new Response(JSON.stringify({ error: 'Session not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -455,14 +504,16 @@ async function handleGetMessages(url: URL, supabase: any, userId: string) {
 
     if (error) {
       console.error('❌ Error fetching messages:', error)
-      return new Response(JSON.stringify({ error: 'Failed to fetch messages' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Failed to fetch messages',
+        details: error.message
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     console.log('✅ Found messages:', messages?.length || 0)
-
     return new Response(JSON.stringify({ messages: messages || [] }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
@@ -476,9 +527,9 @@ async function handleGetMessages(url: URL, supabase: any, userId: string) {
 }
 
 async function handleGetUserStats(supabase: any, userId: string) {
+  console.log('📊 Fetching user stats for:', userId)
+  
   try {
-    console.log('📊 Fetching user stats for:', userId)
-    
     const today = new Date()
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
