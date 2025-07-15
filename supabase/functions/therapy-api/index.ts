@@ -9,39 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 }
 
-// Dynamic mode detection function
-function detectOptimalMode(userMessage: string, conversationHistory: string[] = []): string {
-  const message = userMessage.toLowerCase();
-  
-  const modeKeywords = {
-    reflect: ['feel', 'think', 'confused', 'processing', 'understand', 'why', 'emotion'],
-    recover: ['trauma', 'hurt', 'healing', 'past', 'difficult', 'pain', 'overcome', 'move on'],
-    rebuild: ['relationship', 'trust', 'self', 'identity', 'confidence', 'who am i', 'boundary'],
-    evolve: ['grow', 'change', 'future', 'goals', 'potential', 'transform', 'become', 'next level']
-  };
-  
-  const scores: Record<string, number> = {};
-  for (const [mode, keywords] of Object.entries(modeKeywords)) {
-    scores[mode] = keywords.filter(keyword => message.includes(keyword)).length;
-  }
-  
-  const bestMode = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-  
-  return scores[bestMode] > 0 ? bestMode : 'reflect';
-}
-
-// Generate transition messages
-function getTransitionMessage(newMode: string): string {
-  const transitions = {
-    reflect: "🟣 Shifting to Reflect Mode – Let's process your thoughts and emotions together",
-    recover: "🔵 Transitioning to Recover Mode – I'm here to support your healing journey", 
-    rebuild: "🟢 Moving to Rebuild Mode – Time to reconstruct and strengthen your foundation",
-    evolve: "🟡 Entering Evolve Mode – Ready to grow beyond your current limitations"
-  };
-  
-  return transitions[newMode as keyof typeof transitions] || transitions.reflect;
-}
-
 interface Database {
   public: {
     Tables: {
@@ -262,12 +229,11 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
       })
     }
 
-    const { message, sessionId, conversationHistory = [], previousMode } = await req.json()
+    const { message, sessionId, mode } = await req.json()
     console.log('💬 Message details:', { 
       messageLength: message?.length, 
       sessionId, 
-      previousMode,
-      conversationHistoryLength: conversationHistory?.length,
+      mode,
       userId,
       messagePreview: message?.substring(0, 50) + '...'
     })
@@ -279,15 +245,6 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    // Detect optimal mode based on user message
-    const detectedMode = detectOptimalMode(message, conversationHistory)
-    const modeChanged = previousMode && previousMode !== detectedMode
-    console.log('🔍 Mode detection:', { 
-      previousMode, 
-      detectedMode, 
-      modeChanged 
-    })
 
     // Check daily message limit (50 for free users)
     console.log('🔍 Checking daily message limit...')
@@ -347,44 +304,41 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ Session verified:', session.id)
 
-    // Get recent message history for context (if not provided in request)
-    let contextHistory = conversationHistory
-    if (!contextHistory || contextHistory.length === 0) {
-      console.log('📚 Fetching conversation history from database...')
-      const { data: recentMessages, error: messagesError } = await supabase
-        .from('chat_messages')
-        .select('role, content')
-        .eq('session_id', sessionId)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(10)
+    // Get recent message history for context
+    console.log('📚 Fetching conversation history...')
+    const { data: recentMessages, error: messagesError } = await supabase
+      .from('chat_messages')
+      .select('role, content')
+      .eq('session_id', sessionId)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(10)
 
-      if (messagesError) {
-        console.error('❌ Error fetching messages:', messagesError)
-      }
-
-      contextHistory = (recentMessages || [])
-        .reverse()
-        .map(msg => msg.content)
+    if (messagesError) {
+      console.error('❌ Error fetching messages:', messagesError)
     }
 
-    console.log('📚 Conversation history length:', contextHistory.length)
+    const conversationHistory = (recentMessages || [])
+      .reverse()
+      .map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }))
 
-    // Get system prompt based on detected mode
-    const systemPrompt = getSystemPrompt(detectedMode)
-    console.log('🎯 Using detected mode:', detectedMode)
+    console.log('📚 Conversation history length:', conversationHistory.length)
+
+    // Get system prompt based on mode
+    const systemPrompt = getSystemPrompt(mode || 'evolve')
+    console.log('🎯 Using mode:', mode || 'evolve')
 
     // Prepare OpenAI messages
     const openAIMessages = [
       { role: 'system', content: systemPrompt },
-      ...contextHistory.slice(-8).map((content, index) => ({
-        role: index % 2 === 0 ? 'user' : 'assistant',
-        content
-      })),
+      ...conversationHistory,
       { role: 'user', content: message }
     ]
 
-    console.log('🤖 Calling OpenAI API with GPT-4o-mini...')
+    console.log('🤖 Calling OpenAI API with GPT-4.1...')
     console.log('📝 Message count for OpenAI:', openAIMessages.length)
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -394,7 +348,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: openAIMessages,
         temperature: 0.8,
         max_tokens: 500,
@@ -435,7 +389,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ OpenAI response received, length:', aiReply?.length)
 
-    // Save user message with detected mode
+    // Save user message
     console.log('💾 Saving user message...')
     const { error: userMessageError } = await supabase
       .from('chat_messages')
@@ -444,7 +398,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
         user_id: userId,
         content: message,
         role: 'user',
-        mode: detectedMode
+        mode: mode || 'evolve'
       })
 
     if (userMessageError) {
@@ -460,7 +414,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ User message saved')
 
-    // Save AI reply with detected mode
+    // Save AI reply
     console.log('💾 Saving AI reply...')
     const { error: aiMessageError } = await supabase
       .from('chat_messages')
@@ -469,7 +423,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
         user_id: userId,
         content: aiReply,
         role: 'assistant',
-        mode: detectedMode
+        mode: mode || 'evolve'
       })
 
     if (aiMessageError) {
@@ -485,14 +439,11 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ AI message saved')
 
-    // Update session message count and current mode
-    console.log('📊 Updating session...')
+    // Update session message count
+    console.log('📊 Updating session message count...')
     const { error: updateError } = await supabase
       .from('chat_sessions')
-      .update({ 
-        message_count: session.message_count + 1,
-        current_mode: detectedMode
-      })
+      .update({ message_count: session.message_count + 1 })
       .eq('id', sessionId)
       .eq('user_id', userId)
 
@@ -502,21 +453,12 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ Message exchange completed successfully')
 
-    // Prepare response with mode information
-    const response = {
-      message: aiReply,
-      detectedMode,
-      modeChanged,
+    return new Response(JSON.stringify({
+      reply: aiReply,
+      mode: mode || 'evolve',
       sessionId,
       remainingMessages: Math.max(0, 50 - ((messageCount || 0) + 1))
-    }
-
-    // Add transition message if mode changed
-    if (modeChanged) {
-      response.transitionMessage = getTransitionMessage(detectedMode)
-    }
-
-    return new Response(JSON.stringify(response), {
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
