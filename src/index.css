@@ -1,6 +1,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -43,11 +44,16 @@
     --therapy-rebuild: 147 44% 58%;
     --therapy-evolve: 48 95% 59%;
 
-    /* Onboarding Colors - Soft Blue & Lavender Palette */
-    --lavender: 266 47% 87%;
-    --lavender-light: 270 20% 95%;
-    --blue-soft: 213 40% 92%;
-    --blue-calm: 213 70% 85%;
+  /* Onboarding Colors - Soft Blue & Lavender Palette */
+  --lavender: 266 47% 87%;
+  --lavender-light: 270 20% 95%;
+  --blue-soft: 213 40% 92%;
+  --blue-calm: 213 70% 85%;
+
+  /* Innerflow Colors - Calm Blue-Purple Gradients */
+  --innerflow-primary: 220 70% 60%;
+  --innerflow-secondary: 260 50% 70%;
+  --innerflow-accent: 240 60% 80%;
   }
 
   * {
@@ -106,9 +112,16 @@
   }
   
   .glass-effect {
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .premium-glassmorphism {
+    backdrop-filter: blur(20px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   }
   
   .text-gradient {

@@ -12,8 +12,8 @@ const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: 'Therapy', path: '/therapy', requireAuth: true },
-    { name: 'Dashboard', path: '/dashboard', requireAuth: true },
+    { name: 'Innerflow', path: '/therapy', requireAuth: true },
+    { name: 'Home', path: '/dashboard', requireAuth: true },
     { name: 'Summary', path: '/summary', premium: true, requireAuth: true },
     { name: 'Pricing', path: '#pricing', scroll: true },
   ];
