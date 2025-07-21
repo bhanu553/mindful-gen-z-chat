@@ -266,6 +266,90 @@ export type Database = {
         }
         Relationships: []
       }
+      user_onboarding: {
+        Row: {
+          age: number | null
+          ai_substitute_consent: boolean | null
+          calendar_reminders_consent: boolean | null
+          completed: boolean | null
+          country: string | null
+          created_at: string
+          current_crisis: boolean | null
+          current_medication: boolean | null
+          current_struggles: string[] | null
+          data_processing_consent: boolean | null
+          email: string | null
+          emergency_responsibility_consent: boolean | null
+          full_name: string | null
+          gender: string | null
+          id: string
+          last_self_harm_occurrence: string | null
+          mental_health_rating: number | null
+          other_struggles: string | null
+          phone_number: string | null
+          previous_therapy: boolean | null
+          self_harm_thoughts: boolean | null
+          therapy_types: string[] | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          ai_substitute_consent?: boolean | null
+          calendar_reminders_consent?: boolean | null
+          completed?: boolean | null
+          country?: string | null
+          created_at?: string
+          current_crisis?: boolean | null
+          current_medication?: boolean | null
+          current_struggles?: string[] | null
+          data_processing_consent?: boolean | null
+          email?: string | null
+          emergency_responsibility_consent?: boolean | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          last_self_harm_occurrence?: string | null
+          mental_health_rating?: number | null
+          other_struggles?: string | null
+          phone_number?: string | null
+          previous_therapy?: boolean | null
+          self_harm_thoughts?: boolean | null
+          therapy_types?: string[] | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          ai_substitute_consent?: boolean | null
+          calendar_reminders_consent?: boolean | null
+          completed?: boolean | null
+          country?: string | null
+          created_at?: string
+          current_crisis?: boolean | null
+          current_medication?: boolean | null
+          current_struggles?: string[] | null
+          data_processing_consent?: boolean | null
+          email?: string | null
+          emergency_responsibility_consent?: boolean | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          last_self_harm_occurrence?: string | null
+          mental_health_rating?: number | null
+          other_struggles?: string | null
+          phone_number?: string | null
+          previous_therapy?: boolean | null
+          self_harm_thoughts?: boolean | null
+          therapy_types?: string[] | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

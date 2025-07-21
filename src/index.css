@@ -42,6 +42,12 @@
     --therapy-recover: 199 65% 65%;
     --therapy-rebuild: 147 44% 58%;
     --therapy-evolve: 48 95% 59%;
+
+    /* Onboarding Colors - Soft Blue & Lavender Palette */
+    --lavender: 266 47% 87%;
+    --lavender-light: 270 20% 95%;
+    --blue-soft: 213 40% 92%;
+    --blue-calm: 213 70% 85%;
   }
 
   * {

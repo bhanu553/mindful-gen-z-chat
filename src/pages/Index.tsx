@@ -70,7 +70,7 @@ const Index = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
-              to="/therapy" 
+              to="/onboarding" 
               className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 flex items-center justify-center group"
             >
               Start Your Journey
@@ -287,7 +287,7 @@ const Index = () => {
             Join thousands of users who have already started their journey to better mental health with EchoMind's AI-powered support.
           </p>
           <Link 
-            to="/therapy" 
+            to="/onboarding" 
             className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
           >
             Start Your Free Trial Today

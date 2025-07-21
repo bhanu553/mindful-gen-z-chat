@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import FreePlanDetails from "./pages/FreePlanDetails";
 import PremiumPlanDetails from "./pages/PremiumPlanDetails";
 import Admin from "./pages/Admin";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,11 @@ const App = () => (
                 <Route path="/" element={
                   <ProtectedRoute requireAuth={false}>
                     <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/onboarding" element={
+                  <ProtectedRoute>
+                    <Onboarding />
                   </ProtectedRoute>
                 } />
                 <Route path="/therapy" element={
