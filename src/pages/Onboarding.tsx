@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 
 interface OnboardingFormData {
   // Personal Details
@@ -47,8 +48,17 @@ interface OnboardingFormData {
 const Onboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isOnboardingComplete, isLoading } = useOnboardingStatus();
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Redirect if onboarding is already complete
+  useEffect(() => {
+    if (!isLoading && isOnboardingComplete) {
+      navigate('/therapy');
+    }
+  }, [isOnboardingComplete, isLoading, navigate]);
+
   const [formData, setFormData] = useState<OnboardingFormData>({
     full_name: '',
     email: user?.email || '',
@@ -71,6 +81,20 @@ const Onboarding = () => {
     emergency_responsibility_consent: false,
     calendar_reminders_consent: false,
   });
+
+  // Show loading while checking onboarding status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg animate-pulse mx-auto mb-4">
+            <Brain className="w-8 h-8 text-white" />
+          </div>
+          <p className="text-white">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const sections = [
     { title: 'Personal Details', icon: Heart },
@@ -549,7 +573,7 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-lavender-50/50 to-white dark:from-blue-950/20 dark:via-purple-950/20 dark:to-background">
+    <div className="min-h-screen bg-black">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -558,8 +582,8 @@ const Onboarding = () => {
               <Brain className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">EchoMind</h1>
-          <p className="text-xl text-muted-foreground italic">AI Therapy. Real Healing.</p>
+          <h1 className="text-4xl font-bold text-white mb-2">EchoMind</h1>
+          <p className="text-xl text-white italic">AI Therapy. Real Healing.</p>
         </div>
 
         {/* Progress Bar */}
@@ -572,11 +596,11 @@ const Onboarding = () => {
 
               return (
                 <div key={index} className="flex items-center">
-                  <div className={`flex flex-col items-center ${isActive || isCompleted ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <div className={`flex flex-col items-center ${isActive || isCompleted ? 'text-blue-400' : 'text-white/60'}`}>
                     <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all ${
-                      isActive ? 'border-primary bg-primary/10' : 
-                      isCompleted ? 'border-primary bg-primary text-primary-foreground' : 
-                      'border-muted-foreground/30'
+                      isActive ? 'border-blue-400 bg-blue-400/20 shadow-lg shadow-blue-400/25' : 
+                      isCompleted ? 'border-blue-400 bg-blue-400 text-white' : 
+                      'border-white/30'
                     }`}>
                       {isCompleted ? (
                         <CheckCircle className="w-6 h-6" />
@@ -584,10 +608,10 @@ const Onboarding = () => {
                         <Icon className="w-6 h-6" />
                       )}
                     </div>
-                    <span className="text-xs text-center font-medium">{section.title}</span>
+                    <span className="text-xs text-center font-medium text-white">{section.title}</span>
                   </div>
                   {index < sections.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                    <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-blue-400' : 'bg-white/30'}`} />
                   )}
                 </div>
               );
@@ -596,13 +620,13 @@ const Onboarding = () => {
         </div>
 
         {/* Form Content */}
-        <Card className="max-w-4xl mx-auto shadow-lg">
+        <Card className="max-w-4xl mx-auto shadow-lg bg-gray-900 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">
+            <CardTitle className="text-2xl text-center text-white">
               {sections[currentSection].title}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="onboarding-form">
             {renderSection()}
           </CardContent>
         </Card>

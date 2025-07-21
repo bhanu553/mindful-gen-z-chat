@@ -1,13 +1,32 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowRight, Brain, Heart, MessageSquare, TrendingUp, Shield, Sparkles, Check } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
 import PaymentModal from '@/components/ui/payment-modal';
+import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isOnboardingComplete, isLoading } = useOnboardingStatus();
+
+  const handleStartJourney = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
+    if (isOnboardingComplete) {
+      navigate('/therapy');
+    } else {
+      navigate('/onboarding');
+    }
+  };
   
   const heroImages = [
     '/lovable-uploads/7b219328-62cd-48c3-ba2a-f138629bc9db.png',
@@ -69,13 +88,14 @@ const Index = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/onboarding" 
-              className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 flex items-center justify-center group"
+            <button
+              onClick={handleStartJourney}
+              disabled={isLoading}
+              className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Start Your Journey
+              {isLoading ? 'Loading...' : 'Start Your Journey'}
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            </button>
             <Link 
               to="/dashboard" 
               className="glass-effect text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all duration-300"
@@ -286,13 +306,14 @@ const Index = () => {
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Join thousands of users who have already started their journey to better mental health with EchoMind's AI-powered support.
           </p>
-          <Link 
-            to="/onboarding" 
-            className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
+          <button
+            onClick={handleStartJourney}
+            disabled={isLoading}
+            className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Start Your Free Trial Today
+            {isLoading ? 'Loading...' : 'Start Your Free Trial Today'}
             <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          </button>
         </div>
       </section>
 

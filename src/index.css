@@ -211,4 +211,35 @@
     background-position: center;
     transition: all 0.5s ease;
   }
+
+  /* Onboarding form dark mode styles */
+  .onboarding-form label {
+    color: white !important;
+  }
+
+  .onboarding-form input,
+  .onboarding-form textarea,
+  .onboarding-form [data-radix-select-trigger] {
+    background-color: rgb(55 65 81) !important;
+    border-color: rgb(75 85 99) !important;
+    color: white !important;
+  }
+
+  .onboarding-form input::placeholder,
+  .onboarding-form textarea::placeholder {
+    color: rgb(156 163 175) !important;
+  }
+
+  .onboarding-form .text-muted-foreground {
+    color: rgb(156 163 175) !important;
+  }
+
+  .onboarding-form [data-radix-checkbox-root] {
+    border-color: rgb(75 85 99) !important;
+  }
+
+  .onboarding-form input:disabled {
+    background-color: rgb(31 41 55) !important;
+    color: rgb(156 163 175) !important;
+  }
 }
