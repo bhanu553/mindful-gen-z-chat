@@ -11,7 +11,7 @@ import Footer from "@/components/ui/footer";
 import Index from "./pages/Index";
 import Therapy from "./pages/Therapy";
 import Dashboard from "./pages/Dashboard";
-import Summary from "./pages/Summary";
+
 import Login from "./pages/Login";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -56,11 +56,6 @@ const App = () => (
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/summary" element={
-                  <ProtectedRoute>
-                    <Summary />
                   </ProtectedRoute>
                 } />
                 <Route path="/free-plan-details" element={

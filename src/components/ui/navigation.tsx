@@ -14,8 +14,7 @@ const Navigation = () => {
   const navItems = [
     { name: 'Innerflow', path: '/therapy', requireAuth: true },
     { name: 'Dashboard', path: '/dashboard', requireAuth: true },
-    { name: 'Reflections', path: '/summary', premium: true, requireAuth: true },
-    { name: 'Support Vault', path: '#pricing', scroll: true },
+    { name: 'Pricing Plans', path: '#pricing', scroll: true },
   ];
 
   const isActive = (path: string) => {
@@ -49,10 +48,6 @@ const Navigation = () => {
     
     if (item.requireAuth && !user) {
       navigate('/login');
-      return;
-    }
-    if (item.premium && !isPremium) {
-      // Could show premium modal here
       return;
     }
     navigate(item.path);
@@ -90,34 +85,19 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => {
-              if (item.premium && !isPremium) {
-                return (
-                  <div key={item.name} className="relative">
-                    <span className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground cursor-not-allowed">
-                      {item.name}
-                    </span>
-                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-1 rounded-full">
-                      PRO
-                    </span>
-                  </div>
-                );
-              }
-
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavClick(item)}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
-                >
-                  {item.name}
-                </button>
-              );
-            })}
+            {navItems.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => handleNavClick(item)}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? 'text-primary bg-primary/10'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                }`}
+              >
+                {item.name}
+              </button>
+            ))}
             
             {user ? (
               <div className="flex items-center space-x-4">
@@ -183,14 +163,8 @@ const Navigation = () => {
                       ? 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
-                  disabled={item.premium && !isPremium}
                 >
                   {item.name}
-                  {item.premium && !isPremium && (
-                    <span className="ml-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-1 rounded-full">
-                      PRO
-                    </span>
-                  )}
                 </button>
               ))}
               
