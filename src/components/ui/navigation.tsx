@@ -13,7 +13,7 @@ const Navigation = () => {
 
   const navItems = [
     { name: 'Innerflow', path: '/therapy', requireAuth: true },
-    { name: 'Home', path: '/dashboard', requireAuth: true },
+    { name: 'Dashboard', path: '/dashboard', requireAuth: true },
     { name: 'Reflections', path: '/summary', premium: true, requireAuth: true },
     { name: 'Support Vault', path: '#pricing', scroll: true },
   ];
