@@ -12,10 +12,10 @@ const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: 'Therapy', path: '/therapy', requireAuth: true },
-    { name: 'Dashboard', path: '/dashboard', requireAuth: true },
-    { name: 'Summary', path: '/summary', premium: true, requireAuth: true },
-    { name: 'Pricing', path: '#pricing', scroll: true },
+    { name: 'Innerflow', path: '/therapy', requireAuth: true },
+    { name: 'Home', path: '/dashboard', requireAuth: true },
+    { name: 'Reflections', path: '/summary', premium: true, requireAuth: true },
+    { name: 'Support Vault', path: '#pricing', scroll: true },
   ];
 
   const isActive = (path: string) => {

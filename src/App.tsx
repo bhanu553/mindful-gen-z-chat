@@ -48,7 +48,9 @@ const App = () => (
                 } />
                 <Route path="/therapy" element={
                   <ProtectedRoute>
-                    <Therapy />
+                    <div className="min-h-screen">
+                      <Therapy />
+                    </div>
                   </ProtectedRoute>
                 } />
                 <Route path="/dashboard" element={
