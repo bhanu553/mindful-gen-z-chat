@@ -14,7 +14,6 @@ export default async function handler(req, res) {
     
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-    const openaiApiKey = process.env.OPENAI_API_KEY;
     
     const healthData = {
       status: 'healthy',
@@ -25,12 +24,6 @@ export default async function handler(req, res) {
           details: {
             url_configured: !!supabaseUrl,
             anon_key_configured: !!supabaseAnonKey
-          }
-        },
-        openai: {
-          status: openaiApiKey ? 'healthy' : 'unhealthy',
-          details: {
-            api_key_configured: !!openaiApiKey
           }
         },
         environment: {
