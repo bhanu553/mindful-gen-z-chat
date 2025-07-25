@@ -78,13 +78,12 @@ const Index = () => {
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Your AI Companion for
-            <span className="text-gradient block">Emotional Wellness</span>
+            Your AI Therapist for
+            <span className="text-gradient block">Real Healing</span>
           </h1>
           
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Navigate life's challenges with personalized AI therapy. Get instant support, 
-            track your emotional journey, and discover insights that help you thrive.
+            Experience structured therapy sessions that work like $300/hour human therapy - but accessible, private, and available when you need it. No chatbot fluff, just real therapeutic change.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -194,10 +193,10 @@ const Index = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Choose Your Plan
+              Pricing Plans
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Start your emotional wellness journey with our flexible pricing options
+              Start your healing journey
             </p>
           </div>
 
@@ -205,29 +204,29 @@ const Index = () => {
             {/* Free Plan */}
             <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm">
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Free Tier</h3>
                 <div className="text-4xl font-bold text-foreground mb-4">
                   $0<span className="text-lg font-normal text-muted-foreground">/month</span>
                 </div>
-                <p className="text-muted-foreground">Perfect for getting started</p>
+                <p className="text-muted-foreground">Start your healing journey</p>
               </div>
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">50 messages/day</span>
+                  <span className="text-foreground">2 complete therapy session per month</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">5 uploads/day</span>
+                  <span className="text-foreground">Access to intake assessment</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Basic emotional AI support</span>
+                  <span className="text-foreground">Basic mood tracking</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Dynamic Mode Switching (Reflect, Recover, Rebuild, Evolve)</span>
+                  <span className="text-foreground">Emergency crisis resources</span>
                 </li>
               </ul>
 
@@ -235,12 +234,12 @@ const Index = () => {
                 to="/free-plan-details" 
                 className="w-full bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors block text-center"
               >
-                Get Started Free
+                Start Free Session
               </Link>
             </div>
 
             {/* Premium Plan */}
-            <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg relative">
+            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
                   Most Popular
@@ -248,41 +247,41 @@ const Index = () => {
               </div>
 
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-foreground mb-2">Premium</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Premium Therapy</h3>
                 <div className="text-4xl font-bold text-foreground mb-4">
-                  $9.99<span className="text-lg font-normal text-muted-foreground">/month</span>
+                  $49<span className="text-lg font-normal text-muted-foreground">/month</span>
                 </div>
-                <p className="text-muted-foreground">Complete emotional wellness experience</p>
+                <p className="text-muted-foreground">Complete therapeutic experience</p>
               </div>
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">300 messages/day</span>
+                  <span className="text-foreground">16  complete therapy session per month</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">25 uploads/day</span>
+                  <span className="text-foreground">All 6 specialized therapist personas</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Dynamic Mode Switching (Reflect, Recover, Rebuild, Evolve)</span>
+                  <span className="text-foreground">Full 6-phase therapeutic progression</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Full memory storage for therapy sessions</span>
+                  <span className="text-foreground">Between-session support & homework</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Past conversation recall</span>
+                  <span className="text-foreground">Advanced progress analytics</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Early access to future features</span>
+                  <span className="text-foreground">Session-to-session continuity</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">Dedicated growth insights</span>
+                  <span className="text-foreground">Crisis support protocols</span>
                 </li>
               </ul>
               
