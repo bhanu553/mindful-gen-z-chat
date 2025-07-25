@@ -43,45 +43,32 @@ const Therapy = () => {
       isUser: true,
       timestamp: new Date()
     };
-    
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // Simple system message for InnerFlow
-      const systemMessage = {
-        role: 'system',
-        content: 'You are InnerFlow, a deeply empathetic, grounded, structured therapeutic guide helping the user begin their personal transformation.'
-      };
-
-      const messages_for_api = [
-        systemMessage,
-        { role: 'user', content: userInput }
-      ];
-
-      // Call OpenAI API - simple non-streaming version
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Call backend API instead of OpenAI directly
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: 'gpt-4',
-          messages: messages_for_api,
-          temperature: 0.7,
-          max_tokens: 800
-        })
+        body: JSON.stringify({ message: userInput })
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        let errorMsg = 'Failed to get response. Please try again.';
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) errorMsg = errData.error;
+        } catch {}
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
-      const aiResponse = data.choices?.[0]?.message?.content;
+      const aiResponse = data.reply;
 
       if (!aiResponse) {
-        throw new Error('No response from OpenAI');
+        throw new Error('No response from assistant.');
       }
 
       // Add AI response to messages
@@ -91,12 +78,10 @@ const Therapy = () => {
         isUser: false,
         timestamp: new Date()
       };
-      
       setMessages(prev => [...prev, aiMessage]);
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      toast.error('Failed to get response. Please try again.');
+      toast.error(error.message || 'Failed to get response. Please try again.');
       // Remove the user message if we failed
       setMessages(prev => prev.slice(0, -1));
     } finally {
