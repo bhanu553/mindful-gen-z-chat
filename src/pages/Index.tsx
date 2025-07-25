@@ -151,7 +151,7 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">5 Therapy Approaches in One</h3>
               <p className="text-muted-foreground leading-relaxed">
-                CBT + IFS + Somatic + Psychodynamic + ACT - experience what most human therapists specialize in separately. Your AI therapist masters multiple modalities simultaneously.
+                Compassion-Focused + Internal Family Systems + Somatic + Cognitive Behavioral + Existential + Crisis Protocols - access what would require 6 different specialist therapists costing $2,400+ per session combined. Your AI therapeutic team delivers integrated, multi-modal treatment impossible with human practitioners.
               </p>
             </div>
 
@@ -300,10 +300,10 @@ const Index = () => {
       <section className="py-20 gradient-bg">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-            Ready to Transform Your Emotional Wellness?
+            Ready to Experience Real AI Therapy?
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of users who have already started their journey to better mental health with EchoMind's AI-powered support.
+            Join thousands who've moved beyond expensive, limited human therapy to access premium psychological treatment through EchoMind's specialized AI therapist team.
           </p>
           <button
             onClick={handleStartJourney}
