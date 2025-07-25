@@ -198,13 +198,7 @@ const Therapy = () => {
                 </Button>
               </div>
               
-              {/* Word Counter */}
-              <div className="flex justify-between items-center mt-2 px-2">
-                <div />
-                <span className="text-xs text-white/40">
-                  {inputText.length}/300
-                </span>
-              </div>
+              
             </div>
           </div>
         </div>

@@ -149,7 +149,7 @@ const Index = () => {
               <div className="p-3 bg-purple-500/20 rounded-lg w-fit mb-4">
                 <Heart className="w-8 h-8 text-purple-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">5 Therapy Approaches in One</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">6 Premium Therapeutic Modalities Integrated</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Compassion-Focused + Internal Family Systems + Somatic + Cognitive Behavioral + Existential + Crisis Protocols - access what would require 6 different specialist therapists costing $2,400+ per session combined. Your AI therapeutic team delivers integrated, multi-modal treatment impossible with human practitioners.
               </p>
