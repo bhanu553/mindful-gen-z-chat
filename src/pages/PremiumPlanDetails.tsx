@@ -87,67 +87,76 @@ const PremiumPlanDetails = () => {
               <Crown className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Premium Plan
+              EchoMind Premium Plan
             </h1>
             <div className="text-3xl font-bold text-foreground mb-4">
-              $9.99<span className="text-lg font-normal text-muted-foreground"> per month</span>
+              $49<span className="text-lg font-normal text-muted-foreground"> per month</span>
             </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              The complete emotional wellness experience for those serious about their mental health journey and personal growth.
+              The intensive therapeutic experience that delivers breakthrough healing at millionaire-level quality
+              <br/>
+              The complete mental health transformation system for those ready to accelerate their healing journey and achieve lasting psychological change.
             </p>
           </div>
 
           {/* What's Included */}
           <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Complete Premium Features</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Intensive Therapeutic Features 🚀</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">300 Messages Daily</h3>
-                  <p className="text-muted-foreground text-sm">Unlimited conversations for deep therapeutic exploration and continuous support.</p>
+                  <h3 className="font-semibold text-foreground mb-1">16 Deep Therapy Sessions Monthly</h3>
+                  <p className="text-muted-foreground text-sm">Twice-weekly intensive sessions - the same frequency that ultra-wealthy clients pay $3,200+ monthly for. Accelerate your healing timeline from years to months.</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">25 Uploads Daily</h3>
-                  <p className="text-muted-foreground text-sm">Enhanced multimedia support for richer therapy sessions with voice, images, and documents.</p>
+                  <h3 className="font-semibold text-foreground mb-1">Multi-Therapist Specialist Team</h3>
+                  <p className="text-muted-foreground text-sm">Access to all 6 specialized AI therapists based on your evolving needs:<br/>
+                  Dr. Solace (Trauma & Compassion-Focused)<br/>
+                  Kai (Existential & Life Purpose)<br/>
+                  Rhea (Internal Family Systems)<br/>
+                  Eli (Cognitive Behavioral Mastery)<br/>
+                  Nyra (Somatic & Body-Based Healing)<br/>
+                  Plus advanced specialists for eating disorders, addiction, PTSD
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">Dynamic Mode Switching</h3>
-                  <p className="text-muted-foreground text-sm">Full access to Reflect, Recover, Rebuild, and Evolve modes with premium customization.</p>
+                  <h3 className="font-semibold text-foreground mb-1">Advanced Crisis Detection & Safety Protocols</h3>
+                  <p className="text-muted-foreground text-sm">Intelligent crisis monitoring during your scheduled sessions. If suicidal ideation or self-harm is detected, immediate safety resources and emergency contact information are provided - ensuring your safety while maintaining therapeutic boundaries.</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">Full Memory Storage</h3>
-                  <p className="text-muted-foreground text-sm">Complete session history with advanced search and organization capabilities.</p>
+                  <h3 className="font-semibold text-foreground mb-1">Advanced Trauma Processing Protocols</h3>
+                  <p className="text-muted-foreground text-sm">Access to EMDR simulation, somatic trauma release, and complex PTSD treatment - therapeutic modalities that typically cost $400-600 per specialized session.</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">Past Conversation Recall</h3>
-                  <p className="text-muted-foreground text-sm">AI remembers your entire journey, providing contextual and personalized support.</p>
+                  <h3 className="font-semibold text-foreground mb-1">Complete Psychological Progress Tracking</h3>
+                  <p className="text-muted-foreground text-sm">Advanced analytics dashboard showing your healing trajectory, emotional pattern recognition, breakthrough moments, and personalized insights that would take human therapists months to identify.</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">Early Access Features</h3>
-                  <p className="text-muted-foreground text-sm">Be the first to experience new therapeutic tools and AI capabilities.</p>
+                  <h3 className="font-semibold text-foreground mb-1">Therapeutic Continuity System</h3>
+                  <p className="text-muted-foreground text-sm">Your entire therapeutic history remembered and integrated - every session builds on the last, creating accelerated healing impossible with human therapists who forget details between appointments.</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">Dedicated Growth Insights</h3>
-                  <p className="text-muted-foreground text-sm">Advanced analytics and personalized reports on your emotional progress.</p>
+                  <h3 className="font-semibold text-foreground mb-1">Structured Between-Session Integration</h3>
+                  <p className="text-muted-foreground text-sm">Personalized therapeutic homework and reflection prompts delivered between your scheduled sessions. Process insights, complete assignments, and prepare for your next session - maintaining therapeutic momentum while respecting proper session intervals.</p>
                 </div>
               </div>
             </div>
@@ -155,23 +164,27 @@ const PremiumPlanDetails = () => {
 
           {/* Who It's For */}
           <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Who This Plan Is For</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Who This Plan Is For ��</h2>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <Sparkles className="w-5 h-5 text-primary mt-1" />
-                <p className="text-muted-foreground">Individuals committed to deep emotional work and personal transformation</p>
+                <p className="text-muted-foreground">✨ Serious Healing Seekers - Ready to invest in intensive therapeutic work that delivers real psychological transformation</p>
               </div>
               <div className="flex items-start space-x-3">
                 <TrendingUp className="w-5 h-5 text-green-400 mt-1" />
-                <p className="text-muted-foreground">People who want comprehensive tracking of their mental health journey</p>
+                <p className="text-muted-foreground">🏆 High Achievers - Want the same mental health advantages that successful people pay thousands monthly to access</p>
               </div>
               <div className="flex items-start space-x-3">
                 <Shield className="w-5 h-5 text-blue-400 mt-1" />
-                <p className="text-muted-foreground">Those who value continuity and want their AI therapist to remember their entire story</p>
+                <p className="text-muted-foreground">⚡ Breakthrough Seekers - Tired of surface-level therapy and ready for deep, accelerated healing work</p>
               </div>
               <div className="flex items-start space-x-3">
                 <Brain className="w-5 h-5 text-purple-400 mt-1" />
-                <p className="text-muted-foreground">Users seeking advanced insights and personalized growth recommendations</p>
+                <p className="text-muted-foreground">🛡️ Safety-Conscious Individuals - Need reliable crisis detection and emergency resource access during their therapeutic journey</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <Heart className="w-5 h-5 text-pink-400 mt-1" />
+                <p className="text-muted-foreground">🧬 Complex Cases - Dealing with multiple mental health challenges that require specialized, coordinated treatment</p>
               </div>
             </div>
           </div>

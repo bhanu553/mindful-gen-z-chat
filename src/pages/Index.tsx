@@ -120,7 +120,7 @@ const Index = () => {
               Why Choose EchoMind?
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Experience the future of emotional wellness with our AI-powered platform
+              Professional AI therapy with scheduled sessions, clinical outcomes, and therapeutic excellence
             </p>
           </div>
 
@@ -129,9 +129,9 @@ const Index = () => {
               <div className="p-3 bg-blue-500/20 rounded-lg w-fit mb-4">
                 <MessageSquare className="w-8 h-8 text-blue-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">24/7 AI Support</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Real Therapy Scheduling</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Get instant emotional support whenever you need it. Our AI is always here to listen and guide you through difficult moments.
+                Book actual therapy appointments, not endless chat sessions. Fixed 50-minute sessions with therapeutic boundaries - because healing happens with structure, not 24/7 emotional dependency.
               </p>
             </div>
 
@@ -139,9 +139,9 @@ const Index = () => {
               <div className="p-3 bg-green-500/20 rounded-lg w-fit mb-4">
                 <TrendingUp className="w-8 h-8 text-green-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Mood Tracking</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Measurable Therapeutic Results</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Understand your emotional patterns with advanced analytics and personalized insights into your mental wellness journey.
+                Track real progress with validated psychological assessments. Depression scores, anxiety reduction, and breakthrough insights - see the data behind your healing journey.
               </p>
             </div>
 
@@ -149,9 +149,9 @@ const Index = () => {
               <div className="p-3 bg-purple-500/20 rounded-lg w-fit mb-4">
                 <Heart className="w-8 h-8 text-purple-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Personalized Care</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">5 Therapy Approaches in One</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Receive tailored therapeutic approaches based on your unique needs, preferences, and emotional responses.
+                CBT + IFS + Somatic + Psychodynamic + ACT - experience what most human therapists specialize in separately. Your AI therapist masters multiple modalities simultaneously.
               </p>
             </div>
 
@@ -159,9 +159,9 @@ const Index = () => {
               <div className="p-3 bg-yellow-500/20 rounded-lg w-fit mb-4">
                 <Shield className="w-8 h-8 text-yellow-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Privacy First</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Clinical Privacy Standards</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Your conversations are encrypted and secure. We prioritize your privacy and maintain strict confidentiality standards.
+                Your therapy deserves clinical-grade confidentiality. Bank-level encryption with therapeutic privacy protocols - because deep healing requires absolute trust.
               </p>
             </div>
 
@@ -169,9 +169,9 @@ const Index = () => {
               <div className="p-3 bg-pink-500/20 rounded-lg w-fit mb-4">
                 <Sparkles className="w-8 h-8 text-pink-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Evidence-Based</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Licensed Therapist Quality</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Our AI uses proven therapeutic techniques including CBT, mindfulness, and positive psychology approaches.
+                Not another wellness chatbot. Built on clinical therapeutic frameworks with evidence-based interventions that match $300/hour human therapy standards.
               </p>
             </div>
 
@@ -179,9 +179,9 @@ const Index = () => {
               <div className="p-3 bg-indigo-500/20 rounded-lg w-fit mb-4">
                 <Brain className="w-8 h-8 text-indigo-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Continuous Learning</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Long-Term Therapeutic Relationship</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Our AI continuously improves and adapts to provide increasingly personalized and effective support.
+                Your AI therapist builds rapport across sessions, remembers your breakthroughs, and deepens understanding over time - creating the therapeutic alliance that drives real change.
               </p>
             </div>
           </div>
