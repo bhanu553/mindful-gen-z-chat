@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   id: string;
@@ -17,9 +18,11 @@ const Therapy = () => {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Get your OpenAI API key from the environment variable. Put VITE_OPENAI_API_KEY=sk-... in a .env file in the project root (do NOT commit the .env file).
   const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -39,6 +42,53 @@ const Therapy = () => {
       triggerFirstMessage();
     }
   }, [user, hasInitialized, messages.length]);
+
+  // Fetch or create session and load messages on mount
+  useEffect(() => {
+    if (user) {
+      fetchSessionAndMessages();
+    }
+    // eslint-disable-next-line
+  }, [user]);
+
+  const fetchSessionAndMessages = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id })
+      });
+      if (!response.ok) {
+        let errorMsg = 'Failed to load session.';
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) errorMsg = errData.error;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+      const data = await response.json();
+      if (data.sessionComplete) {
+        setSessionComplete(true);
+        navigate('/premium-plan-details');
+        return;
+      }
+      // Map backend messages to local format
+      setMessages(
+        (data.messages || []).map((msg: any) => ({
+          id: msg.id,
+          text: msg.content,
+          isUser: msg.role === 'user',
+          timestamp: new Date(msg.created_at)
+        }))
+      );
+      setSessionComplete(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to load session.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const triggerFirstMessage = async () => {
     if (!user) return;
@@ -94,7 +144,7 @@ const Therapy = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!inputText?.trim()) return;
+    if (!inputText?.trim() || sessionComplete) return;
 
     const userInput = inputText.trim();
     setInputText('');
@@ -147,6 +197,11 @@ const Therapy = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiMessage]);
+      if (data.sessionComplete) {
+        setSessionComplete(true);
+        toast.info('Your free session is now complete. Upgrade to continue.');
+        setTimeout(() => navigate('/premium-plan-details'), 2000);
+      }
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(error.message || 'Failed to get response. Please try again.');
@@ -262,13 +317,13 @@ const Therapy = () => {
                   onKeyPress={handleKeyPress}
                   placeholder="Share your thoughts..."
                   className="flex-1 min-h-[2.5rem] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0"
-                  disabled={isLoading}
+                  disabled={isLoading || sessionComplete}
                 />
                 
                 {/* Send Button */}
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!inputText.trim() || isLoading}
+                  disabled={!inputText.trim() || isLoading || sessionComplete}
                   className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send size={20} />

@@ -413,6 +413,53 @@ async function getUserOnboardingData(userId) {
   }
 }
 
+// Utility: Get start of current month
+function getMonthStart() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+}
+
+// Utility: Detect session completion
+function isSessionComplete(aiResponse) {
+  const completionIndicators = [
+    "Daily Reflection:",
+    "Journaling Prompt:",
+    "Mini Practice:",
+    "Note from me:",
+    "I'm here when you're ready again",
+    "Take time to process",
+    "reflection on the session theme"
+  ];
+  return completionIndicators.some(indicator => aiResponse.includes(indicator));
+}
+
+// Utility: Get or create current session for free user
+async function getOrCreateCurrentSession(userId) {
+  // 1. Check for an active session for this month
+  const { data: sessions, error } = await supabase
+    .from('chat_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('created_at', getMonthStart())
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  if (sessions && sessions.length > 0) {
+    // If session is not complete, return it
+    const active = sessions.find(s => !s.is_complete);
+    if (active) return active;
+    // If all sessions are complete, return the most recent (to block further use)
+    return sessions[0];
+  }
+  // 2. No session: create one
+  const { data: newSession, error: createError } = await supabase
+    .from('chat_sessions')
+    .insert({ user_id: userId, is_complete: false, created_at: new Date().toISOString() })
+    .select()
+    .single();
+  if (createError) throw createError;
+  return newSession;
+}
+
 export async function POST(req) {
   try {
     const { message, userId, isFirstMessage = false } = await req.json();
@@ -424,6 +471,16 @@ export async function POST(req) {
 
     if (!message) {
       return Response.json({ error: "No message provided." }, { status: 400 });
+    }
+
+    // --- SESSION MANAGEMENT FOR FREE USERS ---
+    let session = null;
+    if (userId) {
+      session = await getOrCreateCurrentSession(userId);
+      if (session.is_complete) {
+        // Session is already complete for this month
+        return Response.json({ error: "Session complete", sessionComplete: true }, { status: 403 });
+      }
     }
 
     let systemPrompt = "";
@@ -503,10 +560,38 @@ export async function POST(req) {
       max_tokens: 1000,
     });
 
-    const reply = response.choices[0].message.content;
-    console.log("✅ OpenAI response received, length:", reply.length);
+    const aiReply = response.choices[0].message.content;
+    console.log("✅ OpenAI response received, length:", aiReply.length);
 
-    return Response.json({ reply });
+    // --- SAVE MESSAGES ---
+    if (session && userId) {
+      // Save user message
+      await supabase.from('chat_messages').insert({
+        session_id: session.id,
+        user_id: userId,
+        content: message,
+        role: 'user',
+        mode: 'therapy',
+        created_at: new Date().toISOString()
+      });
+      // Save AI reply
+      await supabase.from('chat_messages').insert({
+        session_id: session.id,
+        user_id: userId,
+        content: aiReply,
+        role: 'assistant',
+        mode: 'therapy',
+        created_at: new Date().toISOString()
+      });
+    }
+    // --- SESSION COMPLETION DETECTION ---
+    let sessionComplete = false;
+    if (isSessionComplete(aiReply) && session && userId) {
+      await supabase.from('chat_sessions').update({ is_complete: true }).eq('id', session.id);
+      sessionComplete = true;
+    }
+
+    return Response.json({ reply: aiReply, sessionComplete });
   } catch (error) {
     console.error("❌ Error in /api/chat:", error);
     return Response.json({ error: error.message || "Internal server error" }, { status: 500 });

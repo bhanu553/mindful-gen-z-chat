@@ -52,15 +52,14 @@ const Onboarding = () => {
   const { isOnboardingComplete, refresh: refreshOnboardingStatus } = useOnboardingStatus();
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [optimisticOnboarding, setOptimisticOnboarding] = useState(false); // NEW
 
   // Redirect if onboarding is already complete or optimistically set
   useEffect(() => {
-    if (isOnboardingComplete === true || optimisticOnboarding) {
+    if (isOnboardingComplete === true) {
       console.log('Onboarding already complete, redirecting to therapy');
       navigate('/therapy');
     }
-  }, [isOnboardingComplete, optimisticOnboarding, navigate]);
+  }, [isOnboardingComplete, navigate]);
 
   const [formData, setFormData] = useState<OnboardingFormData>({
     full_name: '',

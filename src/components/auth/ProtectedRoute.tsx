@@ -81,6 +81,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       console.log('🔒 Onboarding page: user not authenticated, returning null');
       return null; // Will redirect to login
     }
+    // If user is authenticated and onboarding is complete, redirect to therapy
+    if (user && isOnboardingComplete === true) {
+      console.log('✅ Onboarding complete, redirecting to therapy from onboarding page');
+      navigate('/therapy', { replace: true });
+      return null;
+    }
     // If user is authenticated, show onboarding regardless of completion status
     console.log('📝 Onboarding page: user authenticated, showing form');
     return <>{children}</>;
