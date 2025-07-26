@@ -42,19 +42,19 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/onboarding" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireOnboarding={false}>
                     <Onboarding />
                   </ProtectedRoute>
                 } />
                 <Route path="/therapy" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireOnboarding={true}>
                     <div className="min-h-screen">
                       <Therapy />
                     </div>
                   </ProtectedRoute>
                 } />
                 <Route path="/dashboard" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireOnboarding={true}>
                     <Dashboard />
                   </ProtectedRoute>
                 } />
@@ -69,7 +69,7 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/admin" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireOnboarding={true}>
                     <Admin />
                   </ProtectedRoute>
                 } />

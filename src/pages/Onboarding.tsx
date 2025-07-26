@@ -48,16 +48,17 @@ interface OnboardingFormData {
 const Onboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isOnboardingComplete, isLoading } = useOnboardingStatus();
+  const { isOnboardingComplete } = useOnboardingStatus();
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect if onboarding is already complete
   useEffect(() => {
-    if (!isLoading && isOnboardingComplete) {
+    if (isOnboardingComplete === true) {
+      console.log('Onboarding already complete, redirecting to therapy');
       navigate('/therapy');
     }
-  }, [isOnboardingComplete, isLoading, navigate]);
+  }, [isOnboardingComplete, navigate]);
 
   const [formData, setFormData] = useState<OnboardingFormData>({
     full_name: '',
@@ -82,19 +83,12 @@ const Onboarding = () => {
     calendar_reminders_consent: false,
   });
 
-  // Show loading while checking onboarding status
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg animate-pulse mx-auto mb-4">
-            <Brain className="w-8 h-8 text-white" />
-          </div>
-          <p className="text-white">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Update email when user changes
+  useEffect(() => {
+    if (user?.email) {
+      setFormData(prev => ({ ...prev, email: user.email }));
+    }
+  }, [user?.email]);
 
   const sections = [
     { title: 'Personal Details', icon: Heart },
@@ -138,6 +132,7 @@ const Onboarding = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('Saving onboarding data for user:', user.id);
       const { error } = await supabase
         .from('user_onboarding')
         .upsert({
@@ -165,8 +160,12 @@ const Onboarding = () => {
           completed: true
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Onboarding data saved successfully');
       toast({
         title: "Welcome to EchoMind!",
         description: "Your onboarding is complete. Let's begin your healing journey.",
