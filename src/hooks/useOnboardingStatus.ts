@@ -19,13 +19,19 @@ export const useOnboardingStatus = () => {
           .from('user_onboarding')
           .select('completed')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error checking onboarding status:', error);
         }
 
-        setIsOnboardingComplete(data?.completed === true);
+        if (!data) {
+          setIsOnboardingComplete(false);
+          setIsLoading(false);
+          return;
+        }
+
+        setIsOnboardingComplete(data.completed === true);
       } catch (error) {
         console.error('Error checking onboarding status:', error);
         setIsOnboardingComplete(false);
