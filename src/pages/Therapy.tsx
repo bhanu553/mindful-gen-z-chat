@@ -3,6 +3,7 @@ import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   id: string;
@@ -15,8 +16,10 @@ const Therapy = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { user } = useAuth();
 
   // Get your OpenAI API key from the environment variable. Put VITE_OPENAI_API_KEY=sk-... in a .env file in the project root (do NOT commit the .env file).
   const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -28,6 +31,67 @@ const Therapy = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-trigger first AI message when component mounts and user is available
+  useEffect(() => {
+    if (user && !hasInitialized && messages.length === 0) {
+      setHasInitialized(true);
+      triggerFirstMessage();
+    }
+  }, [user, hasInitialized, messages.length]);
+
+  const triggerFirstMessage = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      console.log("🚀 Triggering first AI message for user:", user.id);
+      
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          message: "Start my first therapy session",
+          userId: user.id,
+          isFirstMessage: true
+        })
+      });
+
+      if (!response.ok) {
+        let errorMsg = 'Failed to get initial response. Please try again.';
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) errorMsg = errData.error;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.reply;
+
+      if (!aiResponse) {
+        throw new Error('No initial response from assistant.');
+      }
+
+      // Add AI's first message (analysis and welcome)
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        text: aiResponse,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages([aiMessage]);
+      
+      console.log("✅ First AI message received and displayed");
+    } catch (error: any) {
+      console.error('Error triggering first message:', error);
+      toast.error(error.message || 'Failed to start therapy session. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputText?.trim()) return;
@@ -46,13 +110,17 @@ const Therapy = () => {
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // Call backend API instead of OpenAI directly
+      // Call backend API with user context
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: userInput })
+        body: JSON.stringify({ 
+          message: userInput,
+          userId: user?.id,
+          isFirstMessage: false
+        })
       });
 
       if (!response.ok) {
@@ -130,6 +198,15 @@ const Therapy = () => {
                 <div className="text-center text-white/70">
                   <p className="text-xl md:text-2xl mb-2 font-serif">Your therapeutic session begins now</p>
                   <p className="text-base md:text-lg text-white/50">What's the most important emotional challenge you're ready to work on today?</p>
+                  {isLoading && (
+                    <div className="mt-4 flex justify-center">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
