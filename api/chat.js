@@ -433,15 +433,39 @@ export async function POST(req) {
       const onboardingData = await getUserOnboardingData(userId);
       
       if (onboardingData) {
+        // Check if AI analysis already exists
+        if (onboardingData.ai_analysis) {
+          console.log("📝 Reusing saved AI analysis for user");
+          return Response.json({ reply: onboardingData.ai_analysis });
+        }
         console.log("✅ Onboarding data found, formatting for AI analysis");
         const formattedOnboardingData = formatOnboardingData(onboardingData);
         systemPrompt = THERAPY_PROMPT_TEMPLATE.replace('{user_intake_form_here}', formattedOnboardingData);
-        
         // For first message, we want the AI to analyze the form and provide the initial welcome
         messages = [
           { role: "system", content: systemPrompt },
           { role: "user", content: "I'm ready to start my first therapy session. Please analyze my intake form and begin with your welcome message." }
         ];
+        // Call OpenAI to generate the analysis
+        console.log("🤖 Sending request to OpenAI for new analysis");
+        const response = await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 1000,
+        });
+        const aiAnalysis = response.choices[0].message.content;
+        // Save the analysis to the database
+        const { error: updateError } = await supabase
+          .from('user_onboarding')
+          .update({ ai_analysis: aiAnalysis })
+          .eq('id', onboardingData.id);
+        if (updateError) {
+          console.error("❌ Failed to save AI analysis:", updateError);
+        } else {
+          console.log("💾 AI analysis saved to user_onboarding");
+        }
+        return Response.json({ reply: aiAnalysis });
       } else {
         console.log("⚠️ No onboarding data found, using default prompt");
         systemPrompt = THERAPY_PROMPT_TEMPLATE.replace('{user_intake_form_here}', "No onboarding data available. Please proceed with general therapeutic support.");
@@ -449,6 +473,15 @@ export async function POST(req) {
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
         ];
+        // Fallback: call OpenAI as before
+        const response = await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 1000,
+        });
+        const reply = response.choices[0].message.content;
+        return Response.json({ reply });
       }
     } else {
       // For subsequent messages, use the therapy prompt without the initial analysis

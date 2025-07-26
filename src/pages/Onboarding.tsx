@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+import timezones from '@/lib/timezones'; // We'll create this file for the timezone list
 
 interface OnboardingFormData {
   // Personal Details
@@ -51,14 +52,15 @@ const Onboarding = () => {
   const { isOnboardingComplete, refresh: refreshOnboardingStatus } = useOnboardingStatus();
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [optimisticOnboarding, setOptimisticOnboarding] = useState(false); // NEW
 
-  // Redirect if onboarding is already complete
+  // Redirect if onboarding is already complete or optimistically set
   useEffect(() => {
-    if (isOnboardingComplete === true) {
+    if (isOnboardingComplete === true || optimisticOnboarding) {
       console.log('Onboarding already complete, redirecting to therapy');
       navigate('/therapy');
     }
-  }, [isOnboardingComplete, navigate]);
+  }, [isOnboardingComplete, optimisticOnboarding, navigate]);
 
   const [formData, setFormData] = useState<OnboardingFormData>({
     full_name: '',
@@ -167,6 +169,8 @@ const Onboarding = () => {
 
       console.log('Onboarding data saved successfully');
       
+      // Optimistically set onboarding as complete and redirect
+      setOptimisticOnboarding(true);
       // Refresh the onboarding status to reflect the changes
       console.log('🔄 Refreshing onboarding status...');
       await refreshOnboardingStatus();
@@ -280,15 +284,21 @@ const Onboarding = () => {
             placeholder="United States"
           />
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="timezone">Timezone</Label>
-          <Input
-            id="timezone"
+          <Select
             value={formData.timezone}
-            onChange={(e) => updateFormData('timezone', e.target.value)}
-            placeholder="America/New_York"
-          />
+            onValueChange={(value) => updateFormData('timezone', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select timezone" />
+            </SelectTrigger>
+            <SelectContent>
+              {timezones.map((tz) => (
+                <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
