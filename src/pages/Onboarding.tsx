@@ -25,6 +25,7 @@ interface OnboardingFormData {
   gender: string;
   country: string;
   timezone: string;
+  primary_focus: string; // NEW
   
   // Mental Health Status
   previous_therapy: boolean | null;
@@ -52,14 +53,15 @@ const Onboarding = () => {
   const { isOnboardingComplete, refresh: refreshOnboardingStatus } = useOnboardingStatus();
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false); // NEW
 
-  // Redirect if onboarding is already complete or optimistically set
+  // Redirect if onboarding is already complete, but skip if justCompleted
   useEffect(() => {
-    if (isOnboardingComplete === true) {
+    if (isOnboardingComplete === true && !justCompleted) {
       console.log('Onboarding already complete, redirecting to therapy');
       navigate('/therapy');
     }
-  }, [isOnboardingComplete, navigate]);
+  }, [isOnboardingComplete, navigate, justCompleted]);
 
   const [formData, setFormData] = useState<OnboardingFormData>({
     full_name: '',
@@ -69,6 +71,7 @@ const Onboarding = () => {
     gender: '',
     country: '',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    primary_focus: '', // NEW
     previous_therapy: null,
     therapy_types: [],
     current_medication: null,
@@ -129,6 +132,15 @@ const Onboarding = () => {
       });
       return;
     }
+    // Validate primary_focus
+    if (!formData.primary_focus) {
+      toast({
+        title: "Primary Focus Required",
+        description: "Please select what brings you to therapy today.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -145,8 +157,8 @@ const Onboarding = () => {
           gender: formData.gender || null,
           country: formData.country || null,
           timezone: formData.timezone || null,
+          primary_focus: formData.primary_focus, // NEW
           previous_therapy: formData.previous_therapy,
-          therapy_types: formData.therapy_types,
           current_medication: formData.current_medication,
           mental_health_rating: formData.mental_health_rating ? parseInt(formData.mental_health_rating) : null,
           current_struggles: formData.current_struggles,
@@ -171,6 +183,7 @@ const Onboarding = () => {
         title: "Welcome to EchoMind!",
         description: "Your onboarding is complete. Let's begin your healing journey.",
       });
+      setJustCompleted(true); // Set local flag
       // Instantly redirect to therapy after onboarding completion
       console.log('🚀 Redirecting to therapy after onboarding completion');
       navigate('/therapy');
@@ -291,6 +304,28 @@ const Onboarding = () => {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="primary_focus">What brings you to therapy today? <span className="text-red-500">*</span></Label>
+        <Select
+          value={formData.primary_focus}
+          onValueChange={(value) => updateFormData('primary_focus', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select your primary focus" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="anxiety">Anxiety & Panic – Feeling overwhelmed, panic attacks, constant worry</SelectItem>
+            <SelectItem value="depression">Depression & Low Mood – Sadness, hopelessness, emotional numbness</SelectItem>
+            <SelectItem value="trauma">Trauma & Past Experiences – Childhood issues, traumatic events, flashbacks</SelectItem>
+            <SelectItem value="relationship">Relationship Struggles – Breakups, attachment issues, communication problems</SelectItem>
+            <SelectItem value="self-worth">Self-Worth & Confidence – Low self-esteem, inner criticism, identity confusion</SelectItem>
+            <SelectItem value="stress">Stress & Burnout – Work pressure, life overwhelm, exhaustion</SelectItem>
+            <SelectItem value="life-changes">Life Changes & Transitions – Career decisions, major life shifts, finding purpose</SelectItem>
+            <SelectItem value="grief">Grief & Loss – Death of loved one, relationship endings, life changes</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
