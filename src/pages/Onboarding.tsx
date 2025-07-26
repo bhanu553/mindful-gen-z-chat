@@ -48,7 +48,7 @@ interface OnboardingFormData {
 const Onboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isOnboardingComplete } = useOnboardingStatus();
+  const { isOnboardingComplete, refresh: refreshOnboardingStatus } = useOnboardingStatus();
   const [currentSection, setCurrentSection] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -166,12 +166,22 @@ const Onboarding = () => {
       }
 
       console.log('Onboarding data saved successfully');
+      
+      // Refresh the onboarding status to reflect the changes
+      console.log('🔄 Refreshing onboarding status...');
+      await refreshOnboardingStatus();
+      
       toast({
         title: "Welcome to EchoMind!",
         description: "Your onboarding is complete. Let's begin your healing journey.",
       });
 
-      navigate('/therapy');
+      // Add a small delay to ensure the status is updated before redirecting
+      setTimeout(() => {
+        console.log('🚀 Redirecting to therapy after onboarding completion');
+        navigate('/therapy');
+      }, 500);
+
     } catch (error) {
       console.error('Error saving onboarding:', error);
       toast({
