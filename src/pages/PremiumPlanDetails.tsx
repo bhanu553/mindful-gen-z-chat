@@ -33,9 +33,9 @@ const PremiumPlanDetails = () => {
               return actions.order.create({
                 purchase_units: [{
                   amount: {
-                    value: '9.99'
+                    value: '49'
                   },
-                  description: 'EchoMind Premium Plan - $9.99 monthly subscription'
+                  description: 'EchoMind Premium Plan - $49 monthly subscription'
                 }]
               });
             },
@@ -230,7 +230,7 @@ const PremiumPlanDetails = () => {
             <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-foreground mb-2">Upgrade to Premium</h2>
-                <p className="text-muted-foreground">Unlock the full potential of AI-powered emotional wellness for just $9.99/month</p>
+                <p className="text-muted-foreground">Unlock the full potential of AI-powered emotional wellness for just $49/month</p>
               </div>
               
               <div className="max-w-md mx-auto">

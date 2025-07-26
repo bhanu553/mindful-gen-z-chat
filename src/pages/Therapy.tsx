@@ -127,10 +127,10 @@ const Therapy = () => {
           <div className="flex-1 overflow-y-auto p-8 md:p-10 scrollable-container">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center">
-              <div className="text-center text-white/70">
-                <p className="text-xl md:text-2xl mb-2 font-serif">Begin your transformation and growth</p>
-                <p className="text-base md:text-lg text-white/50">Share what's on your mind to get started</p>
-              </div>
+                <div className="text-center text-white/70">
+                  <p className="text-xl md:text-2xl mb-2 font-serif">Your therapeutic session begins now</p>
+                  <p className="text-base md:text-lg text-white/50">What's the most important emotional challenge you're ready to work on today?</p>
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
