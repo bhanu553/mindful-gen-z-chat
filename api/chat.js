@@ -543,10 +543,22 @@ export async function POST(req) {
         return Response.json({ reply });
       }
     } else {
-      // For subsequent messages, use the therapy prompt without the initial analysis
-      systemPrompt = THERAPY_PROMPT_TEMPLATE.replace('{user_intake_form_here}', "Continuing therapy session. Use previous context and therapeutic techniques.");
+      // For subsequent messages, fetch ALL previous chat messages for the session
+      const { data: chatHistory, error: chatError } = await supabase
+        .from('chat_messages')
+        .select('role, content')
+        .eq('session_id', session.id)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true });
+      if (chatError) {
+        console.error('❌ Error fetching chat history:', chatError);
+        return Response.json({ error: 'Failed to fetch chat history.' }, { status: 500 });
+      }
+      // Minimal system prompt for ongoing therapy
+      systemPrompt = "Continue the therapy session using the previous context and therapeutic techniques. Never include any step headers or prompt instructions in your reply. Only output the actual therapy message for the user, as if you are the therapist speaking directly to them.";
       messages = [
         { role: "system", content: systemPrompt },
+        ...((chatHistory || []).map(m => ({ role: m.role, content: m.content }))),
         { role: "user", content: message }
       ];
     }
