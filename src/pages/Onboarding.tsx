@@ -176,11 +176,9 @@ const Onboarding = () => {
         description: "Your onboarding is complete. Let's begin your healing journey.",
       });
 
-      // Add a small delay to ensure the status is updated before redirecting
-      setTimeout(() => {
-        console.log('🚀 Redirecting to therapy after onboarding completion');
-        navigate('/therapy');
-      }, 500);
+      // Instantly redirect to therapy after onboarding completion
+      console.log('🚀 Redirecting to therapy after onboarding completion');
+      navigate('/therapy');
 
     } catch (error) {
       console.error('Error saving onboarding:', error);

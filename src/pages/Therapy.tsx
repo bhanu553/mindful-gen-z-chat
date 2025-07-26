@@ -189,7 +189,7 @@ const Therapy = () => {
         
         
         {/* Main Chat Container */}
-        <div className="w-full max-w-5xl h-[85vh] md:h-[80vh] premium-glass rounded-3xl flex flex-col">
+        <div className="w-full max-w-5xl h-[90vh] md:h-[85vh] premium-glass rounded-3xl flex flex-col">
           
           {/* Chat Messages Area */}
           <div className="flex-1 overflow-y-auto p-8 md:p-10 scrollable-container">
