@@ -168,18 +168,10 @@ const Onboarding = () => {
       }
 
       console.log('Onboarding data saved successfully');
-      
-      // Optimistically set onboarding as complete and redirect
-      setOptimisticOnboarding(true);
-      // Refresh the onboarding status to reflect the changes
-      console.log('🔄 Refreshing onboarding status...');
-      await refreshOnboardingStatus();
-      
       toast({
         title: "Welcome to EchoMind!",
         description: "Your onboarding is complete. Let's begin your healing journey.",
       });
-
       // Instantly redirect to therapy after onboarding completion
       console.log('🚀 Redirecting to therapy after onboarding completion');
       navigate('/therapy');

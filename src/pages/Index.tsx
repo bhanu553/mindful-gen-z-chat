@@ -214,7 +214,7 @@ const Index = () => {
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">2 complete therapy session per month</span>
+                  <span className="text-foreground">1 complete therapy session per month</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
