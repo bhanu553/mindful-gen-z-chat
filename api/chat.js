@@ -461,6 +461,9 @@ async function getOrCreateCurrentSession(userId) {
 }
 
 export async function POST(req) {
+  // DEBUG: Log environment variables for OpenAI API key
+  console.log("ENV OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : "undefined");
+  console.log("ENV VITE_OPENAI_API_KEY:", process.env.VITE_OPENAI_API_KEY ? process.env.VITE_OPENAI_API_KEY.substring(0, 10) : "undefined");
   try {
     const { message, userId, isFirstMessage = false, generateAnalysis = false } = await req.json();
     
@@ -469,7 +472,13 @@ export async function POST(req) {
     if (!apiKey) {
       console.error("❌ OPENAI_API_KEY is missing");
       console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('OPENAI')));
-      return Response.json({ error: "OpenAI API key is not set." }, { status: 500 });
+      // DEBUG: Return env variable values in the response for troubleshooting
+      return Response.json({ 
+        error: "OpenAI API key is not set.",
+        env_OPENAI_API_KEY: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : "undefined",
+        env_VITE_OPENAI_API_KEY: process.env.VITE_OPENAI_API_KEY ? process.env.VITE_OPENAI_API_KEY.substring(0, 10) : "undefined",
+        available_env_vars: Object.keys(process.env).filter(key => key.includes('OPENAI'))
+      }, { status: 500 });
     }
     
     console.log("🔑 Using OpenAI API key:", apiKey.substring(0, 10) + "...");
@@ -533,8 +542,13 @@ export async function POST(req) {
           max_tokens: 800,
         });
         
-        const aiAnalysis = analysisResponse.choices[0].message.content;
-        console.log('🤖 Generated AI analysis:', aiAnalysis);
+        const aiAnalysisRaw = analysisResponse.choices[0].message.content;
+        // Remove any step headers from the AI's response
+        const aiAnalysis = aiAnalysisRaw
+          .split('\n')
+          .filter(line => !line.match(/STEP [⿡⿢⿣]/) && !line.match(/\*\*STEP/) && !line.match(/STEP [0-9]+:/i))
+          .join('\n');
+        console.log('🤖 Generated AI analysis (cleaned):', aiAnalysis);
         
         // Save the analysis to the database for token reduction
         const { error: updateError } = await supabase

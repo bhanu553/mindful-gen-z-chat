@@ -245,10 +245,11 @@ const Onboarding = () => {
         title: "Welcome to EchoMind!",
         description: "Your onboarding is complete. Let's begin your healing journey.",
       });
-      
-      // Redirect to therapy page AFTER analysis is generated
-      console.log('🚀 Redirecting to therapy page after analysis generation');
-      navigate('/therapy', { replace: true });
+      // Redirect to therapy page after a 1-second delay
+      setTimeout(() => {
+        console.log('🚀 Redirecting to therapy page after analysis generation (delayed)');
+        navigate('/therapy', { replace: true });
+      }, 1000);
 
     } catch (error: any) {
       console.error('❌ Error saving onboarding:', error);
