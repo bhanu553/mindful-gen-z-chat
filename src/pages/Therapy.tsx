@@ -30,6 +30,7 @@ function highlightTherapyQuestion(text: string): JSX.Element {
 }
 
 const Therapy = () => {
+  console.log('Therapy component rendered');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -60,6 +61,13 @@ const Therapy = () => {
       console.log("🎯 Therapy page initialized, waiting for session messages");
     }
   }, [user, hasInitialized, messages.length]);
+
+  // Add this useEffect after messages state is defined
+  useEffect(() => {
+    if (messages.length > 0 && !messages[messages.length - 1].isUser) {
+      setIsLoading(false);
+    }
+  }, [messages]);
 
   // Fetch or create session and load messages on mount
   useEffect(() => {
@@ -134,6 +142,7 @@ const Therapy = () => {
       timestamp: new Date()
     };
     setMessages(prev => [...prev, userMessage]);
+    console.log('User message added:', userMessage);
 
     try {
       // Call backend API with user context
@@ -159,6 +168,7 @@ const Therapy = () => {
       }
 
       const data = await response.json();
+      console.log('AI response from /api/chat:', data);
       const aiResponse = data.reply;
 
       if (!aiResponse) {
@@ -172,8 +182,13 @@ const Therapy = () => {
         isUser: false,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages(prev => {
+        const updated = [...prev, aiMessage];
+        console.log('Messages after AI message added:', updated);
+        return updated;
+      });
       console.log('AI message added:', aiMessage);
+      setIsLoading(false); // double-safety: stop loading after AI message
       if (data.sessionComplete) {
         setSessionComplete(true);
         toast.info('Your free session is now complete. Upgrade to continue.');
