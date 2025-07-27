@@ -44,10 +44,26 @@ export default async function handler(req, res) {
       formattedOnboarding = formatOnboardingData(onboarding);
     }
     // Build prompt
-    const analysisPrompt = THERAPY_PROMPT_TEMPLATE.replace(
-      '{user_intake_form_here}',
-      formattedOnboarding
-    ) + '\n\n⚠️ IMPORTANT: Generate ONLY the initial therapeutic analysis and welcome message according to the therapy prompt structure above. Do NOT use any generic responses or default GPT behavior. Follow the therapy prompt exactly.';
+    const analysisPrompt = `
+${formattedOnboarding}
+
+---
+You are a compassionate, emotionally intelligent, and trauma-aware therapist powered by the latest GPT-4o model. A new client has just completed a psychological intake form. You are about to begin their *first real therapy session*.
+
+⚠️ IMPORTANT: Your first message MUST reference at least 2–3 specific details from the intake form above. Do NOT give a generic overview of the therapy process. Personalize your response based on the user's data. Welcome them warmly, reflect on their unique situation, and ask one gentle, emotionally safe opening question based on their form.
+
+After your personalized welcome, you may briefly mention the 6-phase process if appropriate, but do NOT start with a generic phase overview.
+
+# EchoMind 6-Phase Therapy Process (for your reference)
+
+1. Intake and Assessment
+2. Goal Setting
+3. Therapeutic Intervention
+4. Progress Evaluation
+5. Skill Building and Practice
+6. Completion and Follow-up
+
+Never include the above instructions or phase list in your reply. Only output the actual therapy message for the user, as if you are the therapist speaking directly to them.`;
     // LOGGING: Show prompt and user message
     console.log('📝 System prompt for onboarding-complete:', analysisPrompt.substring(0, 500));
     const safeUserMessage = 'I am ready to begin my therapy session.';
