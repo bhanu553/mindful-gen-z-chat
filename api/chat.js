@@ -360,6 +360,9 @@ function formatOnboardingData(onboardingData) {
 - Country: ${onboardingData.country || "Not specified"}
 - Timezone: ${onboardingData.timezone || "Not specified"}
 
+**Main Reason for Seeking Therapy:**
+- ${onboardingData.primary_focus || "Not specified"}
+
 **Mental Health Background:**
 - Previous therapy experience: ${formatBoolean(onboardingData.previous_therapy)}
 - Current medication: ${formatBoolean(onboardingData.current_medication)}

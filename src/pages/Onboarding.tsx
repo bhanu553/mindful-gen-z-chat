@@ -212,18 +212,7 @@ const Onboarding = () => {
         
         if (analysisData.aiAnalysis) {
           console.log('💾 Saving AI analysis to database...');
-          // Save the AI analysis to the onboarding record
-          const { error: saveError } = await supabase
-            .from('user_onboarding')
-            .update({ ai_analysis: analysisData.aiAnalysis })
-            .eq('user_id', user.id)
-            .eq('completed', true);
-          
-          if (saveError) {
-            console.error('❌ Error saving AI analysis:', saveError);
-          } else {
-            console.log('✅ AI analysis saved successfully');
-          }
+          // The backend handles saving ai_analysis, so no need to update it here
         } else {
           console.log('⚠️ No AI analysis in response');
         }
@@ -245,10 +234,9 @@ const Onboarding = () => {
         title: "Welcome to EchoMind!",
         description: "Your onboarding is complete. Let's begin your healing journey.",
       });
-      // Redirect to therapy page after a 1-second delay
+      // Redirect to therapy page after a 1-second delay (unconditional)
       setTimeout(() => {
-        console.log('🚀 Redirecting to therapy page after analysis generation (delayed)');
-        navigate('/therapy', { replace: true });
+        window.location.href = '/therapy';
       }, 1000);
 
     } catch (error: any) {
@@ -493,7 +481,7 @@ const Onboarding = () => {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <RadioGroup value={formData.self_harm_thoughts?.toString()} onValueChange={(value) => updateFormData('self_harm_thoughts', value === 'true')}>
+        <RadioGroup value={formData.self_harm_thoughts === null ? undefined : formData.self_harm_thoughts.toString()} onValueChange={(value) => updateFormData('self_harm_thoughts', value === 'true')}>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="self-harm-yes" />
             <Label htmlFor="self-harm-yes">Yes</Label>
