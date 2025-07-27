@@ -39,6 +39,7 @@ const Therapy = () => {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user, isPremium } = useAuth();
@@ -54,7 +55,7 @@ const Therapy = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, forceUpdate]);
 
   // Auto-trigger first AI message when component mounts and user is available
   useEffect(() => {
@@ -67,8 +68,14 @@ const Therapy = () => {
 
   // Add this useEffect after messages state is defined
   useEffect(() => {
-    if (messages.length > 0 && !messages[messages.length - 1].isUser) {
-      setIsLoading(false);
+    console.log('🔄 Messages changed, current length:', messages.length);
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      console.log('🔄 Last message is from user:', lastMessage.isUser);
+      if (!lastMessage.isUser) {
+        setIsLoading(false);
+        console.log('🔄 Loading stopped because last message is from AI');
+      }
     }
   }, [messages]);
 
@@ -187,6 +194,9 @@ const Therapy = () => {
         throw new Error('No response from assistant.');
       }
 
+      console.log('🤖 AI Response received:', aiResponse.substring(0, 100) + '...');
+      console.log('🤖 Full AI Response length:', aiResponse.length);
+
       // Add AI response to messages
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -194,13 +204,25 @@ const Therapy = () => {
         isUser: false,
         timestamp: new Date()
       };
+      
+      console.log('📝 About to add AI message to state:', aiMessage);
+      console.log('📝 Current messages before update:', messages);
+      
       setMessages(prev => {
         const updated = [...prev, aiMessage];
         console.log('[setMessages after AI message]', updated);
+        console.log('[setMessages] Updated messages length:', updated.length);
         return updated;
       });
-      console.log('AI message added:', aiMessage);
+      
+      console.log('✅ AI message added to state:', aiMessage);
+      console.log('✅ Loading state before setting to false:', isLoading);
       setIsLoading(false); // double-safety: stop loading after AI message
+      console.log('✅ Loading state set to false');
+      
+      // Force a re-render to ensure the message appears immediately
+      setForceUpdate(prev => prev + 1);
+      console.log('🔄 Force update triggered');
       if (data.sessionComplete) {
         setSessionComplete(true);
         toast.info('Your free session is now complete. Upgrade to continue.');

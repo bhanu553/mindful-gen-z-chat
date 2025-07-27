@@ -389,8 +389,10 @@ export async function POST(req) {
     } else {
       // For all subsequent messages, do NOT reference onboarding at all
       systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6;
+      console.log('🔧 Using Phase 2-6 prompt for ongoing therapy');
     }
     console.log('📝 System prompt sent to OpenAI:', systemPrompt.substring(0, 500));
+    console.log('📝 Full system prompt length:', systemPrompt.length);
 
     // --- FETCH ALL CHAT HISTORY ---
     let chatHistory = [];
@@ -430,7 +432,7 @@ export async function POST(req) {
       return Response.json({ error: 'Failed to generate AI response. Please try again.' }, { status: 500 });
     }
 
-    // Validate that the response follows your therapy prompt
+    // Validate that the response is not empty
     if (!aiReply || aiReply.trim() === '') {
       console.error('❌ Empty response from OpenAI');
       return Response.json({ error: 'Failed to generate response.' }, { status: 500 });
