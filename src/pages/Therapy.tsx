@@ -30,6 +30,8 @@ function highlightTherapyQuestion(text: string): JSX.Element {
 }
 
 const Therapy = () => {
+  const renderCount = useRef(0);
+  renderCount.current += 1;
   console.log('Therapy component rendered');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -39,7 +41,7 @@ const Therapy = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const navigate = useNavigate();
 
   // Get your OpenAI API key from the environment variable. Put VITE_OPENAI_API_KEY=sk-... in a .env file in the project root (do NOT commit the .env file).
@@ -78,6 +80,10 @@ const Therapy = () => {
     }
     // eslint-disable-next-line
   }, [user, hasInitialized]);
+
+  useEffect(() => {
+    console.log(`[Therapy Render #${renderCount.current}] messages:`, messages);
+  });
 
   const fetchSessionAndMessages = async () => {
     setIsLoading(true);
@@ -143,7 +149,11 @@ const Therapy = () => {
       isUser: true,
       timestamp: new Date()
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      const updated = [...prev, userMessage];
+      console.log('[setMessages after user message]', updated);
+      return updated;
+    });
     console.log('User message added:', userMessage);
 
     try {
@@ -170,7 +180,7 @@ const Therapy = () => {
       }
 
       const data = await response.json();
-      console.log('AI response from /api/chat:', data);
+      console.log('[AI response from /api/chat]', data);
       const aiResponse = data.reply;
 
       if (!aiResponse) {
@@ -186,7 +196,7 @@ const Therapy = () => {
       };
       setMessages(prev => {
         const updated = [...prev, aiMessage];
-        console.log('Messages after AI message added:', updated);
+        console.log('[setMessages after AI message]', updated);
         return updated;
       });
       console.log('AI message added:', aiMessage);
@@ -207,6 +217,38 @@ const Therapy = () => {
         toast.error(error.message || 'Failed to get response. Please try again.');
       }
       // Do NOT remove the user message; keep it in the chat
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Add a function to start a new session for premium users
+  const handleStartNewSession = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      // Call backend to create a new session and get the first AI message (with summary)
+      const response = await fetch('/api/new-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id })
+      });
+      if (!response.ok) throw new Error('Failed to start new session.');
+      const data = await response.json();
+      // Clear chat and set first AI message
+      setMessages([
+        {
+          id: Date.now().toString(),
+          text: data.firstMessage,
+          isUser: false,
+          timestamp: new Date()
+        }
+      ]);
+      setSessionComplete(false);
+      setInputText('');
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to start new session.');
+      toast.error(error.message || 'Failed to start new session.');
     } finally {
       setIsLoading(false);
     }
@@ -316,34 +358,65 @@ const Therapy = () => {
           </div>
           
           {/* Input Section */}
-          <div className="p-8 md:p-10 border-t border-white/10">
-            <div className="relative">
-              <div className="premium-glass rounded-2xl border border-white/20 p-4 flex items-end space-x-3">
-                
-                {/* Text Input */}
-                <Textarea
-                  ref={inputRef}
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Share your thoughts..."
-                  className="flex-1 min-h-[2.5rem] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0"
-                  disabled={isLoading || sessionComplete}
-                />
-                
-                {/* Send Button */}
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!inputText.trim() || isLoading || sessionComplete}
-                  className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          {sessionComplete ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-3xl shadow-xl p-8 max-w-md w-full text-center border border-white/20">
+                <h2 className="text-2xl font-bold text-white mb-2">Your free session is complete</h2>
+                <p className="text-white/80 mb-6">Upgrade to continue your therapy journey and unlock unlimited sessions, advanced features, and more.</p>
+                <button
+                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold rounded-xl px-6 py-3 mb-3 transition-all duration-200 shadow-lg text-lg"
+                  onClick={() => navigate('/premium-plan-details')}
                 >
-                  <Send size={20} />
-                </Button>
+                  Upgrade to Premium
+                </button>
+                {isPremium && (
+                  <button
+                    className="bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl px-6 py-3 transition-all duration-200 border border-white/30 text-lg"
+                    onClick={handleStartNewSession}
+                    disabled={isLoading}
+                  >
+                    Start New Session
+                  </button>
+                )}
               </div>
-              
-              
+              {errorMessage && (
+                <div className="mt-4 text-red-400 text-sm font-semibold">{errorMessage}</div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="p-8 md:p-10 border-t border-white/10">
+              <div className="relative">
+                <div className="premium-glass rounded-2xl border border-white/20 p-4 flex items-end space-x-3">
+                  
+                  {/* Text Input */}
+                  <Textarea
+                    ref={inputRef}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={sessionComplete ? "Session complete. Upgrade to continue chatting." : "Share your thoughts..."}
+                    className="flex-1 min-h-[2.5rem] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
+                    disabled={isLoading || sessionComplete}
+                  />
+                  
+                  {/* Send Button */}
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!inputText.trim() || isLoading || sessionComplete}
+                    className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send size={20} />
+                  </Button>
+                </div>
+                
+                {sessionComplete && (
+                  <div className="absolute left-0 right-0 -bottom-8 text-center text-yellow-200 text-sm font-semibold mt-2">
+                    Free session complete. Upgrade to continue chatting.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

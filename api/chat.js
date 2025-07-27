@@ -320,7 +320,6 @@ export async function POST(req) {
       if (onboardingError || !onboarding) {
         console.error('❌ Error fetching onboarding data or onboarding not found:', onboardingError);
         onboardingAnalysis = '';
-        // Do NOT return an error, just proceed with a generic welcome message
         systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
           '{user_intake_form_here}',
           'No onboarding data available. Please proceed with a welcoming, supportive first message.'
@@ -388,7 +387,7 @@ export async function POST(req) {
         ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       }
     } else {
-      // For all subsequent messages, use only Phases 2–6
+      // For all subsequent messages, do NOT reference onboarding at all
       systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6;
     }
     console.log('📝 System prompt sent to OpenAI:', systemPrompt.substring(0, 500));
