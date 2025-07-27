@@ -486,45 +486,66 @@ export async function POST(req) {
     // --- ALWAYS FETCH ONBOARDING ANALYSIS ---
     let onboardingAnalysis = '';
     if (userId) {
-      const { data: onboarding } = await supabase
+      const { data: onboarding, error: onboardingError } = await supabase
         .from('user_onboarding')
-        .select('ai_analysis, *')
+        .select('*')
         .eq('user_id', userId)
         .eq('completed', true)
         .order('updated_at', { ascending: false })
         .limit(1)
         .single();
       
+      if (onboardingError) {
+        console.error('❌ Error fetching onboarding data:', onboardingError);
+        return Response.json({ error: 'Failed to fetch onboarding data.' }, { status: 500 });
+      }
+      
       if (generateAnalysis && onboarding && !onboarding.ai_analysis) {
-        // Generate initial AI analysis based on onboarding form
+        console.log('🔄 Generating initial AI analysis based on onboarding form...');
+        
+        // Format the onboarding data for the prompt
         const formattedOnboarding = formatOnboardingData(onboarding);
+        console.log('📋 Formatted onboarding data:', formattedOnboarding);
+        
+        // Use your complete therapy prompt template with the onboarding data
         const analysisPrompt = THERAPY_PROMPT_TEMPLATE.replace(
           '{user_intake_form_here}',
           formattedOnboarding
-        ) + '\n\n⚠️ IMPORTANT: Generate a personalized initial analysis message based on the user\'s onboarding form. This should be the first message the user sees in therapy. Focus on their primary focus, emotional state, and create a warm, therapeutic welcome. Do not include any step headers or instructions in your response.';
+        );
+        
+        console.log('📝 Using therapy prompt template for analysis generation');
         
         const analysisResponse = await openai.chat.completions.create({
           model: "gpt-4",
           messages: [
             { role: 'system', content: analysisPrompt },
-            { role: 'user', content: 'Generate my initial therapeutic analysis and welcome message based on my onboarding form.' }
+            { role: 'user', content: 'Based on my onboarding form, please provide your initial therapeutic analysis and welcome message as my AI therapist.' }
           ],
           temperature: 0.7,
           max_tokens: 800,
         });
         
         const aiAnalysis = analysisResponse.choices[0].message.content;
+        console.log('🤖 Generated AI analysis:', aiAnalysis);
         
-        // Save the analysis to the database
-        await supabase
+        // Save the analysis to the database for token reduction
+        const { error: updateError } = await supabase
           .from('user_onboarding')
           .update({ ai_analysis: aiAnalysis })
           .eq('user_id', userId)
           .eq('completed', true);
         
+        if (updateError) {
+          console.error('❌ Error saving AI analysis:', updateError);
+          // Continue without saving - the analysis will be regenerated next time
+        } else {
+          console.log('✅ AI analysis saved to database for token reduction');
+        }
+        
         onboardingAnalysis = aiAnalysis;
-        console.log('✅ Generated and saved initial AI analysis');
+        console.log('✅ Initial AI analysis generated and saved successfully');
       } else if (onboarding && onboarding.ai_analysis) {
+        console.log('📖 Using existing AI analysis from database');
         onboardingAnalysis = onboarding.ai_analysis;
       }
     }
@@ -594,6 +615,14 @@ export async function POST(req) {
     if (generateAnalysis && onboardingAnalysis) {
       responseData.aiAnalysis = onboardingAnalysis;
     }
+    
+    console.log('✅ Chat API response:', { 
+      hasReply: !!aiReply, 
+      sessionComplete, 
+      hasAnalysis: !!responseData.aiAnalysis,
+      generateAnalysis 
+    });
+    
     return Response.json(responseData);
   } catch (error) {
     console.error("❌ Error in /api/chat:", error);

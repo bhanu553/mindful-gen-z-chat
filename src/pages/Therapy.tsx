@@ -39,7 +39,8 @@ const Therapy = () => {
   useEffect(() => {
     if (user && !hasInitialized && messages.length === 0) {
       setHasInitialized(true);
-      triggerFirstMessage();
+      // Don't trigger first message - it should come from session loading
+      console.log("🎯 Therapy page initialized, waiting for session messages");
     }
   }, [user, hasInitialized, messages.length]);
 
@@ -90,58 +91,7 @@ const Therapy = () => {
     }
   };
 
-  const triggerFirstMessage = async () => {
-    if (!user) return;
 
-    setIsLoading(true);
-    try {
-      console.log("🚀 Triggering first AI message for user:", user.id);
-      
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          message: "Start my first therapy session",
-          userId: user.id,
-          isFirstMessage: true
-        })
-      });
-
-      if (!response.ok) {
-        let errorMsg = 'Failed to get initial response. Please try again.';
-        try {
-          const errData = await response.json();
-          if (errData && errData.error) errorMsg = errData.error;
-        } catch {}
-        throw new Error(errorMsg);
-      }
-
-      const data = await response.json();
-      const aiResponse = data.reply;
-
-      if (!aiResponse) {
-        throw new Error('No initial response from assistant.');
-      }
-
-      // Add AI's first message (analysis and welcome)
-      const aiMessage: Message = {
-        id: Date.now().toString(),
-        text: aiResponse,
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages([aiMessage]);
-      
-      console.log("✅ First AI message received and displayed");
-    } catch (error: any) {
-      console.error('Error triggering first message:', error);
-      toast.error(error.message || 'Failed to start therapy session. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSendMessage = async () => {
     if (!inputText?.trim() || sessionComplete) return;

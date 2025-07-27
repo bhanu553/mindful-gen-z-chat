@@ -142,36 +142,47 @@ const Onboarding = () => {
 
     try {
       console.log('Saving onboarding data for user:', user.id);
-      const { error } = await supabase
+      console.log('Form data being saved:', formData);
+      
+      // Create a clean data object with only the fields we know exist
+      const onboardingData = {
+        user_id: user.id,
+        full_name: formData.full_name,
+        email: formData.email,
+        phone_number: formData.phone_number || null,
+        age: formData.age ? parseInt(formData.age) : null,
+        gender: formData.gender || null,
+        country: formData.country || null,
+        timezone: formData.timezone || null,
+        primary_focus: formData.primary_focus,
+        previous_therapy: formData.previous_therapy,
+        current_medication: formData.current_medication,
+        mental_health_rating: formData.mental_health_rating ? parseInt(formData.mental_health_rating) : null,
+        other_struggles: formData.other_struggles || null,
+        self_harm_thoughts: formData.self_harm_thoughts,
+        last_self_harm_occurrence: formData.last_self_harm_occurrence || null,
+        current_crisis: formData.current_crisis,
+        ai_substitute_consent: formData.ai_substitute_consent,
+        data_processing_consent: formData.data_processing_consent,
+        emergency_responsibility_consent: formData.emergency_responsibility_consent,
+        calendar_reminders_consent: formData.calendar_reminders_consent,
+        completed: true
+      };
+      
+      console.log('Clean onboarding data:', onboardingData);
+      
+      const { data, error } = await supabase
         .from('user_onboarding')
-        .upsert({
-          user_id: user.id,
-          full_name: formData.full_name,
-          email: formData.email,
-          phone_number: formData.phone_number || null,
-          age: formData.age ? parseInt(formData.age) : null,
-          gender: formData.gender || null,
-          country: formData.country || null,
-          timezone: formData.timezone || null,
-          primary_focus: formData.primary_focus,
-          previous_therapy: formData.previous_therapy,
-          current_medication: formData.current_medication,
-          mental_health_rating: formData.mental_health_rating ? parseInt(formData.mental_health_rating) : null,
-          other_struggles: formData.other_struggles || null,
-          self_harm_thoughts: formData.self_harm_thoughts,
-          last_self_harm_occurrence: formData.last_self_harm_occurrence || null,
-          current_crisis: formData.current_crisis,
-          ai_substitute_consent: formData.ai_substitute_consent,
-          data_processing_consent: formData.data_processing_consent,
-          emergency_responsibility_consent: formData.emergency_responsibility_consent,
-          calendar_reminders_consent: formData.calendar_reminders_consent,
-          completed: true
-        });
+        .upsert(onboardingData)
+        .select();
 
       if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+        console.error('❌ Supabase error:', error);
+        console.error('Error details:', error.message, error.details, error.hint);
+        throw new Error(`Database error: ${error.message}`);
       }
+      
+      console.log('✅ Onboarding data saved successfully:', data);
 
       console.log('Onboarding data saved successfully');
       
@@ -185,6 +196,7 @@ const Onboarding = () => {
       });
       
       // Generate AI analysis in background (non-blocking)
+      console.log('🔄 Starting AI analysis generation...');
       fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -197,9 +209,17 @@ const Onboarding = () => {
           generateAnalysis: true
         })
       })
-      .then(response => response.json())
+      .then(response => {
+        console.log('📡 AI analysis response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+        return response.json();
+      })
       .then(data => {
+        console.log('📊 AI analysis response data:', data);
         if (data.aiAnalysis) {
+          console.log('💾 Saving AI analysis to database...');
           // Save the AI analysis to the onboarding record
           supabase
             .from('user_onboarding')
@@ -208,15 +228,17 @@ const Onboarding = () => {
             .eq('completed', true)
             .then(({ error }) => {
               if (error) {
-                console.error('Error saving AI analysis:', error);
+                console.error('❌ Error saving AI analysis:', error);
               } else {
                 console.log('✅ AI analysis saved successfully');
               }
             });
+        } else {
+          console.log('⚠️ No AI analysis in response');
         }
       })
       .catch(error => {
-        console.error('Error generating AI analysis:', error);
+        console.error('❌ Error generating AI analysis:', error);
         // Continue anyway - the analysis can be generated later
       });
       
@@ -224,11 +246,18 @@ const Onboarding = () => {
       console.log('🚀 Direct redirect to therapy page');
       navigate('/therapy', { replace: true });
 
-    } catch (error) {
-      console.error('Error saving onboarding:', error);
+    } catch (error: any) {
+      console.error('❌ Error saving onboarding:', error);
+      console.error('Error stack:', error.stack);
+      
+      let errorMessage = "Failed to save your information. Please try again.";
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to save your information. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
