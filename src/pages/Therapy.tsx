@@ -13,6 +13,22 @@ interface Message {
   timestamp: Date;
 }
 
+// Utility to highlight the last question in an AI message
+function highlightTherapyQuestion(text: string): JSX.Element {
+  // Find the last question mark
+  const lastQ = text.lastIndexOf('?');
+  if (lastQ === -1) return <>{text}</>;
+  // Find the start of the last sentence (after previous period or newline)
+  let start = text.lastIndexOf('.', lastQ);
+  if (start === -1) start = text.lastIndexOf('\n', lastQ);
+  if (start === -1) start = 0; else start += 1;
+  // Extract question and before/after
+  const before = text.slice(0, start);
+  const question = text.slice(start, lastQ + 1);
+  const after = text.slice(lastQ + 1);
+  return <>{before}<span className="therapy-question">«{question.trim()}»</span>{after}</>;
+}
+
 const Therapy = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -246,7 +262,7 @@ const Therapy = () => {
                         }`}
                       >
                         <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                          {message.text}
+                          {message.isUser ? message.text : highlightTherapyQuestion(message.text)}
                         </p>
                         <p className="text-xs text-white/50 mt-2">
                           {formatTimestamp(message.timestamp)}
