@@ -48,6 +48,10 @@ export default async function handler(req, res) {
       '{user_intake_form_here}',
       formattedOnboarding
     ) + '\n\n⚠️ IMPORTANT: Generate ONLY the initial therapeutic analysis and welcome message according to the therapy prompt structure above. Do NOT use any generic responses or default GPT behavior. Follow the therapy prompt exactly.';
+    // LOGGING: Show prompt and user message
+    console.log('📝 System prompt for onboarding-complete:', analysisPrompt.substring(0, 500));
+    const safeUserMessage = 'I am ready to begin my therapy session.';
+    console.log('📝 User message for onboarding-complete:', safeUserMessage);
     // Generate ai_analysis
     const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
     if (!apiKey) return res.status(500).json({ success: false, error: 'OpenAI API key missing' });
@@ -56,7 +60,7 @@ export default async function handler(req, res) {
       model: "gpt-4",
       messages: [
         { role: 'system', content: analysisPrompt },
-        { role: 'user', content: 'Generate my initial therapeutic analysis and welcome message based on my onboarding form, following the therapy prompt structure exactly.' }
+        { role: 'user', content: safeUserMessage }
       ],
       temperature: 0.7,
       max_tokens: 800,
