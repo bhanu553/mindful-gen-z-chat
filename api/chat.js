@@ -221,9 +221,17 @@ function isSessionComplete(aiResponse) {
     "Note from me:",
     "I'm here when you're ready again",
     "Take time to process",
-    "reflection on the session theme"
+    "reflection on the session theme",
+    "I look forward to our next session",
+    "until then",
+    "Take care of yourself",
+    "Thank you for sharing",
+    "session is complete",
+    "end of our session",
+    "conclude our session",
+    "wrap up our session"
   ];
-  return completionIndicators.some(indicator => aiResponse.includes(indicator));
+  return completionIndicators.some(indicator => aiResponse.toLowerCase().includes(indicator.toLowerCase()));
 }
 
 // Utility: Get or create current session for free user
@@ -420,6 +428,7 @@ export async function POST(req) {
     // --- SEND TO OPENAI ---
     let aiReply = '';
     try {
+      console.log('🤖 Sending request to OpenAI with messages:', messages.length);
       const response = await openai.chat.completions.create({
         model: "gpt-4",
         messages: messages,
@@ -427,9 +436,18 @@ export async function POST(req) {
         max_tokens: 1000
       });
       aiReply = response.choices[0].message.content;
+      console.log('✅ OpenAI response received successfully');
     } catch (error) {
       console.error('❌ Error from OpenAI:', error);
-      return Response.json({ error: 'Failed to generate AI response. Please try again.' }, { status: 500 });
+      console.error('❌ OpenAI error details:', {
+        message: error.message,
+        status: error.status,
+        type: error.type
+      });
+      return Response.json({ 
+        error: 'Failed to generate AI response. Please try again.',
+        details: error.message 
+      }, { status: 500 });
     }
 
     // Validate that the response is not empty
@@ -453,9 +471,13 @@ export async function POST(req) {
     }
     // --- SESSION COMPLETION DETECTION ---
     let sessionComplete = false;
+    console.log('🔍 Checking session completion for AI response:', aiReply.substring(0, 100) + '...');
     if (isSessionComplete(aiReply) && session && userId) {
+      console.log('✅ Session completion detected! Marking session as complete.');
       await supabase.from('chat_sessions').update({ is_complete: true }).eq('id', session.id);
       sessionComplete = true;
+    } else {
+      console.log('❌ Session completion NOT detected for this response.');
     }
 
     const responseData = { reply: aiReply, sessionComplete };
@@ -468,7 +490,6 @@ export async function POST(req) {
       sessionComplete, 
       hasAnalysis: !!responseData.aiAnalysis,
       generateAnalysis,
-      onboardingData: !!onboarding,
       aiAnalysisLength: onboardingAnalysis ? onboardingAnalysis.length : 0
     });
     

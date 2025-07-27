@@ -40,6 +40,17 @@ const Therapy = () => {
   const [sessionComplete, setSessionComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // Debug sessionComplete state changes
+  useEffect(() => {
+    console.log('🔄 sessionComplete state changed to:', sessionComplete);
+  }, [sessionComplete]);
+  
+  // Debug messages state changes
+  useEffect(() => {
+    console.log('🔄 messages state changed, current length:', messages.length);
+    console.log('🔄 last message:', messages[messages.length - 1]);
+  }, [messages]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user, isPremium } = useAuth();
@@ -72,12 +83,12 @@ const Therapy = () => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       console.log('🔄 Last message is from user:', lastMessage.isUser);
-      if (!lastMessage.isUser) {
+      if (!lastMessage.isUser && isLoading) {
         setIsLoading(false);
         console.log('🔄 Loading stopped because last message is from AI');
       }
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   // Fetch or create session and load messages on initial mount only
   useEffect(() => {
@@ -165,6 +176,7 @@ const Therapy = () => {
 
     try {
       // Call backend API with user context
+      console.log('📤 Sending message to backend:', userInput.substring(0, 50) + '...');
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -208,6 +220,7 @@ const Therapy = () => {
       console.log('📝 About to add AI message to state:', aiMessage);
       console.log('📝 Current messages before update:', messages);
       
+      // Update messages state with the new AI message - use immediate callback
       setMessages(prev => {
         const updated = [...prev, aiMessage];
         console.log('[setMessages after AI message]', updated);
@@ -215,21 +228,36 @@ const Therapy = () => {
         return updated;
       });
       
+      // Force immediate re-render
+      setForceUpdate(prev => prev + 1);
+      
+      // Ensure loading is stopped immediately
+      setIsLoading(false);
+      
       console.log('✅ AI message added to state:', aiMessage);
-      console.log('✅ Loading state before setting to false:', isLoading);
-      setIsLoading(false); // double-safety: stop loading after AI message
       console.log('✅ Loading state set to false');
       
-      // Force a re-render to ensure the message appears immediately
+      // Force multiple re-renders to ensure the message appears immediately
       setForceUpdate(prev => prev + 1);
       console.log('🔄 Force update triggered');
+      
+      // Additional force update after a small delay to ensure re-render
+      setTimeout(() => {
+        setForceUpdate(prev => prev + 1);
+        console.log('🔄 Additional force update triggered');
+      }, 100);
+      
+      console.log('🔍 Checking sessionComplete flag from backend:', data.sessionComplete);
       if (data.sessionComplete) {
+        console.log('✅ Session complete detected! Setting sessionComplete state to true.');
         setSessionComplete(true);
         toast.info('Your free session is now complete. Upgrade to continue.');
         setTimeout(() => navigate('/premium-plan-details'), 2000);
+      } else {
+        console.log('❌ Session complete NOT detected from backend response.');
       }
     } catch (error: any) {
-      console.error('Error:', error);
+      console.error('❌ Frontend error:', error);
       // Suppress onboarding errors from user view
       const errMsg = (error.message || '').toLowerCase();
       if (errMsg.includes('onboarding')) {
@@ -239,8 +267,10 @@ const Therapy = () => {
         toast.error(error.message || 'Failed to get response. Please try again.');
       }
       // Do NOT remove the user message; keep it in the chat
+      console.log('🔄 Keeping user message in chat despite error');
     } finally {
       setIsLoading(false);
+      console.log('🔄 Loading stopped in finally block');
     }
   };
 
