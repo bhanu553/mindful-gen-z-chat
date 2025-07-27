@@ -299,6 +299,7 @@ export async function POST(req) {
       if (onboardingError) {
         console.error('❌ Error fetching onboarding data:', onboardingError);
         onboardingAnalysis = '';
+        // Do NOT return an error, just proceed
       } else if (generateAnalysis && onboarding && (!onboarding.ai_analysis || onboarding.ai_analysis === null || onboarding.ai_analysis === '')) {
         console.log('🔄 Generating initial AI analysis based on onboarding form...');
         

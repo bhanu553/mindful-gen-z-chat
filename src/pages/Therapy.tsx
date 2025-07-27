@@ -87,8 +87,14 @@ const Therapy = () => {
       );
       setSessionComplete(false);
     } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to load session.');
-      toast.error(error.message || 'Failed to load session.');
+      // Suppress onboarding errors from user view
+      const errMsg = (error.message || '').toLowerCase();
+      if (errMsg.includes('onboarding')) {
+        setErrorMessage(null);
+      } else {
+        setErrorMessage(error.message || 'Failed to load session.');
+        toast.error(error.message || 'Failed to load session.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -158,8 +164,14 @@ const Therapy = () => {
       }
     } catch (error: any) {
       console.error('Error:', error);
-      setErrorMessage(error.message || 'Failed to get response. Please try again.');
-      toast.error(error.message || 'Failed to get response. Please try again.');
+      // Suppress onboarding errors from user view
+      const errMsg = (error.message || '').toLowerCase();
+      if (errMsg.includes('onboarding')) {
+        setErrorMessage(null);
+      } else {
+        setErrorMessage(error.message || 'Failed to get response. Please try again.');
+        toast.error(error.message || 'Failed to get response. Please try again.');
+      }
       // Do NOT remove the user message; keep it in the chat
     } finally {
       setIsLoading(false);

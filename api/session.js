@@ -76,6 +76,7 @@ export async function POST(req) {
         ];
       }
     }
+    // If onboarding is missing or onboardingError, just proceed with allMessages (no error)
     return Response.json({ sessionComplete: false, messages: allMessages });
   } catch (error) {
     console.error('❌ Error in /api/session:', error);
