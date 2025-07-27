@@ -186,64 +186,68 @@ const Onboarding = () => {
 
       console.log('Onboarding data saved successfully');
       
-      // Set completion flag immediately to prevent redirect loops
+      // Generate AI analysis FIRST before redirect
+      console.log('🔄 Generating AI analysis before redirect...');
+      
+      try {
+        const analysisResponse = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: 'Generate initial analysis based on onboarding form',
+            userId: user.id,
+            isFirstMessage: true,
+            generateAnalysis: true
+          })
+        });
+        
+        if (!analysisResponse.ok) {
+          throw new Error(`API error: ${analysisResponse.status} ${analysisResponse.statusText}`);
+        }
+        
+        const analysisData = await analysisResponse.json();
+        console.log('📊 AI analysis response data:', analysisData);
+        
+        if (analysisData.aiAnalysis) {
+          console.log('💾 Saving AI analysis to database...');
+          // Save the AI analysis to the onboarding record
+          const { error: saveError } = await supabase
+            .from('user_onboarding')
+            .update({ ai_analysis: analysisData.aiAnalysis })
+            .eq('user_id', user.id)
+            .eq('completed', true);
+          
+          if (saveError) {
+            console.error('❌ Error saving AI analysis:', saveError);
+          } else {
+            console.log('✅ AI analysis saved successfully');
+          }
+        } else {
+          console.log('⚠️ No AI analysis in response');
+        }
+      } catch (analysisError) {
+        console.error('❌ Error generating AI analysis:', analysisError);
+        // Continue anyway - the analysis can be generated later
+      }
+      
+      // Set completion flag and show success toast
       setJustCompleted(true);
       
-      // Show success toast
+      // Refresh onboarding status to update the hook
+      await refreshOnboardingStatus();
+      
+      // Small delay to ensure database update is reflected
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       toast({
         title: "Welcome to EchoMind!",
         description: "Your onboarding is complete. Let's begin your healing journey.",
       });
       
-      // Generate AI analysis in background (non-blocking)
-      console.log('🔄 Starting AI analysis generation...');
-      fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: 'Generate initial analysis based on onboarding form',
-          userId: user.id,
-          isFirstMessage: true,
-          generateAnalysis: true
-        })
-      })
-      .then(response => {
-        console.log('📡 AI analysis response status:', response.status);
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('📊 AI analysis response data:', data);
-        if (data.aiAnalysis) {
-          console.log('💾 Saving AI analysis to database...');
-          // Save the AI analysis to the onboarding record
-          supabase
-            .from('user_onboarding')
-            .update({ ai_analysis: data.aiAnalysis })
-            .eq('user_id', user.id)
-            .eq('completed', true)
-            .then(({ error }) => {
-              if (error) {
-                console.error('❌ Error saving AI analysis:', error);
-              } else {
-                console.log('✅ AI analysis saved successfully');
-              }
-            });
-        } else {
-          console.log('⚠️ No AI analysis in response');
-        }
-      })
-      .catch(error => {
-        console.error('❌ Error generating AI analysis:', error);
-        // Continue anyway - the analysis can be generated later
-      });
-      
-      // Immediate redirect to therapy page
-      console.log('🚀 Direct redirect to therapy page');
+      // Redirect to therapy page AFTER analysis is generated
+      console.log('🚀 Redirecting to therapy page after analysis generation');
       navigate('/therapy', { replace: true });
 
     } catch (error: any) {

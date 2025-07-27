@@ -57,6 +57,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return;
       }
     }
+    
+    // If we're on therapy page and onboarding is complete, allow access
+    if (location.pathname === '/therapy' && isOnboardingComplete === true) {
+      console.log('✅ Therapy page: onboarding complete, allowing access');
+    }
 
     console.log('✅ ProtectedRoute: All checks passed, rendering children');
   }, [user, loading, navigate, requireAuth, requireOnboarding, isOnboardingComplete, onboardingLoading, isOnboardingPage]);
