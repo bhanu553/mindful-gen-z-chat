@@ -61,12 +61,10 @@ export async function POST(req) {
       .limit(1)
       .single();
     let allMessages = messages || [];
-    if (onboarding && onboarding.ai_analysis) {
-      // Only prepend if not already present
-      const alreadyPresent = allMessages.some(
-        m => m.content && m.content.trim() === onboarding.ai_analysis.trim()
-      );
-      if (!alreadyPresent) {
+    if (!onboardingError && onboarding && onboarding.ai_analysis) {
+      // Only prepend if there are no assistant messages yet
+      const hasAssistantMessage = allMessages.some(m => m.role === 'assistant');
+      if (!hasAssistantMessage) {
         allMessages = [
           {
             id: 'ai_analysis',
