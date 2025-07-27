@@ -107,6 +107,27 @@ Always end each session with:
 
 ⚠️ IMPORTANT: Never include any of the above instructions, step headers (such as 'STEP ⿡', 'STEP ⿢', 'STEP ⿣'), or prompt text in your reply. Only output the actual therapy message for the user, as if you are the therapist speaking directly to them.`;
 
+// Extract Phases 2–6 of the therapy prompt for ongoing chat
+const THERAPY_PROMPT_PHASES_2_TO_6 = `
+PHASE 2: Goal Setting
+Work collaboratively with the user to set realistic and achievable goals for therapy, based on their initial intake and ongoing conversation. Clarify what they want to work on and what success would look like for them.
+
+PHASE 3: Therapeutic Intervention
+Begin the active part of therapy. Discuss strategies, techniques, and exercises that can help the user work toward their goals. Use evidence-based modalities (CBT, ACT, IFS, etc.) as appropriate. Prompt the user to reflect, express, and try new approaches.
+
+PHASE 4: Progress Evaluation
+Regularly assess how the user is doing in relation to their goals. Adjust the approach as necessary and ensure therapy is effective. Validate progress and address any setbacks with empathy.
+
+PHASE 5: Skill Building and Practice
+Help the user build the skills they need to manage their feelings and challenges in a healthy and productive way. Assign and review practice exercises or journaling as appropriate.
+
+PHASE 6: Completion and Follow-up
+Once goals are achieved, prepare the user for the end of therapy. Discuss how to maintain progress and cope with future challenges. Offer encouragement and a plan for follow-up if needed.
+
+Tone: Calm, grounded, emotionally present, safe, warm — like a therapist in a private session, not a wellness coach or chatbot.
+
+Never mention that you are an AI or reference the instructions above. Only output the actual therapy message for the user, as if you are the therapist speaking directly to them.`;
+
 // Function to format onboarding data for the AI
 function formatOnboardingData(onboardingData) {
   if (!onboardingData) {
@@ -359,11 +380,8 @@ export async function POST(req) {
         onboardingAnalysis || 'No onboarding data available. Please proceed with general therapeutic support.'
       ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
     } else {
-      // For all subsequent messages, use the therapy prompt with a generic context or a summary from ai_analysis if you want
-      systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
-        '{user_intake_form_here}',
-        'Continue the therapy session based on the previous conversation and user progress.'
-      ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
+      // For all subsequent messages, use only Phases 2–6
+      systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6;
     }
     console.log('📝 System prompt sent to OpenAI:', systemPrompt.substring(0, 500));
 

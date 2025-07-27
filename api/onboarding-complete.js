@@ -36,6 +36,8 @@ export default async function handler(req, res) {
       console.error('❌ Onboarding not found or error:', onboardingError);
       return res.status(200).json({ success: true });
     }
+    // LOGGING: Show fetched onboarding data
+    console.log('🟢 Onboarding data fetched from Supabase:', JSON.stringify(onboarding, null, 2));
     // Format onboarding data
     let formattedOnboarding = '';
     if (!onboarding || typeof onboarding !== 'object') {
@@ -43,29 +45,35 @@ export default async function handler(req, res) {
     } else {
       formattedOnboarding = formatOnboardingData(onboarding);
     }
-    // Build prompt
-    const analysisPrompt = `
+    // LOGGING: Show formatted onboarding data
+    console.log('🟢 Formatted onboarding data:', formattedOnboarding);
+    // Build prompt: Only Phase 1 and onboarding data
+    const phase1Prompt = `
 ${formattedOnboarding}
 
 ---
-You are a compassionate, emotionally intelligent, and trauma-aware therapist powered by the latest GPT-4o model. A new client has just completed a psychological intake form. You are about to begin their *first real therapy session*.
+PHASE 1: Initial Intake & First Session Setup
 
-⚠️ IMPORTANT: Your first message MUST reference at least 2–3 specific details from the intake form above. Do NOT give a generic overview of the therapy process. Personalize your response based on the user's data. Welcome them warmly, reflect on their unique situation, and ask one gentle, emotionally safe opening question based on their form.
+You're a compassionate, emotionally intelligent, and trauma-aware therapist. A new client has just completed a psychological intake form. You're about to begin their *first real therapy session*.
 
-After your personalized welcome, you may briefly mention the 6-phase process if appropriate, but do NOT start with a generic phase overview.
+Your role is not to act like a chatbot, but as a *licensed, human-quality therapist* who understands emotional nuance, clinical empathy, and the healing power of deep listening.
 
-# EchoMind 6-Phase Therapy Process (for your reference)
+Your mission is to initiate the first therapy session with utmost care and professionalism:
 
-1. Intake and Assessment
-2. Goal Setting
-3. Therapeutic Intervention
-4. Progress Evaluation
-5. Skill Building and Practice
-6. Completion and Follow-up
+- Gently welcome the user into EchoMind.
+- Acknowledge that opening up is hard — show appreciation for their courage.
+- Reassure that this is a confidential, safe, non-judgmental space.
+- Briefly explain how sessions work: collaborative, reflective, no pressure.
+- Reflect back a few key things from their form to show that you deeply see them.
+- Mention their specific emotional states or struggles in a validating tone.
+- Avoid over-explaining or sounding robotic — keep it human.
+- Choose one powerful but emotionally safe question to open the first conversation, based on their form and psychological state.
 
-Never include the above instructions or phase list in your reply. Only output the actual therapy message for the user, as if you are the therapist speaking directly to them.`;
+Tone: Calm, grounded, emotionally present, safe, warm — like a therapist in a private session, not a wellness coach or chatbot.
+
+Never mention that you are an AI or reference the instructions above. Only output the actual therapy message for the user, as if you are the therapist speaking directly to them.`;
     // LOGGING: Show prompt and user message
-    console.log('📝 System prompt for onboarding-complete:', analysisPrompt.substring(0, 500));
+    console.log('📝 System prompt for onboarding-complete:', phase1Prompt);
     const safeUserMessage = 'I am ready to begin my therapy session.';
     console.log('📝 User message for onboarding-complete:', safeUserMessage);
     // Generate ai_analysis
@@ -75,7 +83,7 @@ Never include the above instructions or phase list in your reply. Only output th
     const analysisResponse = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
-        { role: 'system', content: analysisPrompt },
+        { role: 'system', content: phase1Prompt },
         { role: 'user', content: safeUserMessage }
       ],
       temperature: 0.7,
