@@ -10,7 +10,58 @@ const THERAPY_PROMPT_TEMPLATE = `# EchoMind 6-Phase Therapy Process
 ...<your 6-phase prompt here>...`;
 
 function formatOnboardingData(onboardingData) {
-  // ...same as in chat.js...
+  if (!onboardingData) {
+    return "No onboarding data available.";
+  }
+
+  const formatArray = (arr) => Array.isArray(arr) ? arr.join(", ") : arr;
+  const formatBoolean = (bool) => bool ? "Yes" : "No";
+  const formatRating = (rating) => rating ? `${rating}/10` : "Not specified";
+
+  return `
+MAIN ISSUE: ${onboardingData.primary_focus || "Not specified"}
+
+**CLIENT INTAKE FORM ANALYSIS**
+
+**Personal Information:**
+- Name: ${onboardingData.full_name || "Not provided"}
+- Age: ${onboardingData.age || "Not specified"}
+- Gender: ${onboardingData.gender || "Not specified"}
+- Email: ${onboardingData.email || "Not provided"}
+- Phone: ${onboardingData.phone_number || "Not provided"}
+- Country: ${onboardingData.country || "Not specified"}
+- Timezone: ${onboardingData.timezone || "Not specified"}
+
+**Main Reason for Seeking Therapy:**
+- ${onboardingData.primary_focus || "Not specified"}
+
+**Mental Health Background:**
+- Previous therapy experience: ${formatBoolean(onboardingData.previous_therapy)}
+- Current medication: ${formatBoolean(onboardingData.current_medication)}
+- Mental health rating: ${formatRating(onboardingData.mental_health_rating)}
+- Current crisis situation: ${formatBoolean(onboardingData.current_crisis)}
+
+**Current Struggles:**
+- Primary struggles: ${formatArray(onboardingData.current_struggles)}
+- Additional struggles: ${onboardingData.other_struggles || "None specified"}
+
+**Safety Assessment:**
+- Self-harm thoughts: ${formatBoolean(onboardingData.self_harm_thoughts)}
+- Last self-harm occurrence: ${onboardingData.last_self_harm_occurrence || "Not applicable"}
+
+**Therapeutic Preferences:**
+- Preferred therapy types: ${formatArray(onboardingData.therapy_types)}
+
+**Consent & Agreements:**
+- AI substitute consent: ${formatBoolean(onboardingData.ai_substitute_consent)}
+- Data processing consent: ${formatBoolean(onboardingData.data_processing_consent)}
+- Emergency responsibility consent: ${formatBoolean(onboardingData.emergency_responsibility_consent)}
+- Calendar reminders consent: ${formatBoolean(onboardingData.calendar_reminders_consent)}
+
+**Form Completion Status:**
+- Completed: ${formatBoolean(onboardingData.completed)}
+- Last updated: ${onboardingData.updated_at || "Not specified"}
+`;
 }
 
 export default async function handler(req, res) {
@@ -68,6 +119,8 @@ Your mission is to initiate the first therapy session with utmost care and profe
 - Mention their specific emotional states or struggles in a validating tone.
 - Avoid over-explaining or sounding robotic — keep it human.
 - Choose one powerful but emotionally safe question to open the first conversation, based on their form and psychological state.
+
+You must reference the user's MAIN ISSUE exactly as stated above (e.g., "relationship issue"). Do not use generic terms like "anxiety" unless present in the intake form.
 
 Tone: Calm, grounded, emotionally present, safe, warm — like a therapist in a private session, not a wellness coach or chatbot.
 
