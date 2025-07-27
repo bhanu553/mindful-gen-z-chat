@@ -2,26 +2,27 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, User } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
   content: string;
-  role: 'user' | 'assistant';
+  role: string;
   created_at: string;
+  mode: string;
+  sentiment_score: number;
+  session_id: string;
+  user_id: string;
 }
 
 interface Session {
   id: string;
   title: string;
   created_at: string;
-  is_complete: boolean;
+  current_mode: string;
+  message_count: number;
+  user_id: string;
 }
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 const SessionView = () => {
   const { sessionId } = useParams();
