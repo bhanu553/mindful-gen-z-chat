@@ -462,7 +462,7 @@ async function getOrCreateCurrentSession(userId) {
 
 export async function POST(req) {
   try {
-    const { message, userId, isFirstMessage = false } = await req.json();
+    const { message, userId, isFirstMessage = false, generateAnalysis = false } = await req.json();
     
     if (!process.env.OPENAI_API_KEY) {
       console.error("❌ OPENAI_API_KEY is missing");
@@ -488,13 +488,43 @@ export async function POST(req) {
     if (userId) {
       const { data: onboarding } = await supabase
         .from('user_onboarding')
-        .select('ai_analysis')
+        .select('ai_analysis, *')
         .eq('user_id', userId)
         .eq('completed', true)
         .order('updated_at', { ascending: false })
         .limit(1)
         .single();
-      if (onboarding && onboarding.ai_analysis) {
+      
+      if (generateAnalysis && onboarding && !onboarding.ai_analysis) {
+        // Generate initial AI analysis based on onboarding form
+        const formattedOnboarding = formatOnboardingData(onboarding);
+        const analysisPrompt = THERAPY_PROMPT_TEMPLATE.replace(
+          '{user_intake_form_here}',
+          formattedOnboarding
+        ) + '\n\n⚠️ IMPORTANT: Generate a personalized initial analysis message based on the user\'s onboarding form. This should be the first message the user sees in therapy. Focus on their primary focus, emotional state, and create a warm, therapeutic welcome. Do not include any step headers or instructions in your response.';
+        
+        const analysisResponse = await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: [
+            { role: 'system', content: analysisPrompt },
+            { role: 'user', content: 'Generate my initial therapeutic analysis and welcome message based on my onboarding form.' }
+          ],
+          temperature: 0.7,
+          max_tokens: 800,
+        });
+        
+        const aiAnalysis = analysisResponse.choices[0].message.content;
+        
+        // Save the analysis to the database
+        await supabase
+          .from('user_onboarding')
+          .update({ ai_analysis: aiAnalysis })
+          .eq('user_id', userId)
+          .eq('completed', true);
+        
+        onboardingAnalysis = aiAnalysis;
+        console.log('✅ Generated and saved initial AI analysis');
+      } else if (onboarding && onboarding.ai_analysis) {
         onboardingAnalysis = onboarding.ai_analysis;
       }
     }
@@ -522,7 +552,7 @@ export async function POST(req) {
     const messages = [
       { role: 'system', content: systemPrompt },
       ...chatHistory.map(m => ({ role: m.role, content: m.content })),
-      { role: 'user', content: message }
+          { role: 'user', content: message }
     ];
     // --- SEND TO OPENAI ---
     const response = await openai.chat.completions.create({
@@ -560,7 +590,11 @@ export async function POST(req) {
       sessionComplete = true;
     }
 
-    return Response.json({ reply: aiReply, sessionComplete });
+    const responseData = { reply: aiReply, sessionComplete };
+    if (generateAnalysis && onboardingAnalysis) {
+      responseData.aiAnalysis = onboardingAnalysis;
+    }
+    return Response.json(responseData);
   } catch (error) {
     console.error("❌ Error in /api/chat:", error);
     return Response.json({ error: error.message || "Internal server error" }, { status: 500 });

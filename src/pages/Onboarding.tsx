@@ -29,10 +29,8 @@ interface OnboardingFormData {
   
   // Mental Health Status
   previous_therapy: boolean | null;
-  therapy_types: string[];
   current_medication: boolean | null;
   mental_health_rating: string;
-  current_struggles: string[];
   other_struggles: string;
   
   // Safety Check
@@ -71,12 +69,10 @@ const Onboarding = () => {
     gender: '',
     country: '',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    primary_focus: '', // NEW
+    primary_focus: '',
     previous_therapy: null,
-    therapy_types: [],
     current_medication: null,
     mental_health_rating: '',
-    current_struggles: [],
     other_struggles: '',
     self_harm_thoughts: null,
     last_self_harm_occurrence: '',
@@ -157,11 +153,10 @@ const Onboarding = () => {
           gender: formData.gender || null,
           country: formData.country || null,
           timezone: formData.timezone || null,
-          primary_focus: formData.primary_focus, // NEW
+          primary_focus: formData.primary_focus,
           previous_therapy: formData.previous_therapy,
           current_medication: formData.current_medication,
           mental_health_rating: formData.mental_health_rating ? parseInt(formData.mental_health_rating) : null,
-          current_struggles: formData.current_struggles,
           other_struggles: formData.other_struggles || null,
           self_harm_thoughts: formData.self_harm_thoughts,
           last_self_harm_occurrence: formData.last_self_harm_occurrence || null,
@@ -179,14 +174,55 @@ const Onboarding = () => {
       }
 
       console.log('Onboarding data saved successfully');
+      
+      // Set completion flag immediately to prevent redirect loops
+      setJustCompleted(true);
+      
+      // Show success toast
       toast({
         title: "Welcome to EchoMind!",
         description: "Your onboarding is complete. Let's begin your healing journey.",
       });
-      setJustCompleted(true); // Set local flag
-      // Instantly redirect to therapy after onboarding completion
-      console.log('🚀 Redirecting to therapy after onboarding completion');
-      navigate('/therapy');
+      
+      // Generate AI analysis in background (non-blocking)
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: 'Generate initial analysis based on onboarding form',
+          userId: user.id,
+          isFirstMessage: true,
+          generateAnalysis: true
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.aiAnalysis) {
+          // Save the AI analysis to the onboarding record
+          supabase
+            .from('user_onboarding')
+            .update({ ai_analysis: data.aiAnalysis })
+            .eq('user_id', user.id)
+            .eq('completed', true)
+            .then(({ error }) => {
+              if (error) {
+                console.error('Error saving AI analysis:', error);
+              } else {
+                console.log('✅ AI analysis saved successfully');
+              }
+            });
+        }
+      })
+      .catch(error => {
+        console.error('Error generating AI analysis:', error);
+        // Continue anyway - the analysis can be generated later
+      });
+      
+      // Immediate redirect to therapy page
+      console.log('🚀 Direct redirect to therapy page');
+      navigate('/therapy', { replace: true });
 
     } catch (error) {
       console.error('Error saving onboarding:', error);
@@ -207,13 +243,7 @@ const Onboarding = () => {
     }));
   };
 
-  const toggleArrayField = (field: 'therapy_types' | 'current_struggles', value: string) => {
-    const currentArray = formData[field];
-    const newArray = currentArray.includes(value)
-      ? currentArray.filter(item => item !== value)
-      : [...currentArray, value];
-    updateFormData(field, newArray);
-  };
+
 
   const renderPersonalDetails = () => (
     <div className="space-y-6">
@@ -358,23 +388,7 @@ const Onboarding = () => {
         </RadioGroup>
       </div>
 
-      {formData.previous_therapy && (
-        <div className="space-y-2">
-          <Label>What type of therapy have you received? (Select all that apply)</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {['CBT (Cognitive Behavioral)', 'DBT (Dialectical Behavioral)', 'Psychoanalytic', 'Humanistic', 'Family Therapy', 'Group Therapy', 'EMDR', 'Other'].map((type) => (
-              <div key={type} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`therapy-${type}`}
-                  checked={formData.therapy_types.includes(type)}
-                  onCheckedChange={() => toggleArrayField('therapy_types', type)}
-                />
-                <Label htmlFor={`therapy-${type}`} className="text-sm">{type}</Label>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
 
       <div className="space-y-3">
         <Label>Are you currently on medication for any mental health issue?</Label>
@@ -404,21 +418,7 @@ const Onboarding = () => {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>Select what you're currently struggling with:</Label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {['Anxiety', 'Depression', 'Relationship issues', 'Loneliness', 'Trauma', 'Identity confusion', 'Burnout', 'Self-esteem', 'Grief/loss', 'Financial stress'].map((struggle) => (
-            <div key={struggle} className="flex items-center space-x-2">
-              <Checkbox
-                id={`struggle-${struggle}`}
-                checked={formData.current_struggles.includes(struggle)}
-                onCheckedChange={() => toggleArrayField('current_struggles', struggle)}
-              />
-              <Label htmlFor={`struggle-${struggle}`} className="text-sm">{struggle}</Label>
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       <div className="space-y-2">
         <Label htmlFor="other_struggles">Other struggles (please specify)</Label>
