@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { createClient } from '@supabase/supabase-js';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// OpenAI client will be initialized with the correct API key in the POST function
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -464,11 +464,19 @@ export async function POST(req) {
   try {
     const { message, userId, isFirstMessage = false, generateAnalysis = false } = await req.json();
     
-    if (!process.env.OPENAI_API_KEY) {
+    const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+    
+    if (!apiKey) {
       console.error("❌ OPENAI_API_KEY is missing");
+      console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('OPENAI')));
       return Response.json({ error: "OpenAI API key is not set." }, { status: 500 });
     }
-
+    
+    console.log("🔑 Using OpenAI API key:", apiKey.substring(0, 10) + "...");
+    
+    // Initialize OpenAI client with the correct API key
+    const openai = new OpenAI({ apiKey });
+    
     if (!message) {
       return Response.json({ error: "No message provided." }, { status: 400 });
     }
@@ -507,19 +515,19 @@ export async function POST(req) {
         const formattedOnboarding = formatOnboardingData(onboarding);
         console.log('📋 Formatted onboarding data:', formattedOnboarding);
         
-        // Use your complete therapy prompt template with the onboarding data
+        // Use ONLY your complete therapy prompt template with the onboarding data
         const analysisPrompt = THERAPY_PROMPT_TEMPLATE.replace(
           '{user_intake_form_here}',
           formattedOnboarding
-        );
+        ) + '\n\n⚠️ IMPORTANT: Generate ONLY the initial therapeutic analysis and welcome message according to the therapy prompt structure above. Do NOT use any generic responses or default GPT behavior. Follow the therapy prompt exactly.';
         
-        console.log('📝 Using therapy prompt template for analysis generation');
+        console.log('📝 Using ONLY your therapy prompt for analysis generation');
         
         const analysisResponse = await openai.chat.completions.create({
           model: "gpt-4",
           messages: [
             { role: 'system', content: analysisPrompt },
-            { role: 'user', content: 'Based on my onboarding form, please provide your initial therapeutic analysis and welcome message as my AI therapist.' }
+            { role: 'user', content: 'Generate my initial therapeutic analysis and welcome message based on my onboarding form, following the therapy prompt structure exactly.' }
           ],
           temperature: 0.7,
           max_tokens: 800,
@@ -549,11 +557,14 @@ export async function POST(req) {
         onboardingAnalysis = onboarding.ai_analysis;
       }
     }
-    // --- ALWAYS USE FULL SYSTEM PROMPT ---
+    // --- ALWAYS USE YOUR COMPLETE THERAPY PROMPT ---
     let systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
       '{user_intake_form_here}',
       onboardingAnalysis || 'No onboarding data available. Please proceed with general therapeutic support.'
-    ) + '\n\n⚠️ Do not use generic safety fallback messages. Always respond as a professional therapist according to the above instructions, unless a true crisis is detected.';
+    ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
+    
+    console.log('📝 Using complete therapy prompt for response generation');
+    
     // --- FETCH ALL CHAT HISTORY ---
     let chatHistory = [];
     if (session && userId) {
@@ -569,20 +580,37 @@ export async function POST(req) {
       }
       chatHistory = history || [];
     }
-    // --- BUILD MESSAGES ARRAY ---
+    
+    // --- BUILD MESSAGES ARRAY WITH YOUR PROMPT ---
     const messages = [
       { role: 'system', content: systemPrompt },
       ...chatHistory.map(m => ({ role: m.role, content: m.content })),
-          { role: 'user', content: message }
+      { role: 'user', content: message }
     ];
+    
+    console.log('💬 Sending to OpenAI with your therapy prompt:', {
+      messageCount: messages.length,
+      hasSystemPrompt: !!systemPrompt,
+      userMessage: message.substring(0, 50) + '...'
+    });
     // --- SEND TO OPENAI ---
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: messages,
       temperature: 0.7,
       max_tokens: 1000,
+      system_fingerprint: "therapy_only", // Ensure consistent behavior
     });
     const aiReply = response.choices[0].message.content;
+    
+    // Validate that the response follows your therapy prompt
+    if (!aiReply || aiReply.trim() === '') {
+      console.error('❌ Empty response from OpenAI');
+      return Response.json({ error: 'Failed to generate response.' }, { status: 500 });
+    }
+    
+    console.log('✅ AI response generated using your therapy prompt:', aiReply.substring(0, 100) + '...');
+    
     // --- SAVE MESSAGES ---
     if (session && userId) {
       // Save user message
