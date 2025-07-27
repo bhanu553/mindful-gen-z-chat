@@ -317,10 +317,14 @@ export async function POST(req) {
         .order('updated_at', { ascending: false })
         .limit(1)
         .single();
-      if (onboardingError) {
-        console.error('❌ Error fetching onboarding data:', onboardingError);
+      if (onboardingError || !onboarding) {
+        console.error('❌ Error fetching onboarding data or onboarding not found:', onboardingError);
         onboardingAnalysis = '';
-        // Do NOT return an error, just proceed
+        // Do NOT return an error, just proceed with a generic welcome message
+        systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
+          '{user_intake_form_here}',
+          'No onboarding data available. Please proceed with a welcoming, supportive first message.'
+        ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       } else if (generateAnalysis && onboarding && (!onboarding.ai_analysis || onboarding.ai_analysis === null || onboarding.ai_analysis === '')) {
         console.log('🔄 Generating initial AI analysis based on onboarding form...');
         
@@ -372,13 +376,17 @@ export async function POST(req) {
         console.log('✅ Initial AI analysis generated and saved successfully');
       } else if (onboarding && onboarding.ai_analysis) {
         onboardingAnalysis = onboarding.ai_analysis;
+        systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
+          '{user_intake_form_here}',
+          onboardingAnalysis
+        ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       } else {
         onboardingAnalysis = '';
+        systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
+          '{user_intake_form_here}',
+          'No onboarding data available. Please proceed with a welcoming, supportive first message.'
+        ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       }
-      systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
-        '{user_intake_form_here}',
-        onboardingAnalysis || 'No onboarding data available. Please proceed with general therapeutic support.'
-      ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
     } else {
       // For all subsequent messages, use only Phases 2–6
       systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6;

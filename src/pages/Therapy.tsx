@@ -45,6 +45,7 @@ const Therapy = () => {
   // Get your OpenAI API key from the environment variable. Put VITE_OPENAI_API_KEY=sk-... in a .env file in the project root (do NOT commit the .env file).
   const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
+  // In scrollToBottom, ensure smooth behavior is set
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -69,13 +70,14 @@ const Therapy = () => {
     }
   }, [messages]);
 
-  // Fetch or create session and load messages on mount
+  // Fetch or create session and load messages on initial mount only
   useEffect(() => {
-    if (user) {
+    if (user && !hasInitialized) {
+      setHasInitialized(true);
       fetchSessionAndMessages();
     }
     // eslint-disable-next-line
-  }, [user]);
+  }, [user, hasInitialized]);
 
   const fetchSessionAndMessages = async () => {
     setIsLoading(true);
@@ -245,7 +247,7 @@ const Therapy = () => {
         <div className="w-full max-w-5xl h-[90vh] md:h-[85vh] premium-glass rounded-3xl flex flex-col">
           
           {/* Chat Messages Area */}
-          <div className="flex-1 overflow-y-auto p-8 md:p-10 scrollable-container">
+          <div className="flex-1 overflow-y-auto p-8 md:p-10 scrollable-container scroll-smooth">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center text-white/70">
