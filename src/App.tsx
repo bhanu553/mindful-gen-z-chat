@@ -21,6 +21,7 @@ import FreePlanDetails from "./pages/FreePlanDetails";
 import PremiumPlanDetails from "./pages/PremiumPlanDetails";
 import Admin from "./pages/Admin";
 import Onboarding from "./pages/Onboarding";
+import SessionView from "./pages/SessionView";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,11 @@ const App = () => (
                 <Route path="/admin" element={
                   <ProtectedRoute requireOnboarding={true}>
                     <Admin />
+                  </ProtectedRoute>
+                } />
+                <Route path="/session/:sessionId" element={
+                  <ProtectedRoute requireOnboarding={true}>
+                    <SessionView />
                   </ProtectedRoute>
                 } />
                 <Route path="/terms" element={<Terms />} />

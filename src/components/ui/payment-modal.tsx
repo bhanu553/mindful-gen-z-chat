@@ -37,9 +37,9 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                 return actions.order.create({
                   purchase_units: [{
                     amount: {
-                      value: '9.99'
+                      value: '49'
                     },
-                    description: 'EchoMind Premium Subscription - $9.99/month'
+                    description: 'EchoMind Premium Subscription - $49/month'
                   }]
                 });
               },
@@ -165,7 +165,7 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
             Upgrade to Premium
           </DialogTitle>
           <p className="text-center text-muted-foreground">
-            Unlock enhanced insights and premium features for $9.99/month
+            Unlock enhanced insights and premium features for $49/month
           </p>
         </DialogHeader>
         
@@ -232,7 +232,7 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                 <div className="text-center">
                   <div className="text-blue-800 font-semibold mb-2">PayPal Checkout</div>
                   <div className="text-sm text-blue-600 mb-4">
-                    Secure monthly subscription via PayPal - $9.99/month
+                    Secure monthly subscription via PayPal - $49/month
                   </div>
                   <div id="paypal-button-container"></div>
                   {isProcessing && (
@@ -295,7 +295,7 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                     disabled={isProcessing}
                     className="w-full bg-gradient-to-r from-primary to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isProcessing ? 'Processing...' : 'Subscribe for $9.99/month'}
+                    {isProcessing ? 'Processing...' : 'Subscribe for $49/month'}
                   </button>
                 </div>
               </div>

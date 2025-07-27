@@ -146,7 +146,11 @@ const Dashboard = () => {
               ) : recentSessions.length > 0 ? (
                 <div className="space-y-4">
                   {recentSessions.map((session) => (
-                    <div key={session.id} className="bg-white/10 rounded-xl p-4 hover:bg-white/15 transition-all cursor-pointer">
+                    <div 
+                      key={session.id} 
+                      className="bg-white/10 rounded-xl p-4 hover:bg-white/15 transition-all cursor-pointer"
+                      onClick={() => navigate(`/session/${session.id}`)}
+                    >
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="text-white font-medium text-lg">{session.title}</h4>
@@ -213,7 +217,7 @@ const Dashboard = () => {
                   onClick={() => setShowPaymentModal(true)}
                   className="bg-white text-black hover:bg-white/90 px-8 py-3 rounded-2xl font-medium transition-all duration-300"
                 >
-                  Upgrade to Premium - $9.99/month
+                  Upgrade to Premium - $49/month
                 </Button>
               </div>
             </div>

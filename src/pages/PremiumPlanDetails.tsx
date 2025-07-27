@@ -244,7 +244,7 @@ const PremiumPlanDetails = () => {
           ) : (
             <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8 text-center">
               <h2 className="text-2xl font-bold text-foreground mb-2">Ready to Get Started?</h2>
-              <p className="text-muted-foreground mb-6">Sign in to upgrade to Premium for $9.99/month or start with our Free plan</p>
+              <p className="text-muted-foreground mb-6">Sign in to upgrade to Premium for $49/month or start with our Free plan</p>
               <div className="space-y-4">
                 <Link 
                   to="/login" 
