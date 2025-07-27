@@ -19,6 +19,7 @@ const Therapy = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
@@ -54,6 +55,7 @@ const Therapy = () => {
 
   const fetchSessionAndMessages = async () => {
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const response = await fetch('/api/session', {
         method: 'POST',
@@ -85,6 +87,7 @@ const Therapy = () => {
       );
       setSessionComplete(false);
     } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to load session.');
       toast.error(error.message || 'Failed to load session.');
     } finally {
       setIsLoading(false);
@@ -99,6 +102,7 @@ const Therapy = () => {
     const userInput = inputText.trim();
     setInputText('');
     setIsLoading(true);
+    setErrorMessage(null);
 
     // Add user message immediately
     const userMessage: Message = {
@@ -154,9 +158,9 @@ const Therapy = () => {
       }
     } catch (error: any) {
       console.error('Error:', error);
+      setErrorMessage(error.message || 'Failed to get response. Please try again.');
       toast.error(error.message || 'Failed to get response. Please try again.');
-      // Remove the user message if we failed
-      setMessages(prev => prev.slice(0, -1));
+      // Do NOT remove the user message; keep it in the chat
     } finally {
       setIsLoading(false);
     }
@@ -212,6 +216,9 @@ const Therapy = () => {
                       </div>
                     </div>
                   )}
+                  {errorMessage && (
+                    <div className="mt-4 text-red-400 text-sm font-semibold">{errorMessage}</div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -245,6 +252,14 @@ const Therapy = () => {
                         <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
                         <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
                       </div>
+                    </div>
+                  </div>
+                )}
+                
+                {errorMessage && (
+                  <div className="flex justify-start">
+                    <div className="bg-red-900/80 border border-red-400/40 text-white/95 p-4 md:p-5 rounded-2xl backdrop-blur-sm mr-4 max-w-2xl">
+                      <div className="text-red-200 font-semibold">{errorMessage}</div>
                     </div>
                   </div>
                 )}
