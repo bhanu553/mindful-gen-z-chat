@@ -53,14 +53,6 @@ const Onboarding = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false); // NEW
 
-  // Redirect if onboarding is already complete, but skip if justCompleted
-  useEffect(() => {
-    if (isOnboardingComplete === true && !justCompleted) {
-      console.log('Onboarding already complete, redirecting to therapy');
-      navigate('/therapy');
-    }
-  }, [isOnboardingComplete, navigate, justCompleted]);
-
   const [formData, setFormData] = useState<OnboardingFormData>({
     full_name: '',
     email: user?.email || '',

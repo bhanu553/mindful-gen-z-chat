@@ -615,8 +615,7 @@ export async function POST(req) {
       model: "gpt-4",
       messages: messages,
       temperature: 0.7,
-      max_tokens: 1000,
-      system_fingerprint: "therapy_only", // Ensure consistent behavior
+      max_tokens: 1000
     });
     const aiReply = response.choices[0].message.content;
     
