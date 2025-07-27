@@ -17,11 +17,6 @@ const Navigation = () => {
     { name: 'Pricing Plans', path: '#pricing', scroll: true },
   ];
 
-  const pricingItems = [
-    { name: 'Free Plan', path: '/free-plan-details', requireAuth: false },
-    { name: 'Premium Plan', path: '/premium-plan-details', requireAuth: false },
-  ];
-
   const isActive = (path: string) => {
     if (path.includes('#')) return false;
     return location.pathname === path;
@@ -104,19 +99,6 @@ const Navigation = () => {
               </button>
             ))}
             
-            {/* Pricing Links */}
-            <div className="flex items-center space-x-2">
-              {pricingItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className="px-3 py-2 rounded-md text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-            
             {user ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -185,23 +167,6 @@ const Navigation = () => {
                   {item.name}
                 </button>
               ))}
-              
-              {/* Mobile Pricing Links */}
-              <div className="border-t border-border/50 pt-3 mt-3">
-                <div className="px-3 py-2 text-sm font-medium text-muted-foreground">
-                  Pricing Plans
-                </div>
-                {pricingItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
               
               {user ? (
                 <div className="border-t border-border/50 pt-3 mt-3">

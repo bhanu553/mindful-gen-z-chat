@@ -255,7 +255,7 @@ const PremiumPlanDetails = () => {
                 </Link>
                 <div className="text-muted-foreground">or</div>
                 <Link 
-                  to="/therapy" 
+                  to="/free-plan-details" 
                   className="inline-flex items-center bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors"
                 >
                   Try Free Plan
@@ -270,7 +270,7 @@ const PremiumPlanDetails = () => {
             <div className="text-center">
               <p className="text-muted-foreground mb-4">Want to try it first?</p>
               <Link 
-                to="/therapy" 
+                to="/free-plan-details" 
                 className="inline-flex items-center bg-secondary text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/80 transition-colors"
               >
                 Start with Free Plan
