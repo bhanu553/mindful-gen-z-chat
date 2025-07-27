@@ -59,12 +59,12 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/free-plan-details" element={
-                  <ProtectedRoute requireAuth={false}>
+                  <ProtectedRoute requireAuth={false} requireOnboarding={false}>
                     <FreePlanDetails />
                   </ProtectedRoute>
                 } />
                 <Route path="/premium-plan-details" element={
-                  <ProtectedRoute requireAuth={false}>
+                  <ProtectedRoute requireAuth={false} requireOnboarding={false}>
                     <PremiumPlanDetails />
                   </ProtectedRoute>
                 } />
