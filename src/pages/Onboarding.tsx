@@ -178,35 +178,23 @@ const Onboarding = () => {
 
       console.log('Onboarding data saved successfully');
       
-      // Generate AI analysis FIRST before redirect
-      console.log('🔄 Generating AI analysis before redirect...');
-      
+      // Generate AI analysis and save it after onboarding is saved
       try {
-        const analysisResponse = await fetch('/api/chat', {
+        const analysisResponse = await fetch('/api/onboarding-complete', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            message: 'Generate initial analysis based on onboarding form',
-            userId: user.id,
-            isFirstMessage: true,
-            generateAnalysis: true
-          })
+          body: JSON.stringify({ userId: user.id })
         });
-        
         if (!analysisResponse.ok) {
           throw new Error(`API error: ${analysisResponse.status} ${analysisResponse.statusText}`);
         }
-        
         const analysisData = await analysisResponse.json();
-        console.log('📊 AI analysis response data:', analysisData);
-        
-        if (analysisData.aiAnalysis) {
-          console.log('💾 Saving AI analysis to database...');
-          // The backend handles saving ai_analysis, so no need to update it here
+        if (analysisData.success) {
+          console.log('✅ AI analysis generated and saved successfully');
         } else {
-          console.log('⚠️ No AI analysis in response');
+          console.log('⚠️ AI analysis not generated, but continuing');
         }
       } catch (analysisError) {
         console.error('❌ Error generating AI analysis:', analysisError);
