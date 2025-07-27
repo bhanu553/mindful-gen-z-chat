@@ -37,7 +37,12 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
     // Format onboarding data
-    const formattedOnboarding = formatOnboardingData(onboarding);
+    let formattedOnboarding = '';
+    if (!onboarding || typeof onboarding !== 'object') {
+      formattedOnboarding = 'No onboarding data available. Please proceed with a welcoming, supportive first message.';
+    } else {
+      formattedOnboarding = formatOnboardingData(onboarding);
+    }
     // Build prompt
     const analysisPrompt = THERAPY_PROMPT_TEMPLATE.replace(
       '{user_intake_form_here}',
@@ -57,7 +62,7 @@ export default async function handler(req, res) {
       max_tokens: 800,
     });
     const aiAnalysisRaw = analysisResponse.choices[0].message.content;
-    const aiAnalysis = aiAnalysisRaw
+    const aiAnalysis = (aiAnalysisRaw && aiAnalysisRaw.trim() !== '' ? aiAnalysisRaw : 'Welcome to your first therapy session. Let\'s begin.')
       .split('\n')
       .filter(line => !line.match(/STEP [⿡⿢⿣]/) && !line.match(/\*\*STEP/) && !line.match(/STEP [0-9]+:/i))
       .join('\n');

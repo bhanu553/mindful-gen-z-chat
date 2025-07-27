@@ -61,20 +61,19 @@ export async function POST(req) {
       .limit(1)
       .single();
     let allMessages = messages || [];
-    if (!onboardingError && onboarding && onboarding.ai_analysis) {
-      // Only prepend if there are no assistant messages yet
-      const hasAssistantMessage = allMessages.some(m => m.role === 'assistant');
-      if (!hasAssistantMessage) {
-        allMessages = [
-          {
-            id: 'ai_analysis',
-            role: 'assistant',
-            content: onboarding.ai_analysis,
-            created_at: session.created_at
-          },
-          ...allMessages
-        ];
-      }
+    let aiAnalysisToUse = onboarding && onboarding.ai_analysis ? onboarding.ai_analysis : 'Welcome to your first therapy session. Let\'s begin.';
+    // Only prepend if there are no assistant messages yet
+    const hasAssistantMessage = allMessages.some(m => m.role === 'assistant');
+    if (!hasAssistantMessage) {
+      allMessages = [
+        {
+          id: 'ai_analysis',
+          role: 'assistant',
+          content: aiAnalysisToUse,
+          created_at: session.created_at
+        },
+        ...allMessages
+      ];
     }
     // If onboarding is missing or onboardingError, just proceed with allMessages (no error)
     return Response.json({ sessionComplete: false, messages: allMessages });
