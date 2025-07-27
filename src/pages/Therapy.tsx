@@ -26,7 +26,7 @@ function highlightTherapyQuestion(text: string): JSX.Element {
   const before = text.slice(0, start);
   const question = text.slice(start, lastQ + 1);
   const after = text.slice(lastQ + 1);
-  return <>{before}<span className="therapy-question">«{question.trim()}»</span>{after}</>;
+  return <>{before}<span className="therapy-question-modern">“{question.trim()}”</span>{after}</>;
 }
 
 const Therapy = () => {
@@ -173,6 +173,7 @@ const Therapy = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiMessage]);
+      console.log('AI message added:', aiMessage);
       if (data.sessionComplete) {
         setSessionComplete(true);
         toast.info('Your free session is now complete. Upgrade to continue.');
