@@ -505,7 +505,8 @@ export async function POST(req) {
 
     // --- ALWAYS FETCH ONBOARDING ANALYSIS ---
     let onboardingAnalysis = '';
-    if (userId) {
+    // Only use onboarding data for the first message after onboarding
+    if (userId && (generateAnalysis || isFirstMessage)) {
       const { data: onboarding, error: onboardingError } = await supabase
         .from('user_onboarding')
         .select('*')
@@ -517,10 +518,8 @@ export async function POST(req) {
       
       if (onboardingError) {
         console.error('❌ Error fetching onboarding data:', onboardingError);
-        return Response.json({ error: 'Failed to fetch onboarding data.' }, { status: 500 });
-      }
-      
-      if (generateAnalysis && onboarding && (!onboarding.ai_analysis || onboarding.ai_analysis === null || onboarding.ai_analysis === '')) {
+        onboardingAnalysis = '';
+      } else if (generateAnalysis && onboarding && (!onboarding.ai_analysis || onboarding.ai_analysis === null || onboarding.ai_analysis === '')) {
         console.log('🔄 Generating initial AI analysis based on onboarding form...');
         
         // Format the onboarding data for the prompt
@@ -570,15 +569,26 @@ export async function POST(req) {
         onboardingAnalysis = aiAnalysis;
         console.log('✅ Initial AI analysis generated and saved successfully');
       } else if (onboarding && onboarding.ai_analysis) {
-        console.log('📖 Using existing AI analysis from database');
         onboardingAnalysis = onboarding.ai_analysis;
+      } else {
+        onboardingAnalysis = '';
       }
     }
     // --- ALWAYS USE YOUR COMPLETE THERAPY PROMPT ---
-    let systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
-      '{user_intake_form_here}',
-      onboardingAnalysis || 'No onboarding data available. Please proceed with general therapeutic support.'
-    ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
+    let systemPrompt = '';
+    if (generateAnalysis || isFirstMessage) {
+      // For the first message, include onboarding analysis (if any)
+      systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
+        '{user_intake_form_here}',
+        onboardingAnalysis || 'No onboarding data available. Please proceed with general therapeutic support.'
+      ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
+    } else {
+      // For all subsequent messages, use the therapy prompt with a generic context or a summary from ai_analysis if you want
+      systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
+        '{user_intake_form_here}',
+        onboardingAnalysis || 'Continue the therapy session based on the previous conversation and user progress.'
+      ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
+    }
     
     console.log('📝 Using complete therapy prompt for response generation');
     
