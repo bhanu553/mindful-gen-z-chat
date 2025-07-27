@@ -231,9 +231,6 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <div className="text-center">
                   <div className="text-blue-800 font-semibold mb-2">PayPal Checkout</div>
-                  <div className="text-sm text-blue-600 mb-4">
-                    Secure monthly subscription via PayPal - $49/month
-                  </div>
                   <div id="paypal-button-container"></div>
                   {isProcessing && (
                     <div className="mt-2 text-sm text-blue-600">Processing your payment...</div>
