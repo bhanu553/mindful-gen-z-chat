@@ -6,13 +6,15 @@ import Navigation from '@/components/ui/navigation';
 import PaymentModal from '@/components/ui/payment-modal';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFreeUserTherapyAccess } from '@/hooks/useFreeUserTherapyAccess';
 
 const Index = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const { isOnboardingComplete, isLoading } = useOnboardingStatus();
+  const { canAccessTherapy } = useFreeUserTherapyAccess();
 
   const handleStartJourney = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -25,6 +27,14 @@ const Index = () => {
       navigate('/therapy');
     } else {
       navigate('/onboarding');
+    }
+  };
+
+  const handleGetStarted = () => {
+    if (!canAccessTherapy) {
+      navigate('/premium-plan-details');
+    } else {
+      navigate('/therapy');
     }
   };
   
@@ -306,7 +316,7 @@ const Index = () => {
             Join thousands who've moved beyond expensive, limited human therapy to access premium psychological treatment through EchoMind's specialized AI therapist team.
           </p>
           <button
-            onClick={handleStartJourney}
+            onClick={handleGetStarted}
             disabled={isLoading}
             className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed"
           >

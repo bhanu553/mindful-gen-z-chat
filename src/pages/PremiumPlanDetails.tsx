@@ -1,13 +1,16 @@
 
 import { useEffect, useRef } from 'react';
 import { ArrowRight, Check, Crown, Sparkles, Brain, TrendingUp, Shield, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFreeUserTherapyAccess } from '@/hooks/useFreeUserTherapyAccess';
 
 const PremiumPlanDetails = () => {
   const paypalRef = useRef<HTMLDivElement>(null);
   const { user, isPremium } = useAuth();
+  const { canAccessTherapy } = useFreeUserTherapyAccess();
+  const navigate = useNavigate();
 
   const markUserAsPremium = async () => {
     // This function would connect to Supabase to mark user as premium
@@ -66,6 +69,14 @@ const PremiumPlanDetails = () => {
       };
     }
   }, [isPremium, user]);
+
+  const handleStartTherapy = () => {
+    if (!canAccessTherapy) {
+      navigate('/premium-plan-details');
+    } else {
+      navigate('/therapy');
+    }
+  };
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -218,13 +229,10 @@ const PremiumPlanDetails = () => {
               <Crown className="w-12 h-12 text-primary mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-foreground mb-2">You're Already Premium!</h2>
               <p className="text-muted-foreground">You have access to all premium features. Start your therapy session now.</p>
-              <Link 
-                to="/therapy" 
-                className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group mt-4"
-              >
+              <button onClick={handleStartTherapy} className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group mt-4">
                 Start Therapy Session
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              </button>
             </div>
           ) : user ? (
             <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8">
