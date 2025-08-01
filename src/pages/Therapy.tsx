@@ -412,18 +412,47 @@ const Therapy = () => {
           {/* Input Section */}
           {sessionComplete ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-3xl shadow-xl p-8 max-w-md w-full text-center border border-white/20">
-                <h2 className="text-2xl font-bold text-white mb-2">Your free session is complete</h2>
-                <p className="text-white/80 mb-6">Upgrade to continue your therapy journey and unlock unlimited sessions, advanced features, and more.</p>
+              <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-3xl shadow-xl p-8 max-w-2xl w-full text-center border border-white/20">
+                <h2 className="text-2xl font-bold text-white mb-4">🌟 Session Complete - What's Next?</h2>
+                <div className="text-white/90 text-left space-y-4 mb-6">
+                  <p className="text-lg">You just experienced real therapy, not just a chat. That professional structure and evidence-based approach you felt? That's what $300/session therapy delivers.</p>
+                  
+                  <div className="bg-white/10 rounded-xl p-4 border border-white/20">
+                    <h3 className="font-semibold text-white mb-2">As a free user:</h3>
+                    <ul className="text-white/80 space-y-1 text-sm">
+                      <li>• Next session available in 30 days</li>
+                      <li>• No continuity or progress building</li>
+                      <li>• Limited breakthrough potential</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-400/30">
+                    <h3 className="font-semibold text-yellow-300 mb-2">Ready to continue your healing?</h3>
+                    <div className="text-white/90">
+                      <p className="font-semibold">Premium: $49/month</p>
+                      <ul className="text-white/80 space-y-1 text-sm mt-2">
+                        <li>• 8 sessions (vs 1 free)</li>
+                        <li>• 3 - 4 days spacing for optimal progress</li>
+                        <li>• Session continuity that builds on your breakthrough</li>
+                        <li>• Personalized homework and skill development</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <p className="text-white/80 italic">Therapy isn't a one-session miracle. Real change happens with consistent work.</p>
+                  <p className="text-yellow-300 font-semibold">Don't wait 30 days and lose momentum.</p>
+                </div>
+                
                 <button
-                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold rounded-xl px-6 py-3 mb-3 transition-all duration-200 shadow-lg text-lg"
-                  onClick={() => navigate('/premium-plan-details')}
+                  className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-8 py-4 transition-all duration-200 shadow-lg text-lg w-full"
+                  onClick={() => navigate('/dashboard')}
                 >
-                  Upgrade to Premium
+                  Continue My Journey - $49/month
                 </button>
+                
                 {isPremium && (
                   <button
-                    className="bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl px-6 py-3 transition-all duration-200 border border-white/30 text-lg"
+                    className="bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl px-6 py-3 mt-4 transition-all duration-200 border border-white/30 text-lg"
                     onClick={handleStartNewSession}
                     disabled={isLoading}
                   >
@@ -446,7 +475,7 @@ const Therapy = () => {
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={sessionComplete ? "Session complete. Upgrade to continue chatting." : "Share your thoughts..."}
+                    placeholder={sessionComplete ? "Session complete. Continue your journey to unlock more sessions." : "Share your thoughts..."}
                     className="flex-1 min-h-[2.5rem] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
                     disabled={isLoading || sessionComplete}
                   />
@@ -463,7 +492,7 @@ const Therapy = () => {
                 
                 {sessionComplete && (
                   <div className="absolute left-0 right-0 -bottom-8 text-center text-yellow-200 text-sm font-semibold mt-2">
-                    Free session complete. Upgrade to continue chatting.
+                    Session complete. Continue your healing journey to unlock more sessions.
                   </div>
                 )}
               </div>
