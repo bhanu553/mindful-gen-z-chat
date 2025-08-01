@@ -120,6 +120,16 @@ const Onboarding = () => {
       });
       return;
     }
+    // Validate age
+    if (!formData.age || parseInt(formData.age) < 18) {
+      toast({
+        title: "Age Requirement",
+        description: "You must be at least 18 years old to use EchoMind.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Validate primary_focus
     if (!formData.primary_focus) {
       toast({
@@ -250,54 +260,63 @@ const Onboarding = () => {
   const renderPersonalDetails = () => (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="full_name">Full Name *</Label>
+        <Label htmlFor="full_name" className="text-white font-medium">Full Name *</Label>
         <Input
           id="full_name"
           value={formData.full_name}
           onChange={(e) => updateFormData('full_name', e.target.value)}
           placeholder="Enter your full name"
+          className="bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="email" className="text-white font-medium">Email Address</Label>
         <Input
           id="email"
           value={formData.email}
           onChange={(e) => updateFormData('email', e.target.value)}
           placeholder="your.email@example.com"
           disabled
-          className="bg-muted"
+          className="bg-white/10 backdrop-blur-sm border-white/20 text-white/80"
         />
-        <p className="text-sm text-muted-foreground">Auto-filled from your account</p>
+        <p className="text-sm text-white/70">Auto-filled from your account</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone_number">Phone Number (Optional)</Label>
+        <Label htmlFor="phone_number" className="text-white font-medium">Phone Number (Optional)</Label>
         <Input
           id="phone_number"
           value={formData.phone_number}
           onChange={(e) => updateFormData('phone_number', e.target.value)}
           placeholder="+1 (555) 123-4567"
+          className="bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="age">Age</Label>
+          <Label htmlFor="age" className="text-white font-medium">Age <span className="text-red-400">*</span></Label>
           <Input
             id="age"
             type="number"
+            min="18"
+            max="120"
             value={formData.age}
             onChange={(e) => updateFormData('age', e.target.value)}
             placeholder="25"
+            required
+            className="bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50"
           />
+          {formData.age && parseInt(formData.age) < 18 && (
+            <p className="text-sm text-red-400">You must be at least 18 years old to use EchoMind.</p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="gender">Gender</Label>
+          <Label htmlFor="gender" className="text-white font-medium">Gender</Label>
           <Select value={formData.gender} onValueChange={(value) => updateFormData('gender', value)}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-white/20 backdrop-blur-sm border-white/30 text-white">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
@@ -312,21 +331,22 @@ const Onboarding = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="country">Country</Label>
+          <Label htmlFor="country" className="text-white font-medium">Country</Label>
           <Input
             id="country"
             value={formData.country}
             onChange={(e) => updateFormData('country', e.target.value)}
             placeholder="United States"
+            className="bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="timezone">Timezone</Label>
+          <Label htmlFor="timezone" className="text-white font-medium">Timezone</Label>
           <Select
             value={formData.timezone}
             onValueChange={(value) => updateFormData('timezone', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-white/20 backdrop-blur-sm border-white/30 text-white">
               <SelectValue placeholder="Select timezone" />
             </SelectTrigger>
             <SelectContent>
@@ -339,12 +359,12 @@ const Onboarding = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="primary_focus">What brings you to therapy today? <span className="text-red-500">*</span></Label>
+        <Label htmlFor="primary_focus" className="text-white font-medium">What brings you to therapy today? <span className="text-red-400">*</span></Label>
         <Select
           value={formData.primary_focus}
           onValueChange={(value) => updateFormData('primary_focus', value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="bg-white/20 backdrop-blur-sm border-white/30 text-white">
             <SelectValue placeholder="Select your primary focus" />
           </SelectTrigger>
           <SelectContent>
@@ -605,7 +625,9 @@ const Onboarding = () => {
   const isValidSection = () => {
     switch (currentSection) {
       case 0:
-        return formData.full_name.trim() !== '';
+        return formData.full_name.trim() !== '' && 
+               formData.age && 
+               parseInt(formData.age) >= 18;
       case 1:
         return formData.previous_therapy !== null && formData.current_medication !== null;
       case 2:
@@ -618,17 +640,28 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen relative">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 1200 800\'%3E%3Cdefs%3E%3ClinearGradient id=\'sky\' x1=\'0%25\' y1=\'0%25\' x2=\'100%25\' y2=\'100%25\'%3E%3Cstop offset=\'0%25\' style=\'stop-color:%23FF6B6B;stop-opacity:1\' /%3E%3Cstop offset=\'25%25\' style=\'stop-color:%23FFE66D;stop-opacity:1\' /%3E%3Cstop offset=\'50%25\' style=\'stop-color:%23FF8E53;stop-opacity:1\' /%3E%3Cstop offset=\'75%25\' style=\'stop-color:%23FF6B9D;stop-opacity:1\' /%3E%3Cstop offset=\'100%25\' style=\'stop-color:%234ECDC4;stop-opacity:1\' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=\'1200\' height=\'800\' fill=\'url(%23sky)\'/%3E%3C/svg%3E")',
+        }}
+      />
+      
+      {/* Overlay for better readability */}
+      <div className="absolute inset-0 bg-black/40" />
+      
+      <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-400/80 to-purple-500/80 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-2xl border border-white/20">
               <Brain className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">EchoMind</h1>
-          <p className="text-xl text-white italic">AI Therapy. Real Healing.</p>
+          <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">EchoMind</h1>
+          <p className="text-xl text-white/90 italic drop-shadow-sm">AI Therapy. Real Healing.</p>
         </div>
 
         {/* Progress Bar */}
@@ -641,11 +674,11 @@ const Onboarding = () => {
 
               return (
                 <div key={index} className="flex items-center">
-                  <div className={`flex flex-col items-center ${isActive || isCompleted ? 'text-blue-400' : 'text-white/60'}`}>
-                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all ${
-                      isActive ? 'border-blue-400 bg-blue-400/20 shadow-lg shadow-blue-400/25' : 
-                      isCompleted ? 'border-blue-400 bg-blue-400 text-white' : 
-                      'border-white/30'
+                  <div className={`flex flex-col items-center ${isActive || isCompleted ? 'text-blue-300' : 'text-white/70'}`}>
+                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all backdrop-blur-sm ${
+                      isActive ? 'border-blue-300 bg-blue-400/30 shadow-lg shadow-blue-400/25' : 
+                      isCompleted ? 'border-blue-300 bg-blue-400/50 text-white' : 
+                      'border-white/40 bg-white/10'
                     }`}>
                       {isCompleted ? (
                         <CheckCircle className="w-6 h-6" />
@@ -653,10 +686,10 @@ const Onboarding = () => {
                         <Icon className="w-6 h-6" />
                       )}
                     </div>
-                    <span className="text-xs text-center font-medium text-white">{section.title}</span>
+                    <span className="text-xs text-center font-medium text-white drop-shadow-sm">{section.title}</span>
                   </div>
                   {index < sections.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-blue-400' : 'bg-white/30'}`} />
+                    <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-blue-300' : 'bg-white/40'}`} />
                   )}
                 </div>
               );
@@ -665,7 +698,7 @@ const Onboarding = () => {
         </div>
 
         {/* Form Content */}
-        <Card className="max-w-4xl mx-auto shadow-lg bg-gray-900 border-gray-700">
+        <Card className="max-w-4xl mx-auto shadow-2xl bg-white/10 backdrop-blur-md border-white/20">
           <CardHeader>
             <CardTitle className="text-2xl text-center text-white">
               {sections[currentSection].title}
@@ -682,7 +715,7 @@ const Onboarding = () => {
             variant="outline"
             onClick={handlePrevious}
             disabled={currentSection === 0}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
           >
             <ArrowLeft className="w-4 h-4" />
             Previous
@@ -692,7 +725,7 @@ const Onboarding = () => {
             <Button
               onClick={handleNext}
               disabled={!isValidSection()}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-500/80 to-purple-500/80 backdrop-blur-sm hover:from-blue-600/90 hover:to-purple-600/90 border border-white/20 text-white shadow-lg"
             >
               Next
               <ChevronRight className="w-4 h-4" />
@@ -701,7 +734,7 @@ const Onboarding = () => {
             <Button
               onClick={handleSubmit}
               disabled={!isValidSection() || isSubmitting}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 animate-pulse"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-500/80 to-purple-500/80 backdrop-blur-sm hover:from-blue-600/90 hover:to-purple-600/90 border border-white/20 text-white shadow-lg animate-pulse"
             >
               {isSubmitting ? 'Starting...' : 'Begin Your Healing'}
               <Heart className="w-4 h-4" />

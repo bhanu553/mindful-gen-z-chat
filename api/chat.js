@@ -223,6 +223,7 @@ function getMonthStart() {
 // Utility: Detect session completion
 function isSessionComplete(aiResponse) {
   const completionIndicators = [
+    // Original patterns
     "Daily Reflection:",
     "Journaling Prompt:",
     "Mini Practice:",
@@ -237,7 +238,45 @@ function isSessionComplete(aiResponse) {
     "session is complete",
     "end of our session",
     "conclude our session",
-    "wrap up our session"
+    "wrap up our session",
+    
+    // Additional patterns based on therapy prompt structure
+    "Always end each session with:",
+    "short reflection on the session theme",
+    "note of encouragement",
+    "optional mini homework",
+    "session theme",
+    "end of session",
+    "session wrap-up",
+    "session conclusion",
+    "therapeutic closure",
+    "session summary",
+    "closing thoughts",
+    "final reflection",
+    "session ending",
+    "therapy session complete",
+    "session finished",
+    "therapeutic session ended",
+    "session closure",
+    "end our session",
+    "conclude our therapy",
+    "wrap up our therapy",
+    "session is now complete",
+    "therapy session is over",
+    "session has ended",
+    "therapeutic session complete",
+    "session completion",
+    "therapy session ended",
+    "session is finished",
+    "therapeutic session finished",
+    "session is concluded",
+    "therapy session concluded",
+    "session wrap up",
+    "therapy wrap up",
+    "session ending message",
+    "therapy ending message",
+    "session completion message",
+    "therapy completion message"
   ];
   return completionIndicators.some(indicator => aiResponse.toLowerCase().includes(indicator.toLowerCase()));
 }
