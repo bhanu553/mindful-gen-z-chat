@@ -72,7 +72,7 @@ const PremiumPlanDetails = () => {
 
   const handleStartTherapy = () => {
     if (!canAccessTherapy) {
-      navigate('/premium-plan-details');
+      navigate('/dashboard');
     } else {
       navigate('/therapy');
     }

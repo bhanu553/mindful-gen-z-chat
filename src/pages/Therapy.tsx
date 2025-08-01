@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useFreeUserTherapyAccess } from '@/hooks/useFreeUserTherapyAccess';
 
 interface Message {
   id: string;
@@ -40,6 +41,15 @@ const Therapy = () => {
   const [sessionComplete, setSessionComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const navigate = useNavigate();
+  
+  // Redirect free users to dashboard immediately
+  const { canAccessTherapy } = useFreeUserTherapyAccess();
+  useEffect(() => {
+    if (!canAccessTherapy) {
+      navigate('/dashboard');
+    }
+  }, [canAccessTherapy, navigate]);
   
   // Debug sessionComplete state changes
   useEffect(() => {
@@ -54,7 +64,6 @@ const Therapy = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user, isPremium } = useAuth();
-  const navigate = useNavigate();
 
   // Get your OpenAI API key from the environment variable. Put VITE_OPENAI_API_KEY=sk-... in a .env file in the project root (do NOT commit the .env file).
   const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;

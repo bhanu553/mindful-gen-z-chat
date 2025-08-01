@@ -32,7 +32,7 @@ const Index = () => {
 
   const handleGetStarted = () => {
     if (!canAccessTherapy) {
-      navigate('/premium-plan-details');
+      navigate('/dashboard');
     } else {
       navigate('/therapy');
     }

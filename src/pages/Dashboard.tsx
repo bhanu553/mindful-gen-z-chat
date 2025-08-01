@@ -43,7 +43,7 @@ const Dashboard = () => {
 
   const startNewSession = () => {
     if (!canAccessTherapy) {
-      navigate('/premium-plan-details');
+      navigate('/dashboard');
     } else {
       navigate('/therapy');
     }
