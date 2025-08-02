@@ -40,6 +40,8 @@ const Therapy = () => {
   const [sessionComplete, setSessionComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [isRestricted, setIsRestricted] = useState(false);
+  const [restrictionInfo, setRestrictionInfo] = useState<any>(null);
   const navigate = useNavigate();
   
   // Debug sessionComplete state changes
@@ -121,6 +123,15 @@ const Therapy = () => {
         throw new Error(errorMsg);
       }
       const data = await response.json();
+      
+      // Check for restriction info first
+      if (data.restrictionInfo && data.restrictionInfo.isRestricted) {
+        setIsRestricted(true);
+        setRestrictionInfo(data.restrictionInfo);
+        setSessionComplete(true);
+        return;
+      }
+      
       if (data.sessionComplete) {
         setSessionComplete(true);
         return;
@@ -339,7 +350,55 @@ const Therapy = () => {
           
           {/* Chat Messages Area */}
           <div className="flex-1 overflow-y-auto p-8 md:p-10 scrollable-container scroll-smooth">
-            {messages.length === 0 ? (
+            {isRestricted ? (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center text-white/90 max-w-2xl">
+                  <div className="bg-gradient-to-br from-orange-600/80 to-red-600/80 rounded-2xl shadow-xl p-8 md:p-10 border border-orange-400/30">
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">⏰ Your Free Trial is Over</h2>
+                    
+                    <div className="text-white/90 text-left space-y-4 mb-8">
+                      <p className="text-lg md:text-xl">You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.</p>
+                      
+                      <div className="bg-white/10 rounded-xl p-4 border border-white/20">
+                        <h3 className="font-semibold text-white mb-2">Next Free Session Available:</h3>
+                        <p className="text-2xl font-bold text-yellow-300">
+                          {restrictionInfo?.daysRemaining || 0} days
+                        </p>
+                        <p className="text-white/70 text-sm mt-1">
+                          {restrictionInfo?.nextEligibleDate ? 
+                            `Available on ${new Date(restrictionInfo.nextEligibleDate).toLocaleDateString()}` : 
+                            'Date calculation in progress...'
+                          }
+                        </p>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-400/30">
+                        <h3 className="font-semibold text-yellow-300 mb-2">Ready to continue your healing?</h3>
+                        <div className="text-white/90">
+                          <p className="font-semibold">Premium: $49/month</p>
+                          <ul className="text-white/80 space-y-1 text-sm mt-2">
+                            <li>• 8 sessions (vs 1 free)</li>
+                            <li>• 3 - 4 days spacing for optimal progress</li>
+                            <li>• Session continuity that builds on your breakthrough</li>
+                            <li>• Personalized homework and skill development</li>
+                          </ul>
+                        </div>
+                      </div>
+                      
+                      <p className="text-white/80 italic">Therapy isn't a one-session miracle. Real change happens with consistent work.</p>
+                      <p className="text-yellow-300 font-semibold">Don't wait {restrictionInfo?.daysRemaining || 0} days and lose momentum.</p>
+                    </div>
+                    
+                    <button
+                      className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-8 py-4 transition-all duration-200 shadow-lg text-lg md:text-xl w-full"
+                      onClick={() => navigate('/premium-plan-details')}
+                    >
+                      Upgrade to Premium - $49/month
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center text-white/70">
                   <p className="text-xl md:text-2xl mb-2 font-serif">Your therapeutic session begins now</p>
@@ -461,7 +520,7 @@ const Therapy = () => {
           </div>
           
           {/* Input Section */}
-          {!sessionComplete && (
+          {!sessionComplete && !isRestricted && (
             <div className="p-8 md:p-10 border-t border-white/10">
               <div className="relative">
                 <div className="premium-glass rounded-2xl border border-white/20 p-4 flex items-end space-x-3">

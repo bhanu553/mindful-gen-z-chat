@@ -10,6 +10,57 @@ function getMonthStart() {
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 }
 
+// New function to check user restriction status
+async function checkUserRestriction(userId) {
+  try {
+    // Get user's sessions for current month
+    const { data: sessions, error } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', getMonthStart())
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    // If no sessions, user is not restricted
+    if (!sessions || sessions.length === 0) {
+      return { isRestricted: false };
+    }
+    
+    // Find the most recent session
+    const lastSession = sessions[0];
+    
+    // If session is not complete, user is not restricted
+    if (!lastSession.is_complete) {
+      return { isRestricted: false };
+    }
+    
+    // Calculate days until next session (30 days from last session)
+    const sessionDate = new Date(lastSession.created_at);
+    const now = new Date();
+    const diffTime = sessionDate.getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime();
+    const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (daysRemaining <= 0) {
+      return { isRestricted: false };
+    }
+    
+    // Calculate next eligible date
+    const nextEligibleDate = new Date(sessionDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+    
+    return {
+      isRestricted: true,
+      daysRemaining,
+      nextEligibleDate: nextEligibleDate.toISOString(),
+      lastSessionDate: lastSession.created_at
+    };
+  } catch (error) {
+    console.error('❌ Error checking user restriction:', error);
+    return { isRestricted: false };
+  }
+}
+
 async function getOrCreateCurrentSession(userId) {
   const { data: sessions, error } = await supabase
     .from('chat_sessions')
@@ -38,7 +89,20 @@ export async function POST(req) {
     if (!userId) {
       return Response.json({ error: "No userId provided." }, { status: 400 });
     }
-    // Get or create session
+    
+    // Check user restriction status first
+    const restrictionInfo = await checkUserRestriction(userId);
+    
+    // If user is restricted, return restriction info immediately
+    if (restrictionInfo.isRestricted) {
+      return Response.json({ 
+        sessionComplete: true, 
+        messages: [],
+        restrictionInfo 
+      });
+    }
+    
+    // Get or create session (existing logic unchanged)
     const session = await getOrCreateCurrentSession(userId);
     if (session.is_complete) {
       return Response.json({ sessionComplete: true, messages: [] });
