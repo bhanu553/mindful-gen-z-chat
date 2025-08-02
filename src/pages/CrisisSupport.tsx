@@ -51,7 +51,7 @@ const CrisisSupport = () => {
                   <h4 className="font-semibold text-white mb-2">🇺🇸 988 Suicide & Crisis Lifeline</h4>
                   <ul className="text-gray-300 space-y-1">
                     <li>• Call: 988 (24/7, free, confidential)</li>
-                    <li>• Chat: suicidepreventionlifeline.org</li>
+                    <li>• Chat: <a href="https://suicidepreventionlifeline.org" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">suicidepreventionlifeline.org</a></li>
                   </ul>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4">
@@ -72,7 +72,7 @@ const CrisisSupport = () => {
                   <ul className="text-gray-300 space-y-1">
                     <li>• Call: 1-866-488-7386 (24/7)</li>
                     <li>• Text START to 678-678</li>
-                    <li>• Chat: thetrevorproject.org</li>
+                    <li>• Chat: <a href="https://thetrevorproject.org" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">thetrevorproject.org</a></li>
                   </ul>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4">
@@ -87,7 +87,7 @@ const CrisisSupport = () => {
                   <ul className="text-gray-300 space-y-1">
                     <li>• Call: 988, Press 1</li>
                     <li>• Text: 838255</li>
-                    <li>• Chat: veteranscrisicline.net</li>
+                    <li>• Chat: <a href="https://veteranscrisicline.net" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">veteranscrisicline.net</a></li>
                   </ul>
                 </div>
               </div>
@@ -119,7 +119,7 @@ const CrisisSupport = () => {
                   <h4 className="font-semibold text-white">🇬🇧 Samaritans</h4>
                   <ul className="text-gray-300 space-y-1">
                     <li>• Call: 116 123 (24/7, free)</li>
-                    <li>• Email: jo@samaritans.org</li>
+                    <li>• Email: <a href="mailto:jo@samaritans.org" className="text-blue-300 hover:text-blue-200 underline">jo@samaritans.org</a></li>
                   </ul>
                 </div>
               </div>
@@ -131,7 +131,7 @@ const CrisisSupport = () => {
                   <ul className="text-gray-300 space-y-1">
                     <li>• Call: 13 11 14 (24/7)</li>
                     <li>• Text: 0477 13 11 14</li>
-                    <li>• Chat: lifeline.org.au</li>
+                    <li>• Chat: <a href="https://lifeline.org.au" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">lifeline.org.au</a></li>
                   </ul>
                 </div>
               </div>
@@ -145,7 +145,7 @@ const CrisisSupport = () => {
                   </ul>
                   <h4 className="font-semibold text-white mt-3">🇪🇺 Befrienders Worldwide</h4>
                   <ul className="text-gray-300 space-y-1">
-                    <li>• Visit: befrienders.org for country-specific resources</li>
+                    <li>• Visit: <a href="https://befrienders.org" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">befrienders.org</a> for country-specific resources</li>
                   </ul>
                 </div>
               </div>
@@ -188,7 +188,7 @@ const CrisisSupport = () => {
                   <ul className="text-gray-300 space-y-1">
                     <li>• Call: 1-800-799-7233 (24/7)</li>
                     <li>• Text START to 88788</li>
-                    <li>• Chat: thehotline.org</li>
+                    <li>• Chat: <a href="https://thehotline.org" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">thehotline.org</a></li>
                   </ul>
                 </div>
               </div>
@@ -227,7 +227,7 @@ const CrisisSupport = () => {
                 <h3 className="font-semibold text-white mb-3">International:</h3>
                 <ul className="text-gray-300 space-y-1">
                   <li>🇬🇧 UK: 0808 802 9999 (Rape Crisis England & Wales)</li>
-                  <li>🇨🇦 Canada: Visit casac.ca for provincial resources</li>
+                  <li>🇨🇦 Canada: Visit <a href="https://casac.ca" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">casac.ca</a> for provincial resources</li>
                   <li>🇦🇺 Australia: 1800 737 732 (1800RESPECT)</li>
                 </ul>
               </div>
@@ -285,9 +285,9 @@ const CrisisSupport = () => {
               <div>
                 <h3 className="font-semibold text-white mb-2">Find Local Emergency Rooms:</h3>
                 <ul className="text-gray-300 space-y-1">
-                  <li>🇺🇸 US: hhs.gov/answers/health-care/where-can-i-find-emergency-room</li>
+                  <li>🇺🇸 US: <a href="https://hhs.gov/answers/health-care/where-can-i-find-emergency-room" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">hhs.gov/answers/health-care/where-can-i-find-emergency-room</a></li>
                   <li>🇬🇧 UK: Dial 111 for NHS non-emergency</li>
-                  <li>🇨🇦 Canada: healthlinkbc.ca for local resources</li>
+                  <li>🇨🇦 Canada: <a href="https://healthlinkbc.ca" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">healthlinkbc.ca</a> for local resources</li>
                 </ul>
               </div>
               <div>
