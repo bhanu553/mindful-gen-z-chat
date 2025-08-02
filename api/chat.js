@@ -339,13 +339,30 @@ export async function POST(req) {
       return Response.json({ error: "No message provided." }, { status: 400 });
     }
 
-    // --- SESSION MANAGEMENT FOR FREE USERS ---
+    // --- SESSION MANAGEMENT FOR ALL USERS ---
     let session = null;
     if (userId) {
       session = await getOrCreateCurrentSession(userId);
-      if (session.is_complete) {
-        // Session is already complete for this month
+      
+      // Check if user is premium
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_premium')
+        .eq('id', userId)
+        .single();
+      
+      const isPremium = profile?.is_premium || false;
+      
+      // Only block if session is complete AND user is not premium
+      if (session.is_complete && !isPremium) {
+        // Session is already complete for this month (free users only)
         return Response.json({ error: "Session complete", sessionComplete: true }, { status: 403 });
+      }
+      
+      // For premium users, reset session completion status
+      if (session.is_complete && isPremium) {
+        console.log('✅ Premium user - allowing continuation despite session completion');
+        session.is_complete = false;
       }
     }
 
@@ -632,16 +649,16 @@ export async function POST(req) {
         created_at: new Date().toISOString()
       });
     }
-    // --- SESSION COMPLETION DETECTION ---
-    let sessionComplete = false;
-    console.log('🔍 Checking session completion for AI response:', aiReply.substring(0, 100) + '...');
-    if (isSessionComplete(aiReply) && session && userId) {
-      console.log('✅ Session completion detected! Marking session as complete.');
-      await supabase.from('chat_sessions').update({ is_complete: true }).eq('id', session.id);
-      sessionComplete = true;
-    } else {
-      console.log('❌ Session completion NOT detected for this response.');
-    }
+         // --- SESSION COMPLETION DETECTION (SAME FOR ALL USERS) ---
+     let sessionComplete = false;
+     console.log('🔍 Checking session completion for AI response:', aiReply.substring(0, 100) + '...');
+     if (isSessionComplete(aiReply) && session && userId) {
+       console.log('✅ Session completion detected! Marking session as complete.');
+       await supabase.from('chat_sessions').update({ is_complete: true }).eq('id', session.id);
+       sessionComplete = true;
+     } else {
+       console.log('❌ Session completion NOT detected for this response.');
+     }
 
     const responseData = { reply: aiReply, sessionComplete };
     if (generateAnalysis && onboardingAnalysis) {

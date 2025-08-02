@@ -10,9 +10,37 @@ function getMonthStart() {
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 }
 
-// New function to check user restriction status
+// Function to check if user is premium
+async function checkUserPremiumStatus(userId) {
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('is_premium')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error('❌ Error checking premium status:', error);
+      return false;
+    }
+    
+    return profile?.is_premium || false;
+  } catch (error) {
+    console.error('❌ Error checking premium status:', error);
+    return false;
+  }
+}
+
+// New function to check user restriction status (ONLY for free users)
 async function checkUserRestriction(userId) {
   try {
+    // First check if user is premium - if so, no restrictions
+    const isPremium = await checkUserPremiumStatus(userId);
+    if (isPremium) {
+      console.log('✅ Premium user detected - no restrictions applied');
+      return { isRestricted: false };
+    }
+    
     // Get user's sessions for current month
     const { data: sessions, error } = await supabase
       .from('chat_sessions')
@@ -62,6 +90,9 @@ async function checkUserRestriction(userId) {
 }
 
 async function getOrCreateCurrentSession(userId) {
+  // Check if user is premium
+  const isPremium = await checkUserPremiumStatus(userId);
+  
   const { data: sessions, error } = await supabase
     .from('chat_sessions')
     .select('*')
@@ -69,11 +100,21 @@ async function getOrCreateCurrentSession(userId) {
     .gte('created_at', getMonthStart())
     .order('created_at', { ascending: false });
   if (error) throw error;
+  
   if (sessions && sessions.length > 0) {
+    // For premium users, always return the most recent session (even if complete)
+    if (isPremium) {
+      console.log('✅ Premium user - returning most recent session');
+      return sessions[0];
+    }
+    
+    // For free users, find active session or return the most recent
     const active = sessions.find(s => !s.is_complete);
     if (active) return active;
     return sessions[0];
   }
+  
+  // Create new session
   const { data: newSession, error: createError } = await supabase
     .from('chat_sessions')
     .insert({ user_id: userId, is_complete: false, created_at: new Date().toISOString() })
@@ -105,37 +146,46 @@ export async function POST(req) {
     // Get or create session (existing logic unchanged)
     const session = await getOrCreateCurrentSession(userId);
     
+    // Check if user is premium
+    const isPremium = await checkUserPremiumStatus(userId);
+    
     // CRITICAL FIX: Only mark session as complete if the AI has sent the session end message
     // Check if the last message from AI contains session completion indicators
     if (session.is_complete) {
-      // Get the last AI message to check if it actually ended the session
-      const { data: lastMessages, error: lastMsgError } = await supabase
-        .from('chat_messages')
-        .select('content, role')
-        .eq('session_id', session.id)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      if (lastMsgError) throw lastMsgError;
-      
-      // Only mark as complete if the last message was from AI and contains session end indicators
-      const lastMessage = lastMessages?.[0];
-      const isSessionEndedByAI = lastMessage && 
-        lastMessage.role === 'assistant' && 
-        (lastMessage.content.toLowerCase().includes('see you in the next session') ||
-         lastMessage.content.toLowerCase().includes('see you next session') ||
-         lastMessage.content.toLowerCase().includes('until next session') ||
-         lastMessage.content.toLowerCase().includes('session complete') ||
-         lastMessage.content.toLowerCase().includes('session ended'));
-      
-      if (isSessionEndedByAI) {
-        return Response.json({ sessionComplete: true, messages: [] });
+      // For premium users, always allow continuation regardless of session completion
+      if (isPremium) {
+        console.log('✅ Premium user - allowing continuation despite session completion');
+        session.is_complete = false; // Reset for premium users
       } else {
-        // Session was marked complete but AI didn't end it - reset it
-        console.log('🔄 Session was marked complete but AI didn\'t end it - resetting session');
-        await supabase.from('chat_sessions').update({ is_complete: false }).eq('id', session.id);
-        session.is_complete = false;
+        // For free users, check if AI actually ended the session
+        const { data: lastMessages, error: lastMsgError } = await supabase
+          .from('chat_messages')
+          .select('content, role')
+          .eq('session_id', session.id)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (lastMsgError) throw lastMsgError;
+        
+        // Only mark as complete if the last message was from AI and contains session end indicators
+        const lastMessage = lastMessages?.[0];
+        const isSessionEndedByAI = lastMessage && 
+          lastMessage.role === 'assistant' && 
+          (lastMessage.content.toLowerCase().includes('see you in the next session') ||
+           lastMessage.content.toLowerCase().includes('see you next session') ||
+           lastMessage.content.toLowerCase().includes('until next session') ||
+           lastMessage.content.toLowerCase().includes('session complete') ||
+           lastMessage.content.toLowerCase().includes('session ended'));
+        
+        if (isSessionEndedByAI) {
+          return Response.json({ sessionComplete: true, messages: [] });
+        } else {
+          // Session was marked complete but AI didn't end it - reset it
+          console.log('🔄 Session was marked complete but AI didn\'t end it - resetting session');
+          await supabase.from('chat_sessions').update({ is_complete: false }).eq('id', session.id);
+          session.is_complete = false;
+        }
       }
     }
     // Fetch all messages for this session
