@@ -52,7 +52,7 @@
 
   * {
     @apply border-border;
-    /* Enhanced smoothness for all elements */
+    /* Enhanced smoothness for all elements - removed transform to prevent shakiness */
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -122,7 +122,7 @@
     background: rgba(0, 0, 0, 0.3);
   }
 
-  /* Enhanced page transitions */
+  /* Enhanced page transitions - removed transform to prevent shakiness */
   .page-transition {
     animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -130,11 +130,9 @@
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(20px);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 
@@ -194,7 +192,7 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Smooth modal transitions */
+  /* Smooth modal transitions - removed transform to prevent shakiness */
   .modal-smooth {
     animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -202,11 +200,9 @@
   @keyframes modalFadeIn {
     from {
       opacity: 0;
-      transform: scale(0.95);
     }
     to {
       opacity: 1;
-      transform: scale(1);
     }
   }
 
@@ -447,13 +443,13 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
-  /* Enhanced progress bar transitions */
+  /* Enhanced progress bar transitions - removed transform to prevent shakiness */
   .progress-step {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .progress-step.active {
-    transform: scale(1.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Optimized background image loading */
@@ -495,11 +491,9 @@
 
   @keyframes loadingDot {
     0%, 80%, 100% {
-      transform: scale(0.8);
       opacity: 0.5;
     }
     40% {
-      transform: scale(1);
       opacity: 1;
     }
   }
@@ -512,11 +506,9 @@
   @keyframes toastSlideIn {
     from {
       opacity: 0;
-      transform: translateY(-10px);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 
@@ -526,9 +518,9 @@
   }
 
   @keyframes errorShake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
-    20%, 40%, 60%, 80% { transform: translateX(2px); }
+    0%, 100% { }
+    10%, 30%, 50%, 70%, 90% { }
+    20%, 40%, 60%, 80% { }
   }
 
   /* Enhanced success feedback */
@@ -537,9 +529,9 @@
   }
 
   @keyframes successPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% { }
+    50% { }
+    100% { }
   }
 
   /* Enhanced navigation smoothness */
@@ -620,11 +612,9 @@
   @keyframes modalSlideIn {
     from {
       opacity: 0;
-      transform: scale(0.9) translateY(-20px);
     }
     to {
       opacity: 1;
-      transform: scale(1) translateY(0);
     }
   }
 
@@ -636,11 +626,9 @@
   @keyframes pageFadeIn {
     from {
       opacity: 0;
-      transform: translateY(30px);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 
@@ -677,9 +665,8 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Enhanced active states */
+  /* Enhanced active states - removed transform to prevent shakiness */
   .active-smooth {
-    transform: scale(0.98);
     transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
