@@ -52,8 +52,7 @@
 
   * {
     @apply border-border;
-    /* Enhanced smoothness for all elements - removed transform to prevent shakiness */
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed universal transition to prevent shakiness */
   }
 
   html {
@@ -77,20 +76,20 @@
     overflow-x: hidden;
   }
 
-  /* Enhanced smoothness for all interactive elements */
+  /* Removed universal transitions to prevent shakiness */
   button, a, input, textarea, select {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Smooth hover effects - removed transform to prevent shakiness */
+  /* Removed hover effects to prevent shakiness */
   button:hover, a:hover {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Enhanced focus states - removed transform to prevent shakiness */
+  /* Removed focus effects to prevent shakiness */
   button:focus, a:focus, input:focus, textarea:focus, select:focus {
     outline: none;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   /* Custom scrollbars for webkit browsers */
@@ -106,7 +105,7 @@
   ::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
-    transition: background 0.3s ease;
+    /* Removed transition to prevent shakiness */
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -150,18 +149,18 @@
     }
   }
 
-  /* Smooth card hover effects - removed transform to prevent shakiness */
+  /* Removed card hover effects to prevent shakiness */
   .card-hover {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .card-hover:hover {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   }
 
-  /* Enhanced button animations - removed transform to prevent shakiness */
+  /* Removed button smooth effects to prevent shakiness */
   .btn-smooth {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
     position: relative;
     overflow: hidden;
   }
@@ -171,54 +170,45 @@
   }
 
   .btn-smooth:active {
-    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Smooth input focus effects - removed transform to prevent shakiness */
+  /* Removed input smooth effects to prevent shakiness */
   .input-smooth {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .input-smooth:focus {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  /* Enhanced navigation smoothness - removed transform to prevent shakiness */
+  /* Removed nav smooth effects to prevent shakiness */
   .nav-smooth {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .nav-smooth:hover {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Smooth modal transitions - removed transform to prevent shakiness */
+  /* Removed modal smooth effects to prevent shakiness */
   .modal-smooth {
     animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  @keyframes modalFadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* Enhanced text animations */
+  /* Removed text smooth effects to prevent shakiness */
   .text-smooth {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Smooth background transitions */
+  /* Removed background smooth effects to prevent shakiness */
   .bg-smooth {
-    transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Enhanced glassmorphism smoothness - removed transform to prevent shakiness */
+  /* Removed glass smooth effects to prevent shakiness */
   .glass-smooth {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
     backdrop-filter: blur(10px);
   }
 
@@ -240,7 +230,7 @@
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .premium-glass {
@@ -248,7 +238,7 @@
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .premium-glass:hover {
@@ -297,7 +287,7 @@
   .scrollable-container::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.3);
     border-radius: 3px;
-    transition: background-color 0.3s ease;
+    /* Removed transition to prevent shakiness */
   }
 
   .scrollable-container::-webkit-scrollbar-thumb:hover {
@@ -321,7 +311,7 @@
   .scrollbar-thumb-white\/20::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
-    transition: background-color 0.3s ease;
+    /* Removed transition to prevent shakiness */
   }
 
   /* Mobile optimizations */
@@ -337,34 +327,34 @@
     background-image: url('/lovable-uploads/a3872cd3-caf3-42ac-99bb-15e21499e310.png');
     background-size: cover;
     background-position: center;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .therapy-bg-recover {
     background-image: url('/lovable-uploads/4e0d3477-805c-4e57-b52c-82fe4a8d1c4f.png');
     background-size: cover;
     background-position: center;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .therapy-bg-rebuild {
     background-image: url('/lovable-uploads/07533b71-b782-4088-844e-83d3b08837e7.png');
     background-size: cover;
     background-position: center;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .therapy-bg-evolve {
     background-image: url('/lovable-uploads/63bfd61c-32c7-4ddb-aa9a-6c5a6d885cc6.png');
     background-size: cover;
     background-position: center;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Enhanced onboarding form smoothness */
+  /* Removed onboarding form transitions to prevent shakiness */
   .onboarding-form label {
     color: white !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .onboarding-form input,
@@ -373,13 +363,13 @@
     background-color: rgb(55 65 81) !important;
     border-color: rgb(75 85 99) !important;
     color: white !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .onboarding-form input::placeholder,
   .onboarding-form textarea::placeholder {
     color: rgb(156 163 175) !important;
-    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .onboarding-form .text-muted-foreground {
@@ -388,7 +378,7 @@
 
   .onboarding-form [data-radix-checkbox-root] {
     border-color: rgb(75 85 99) !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .onboarding-form input:disabled {
@@ -396,20 +386,20 @@
     color: rgb(156 163 175) !important;
   }
 
-  /* Enhanced onboarding form smoothness */
+  /* Removed onboarding form smoothness to prevent shakiness */
   .onboarding-form {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
 
   .onboarding-form * {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .onboarding-form input,
   .onboarding-form textarea,
   .onboarding-form [data-radix-select-trigger] {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    /* Removed transition to prevent shakiness */
   }
 
   .onboarding-form input:focus,
@@ -418,48 +408,34 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
-  /* Enhanced section transitions */
+  /* Removed section transitions to prevent shakiness */
   .onboarding-section {
-    animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed animation to prevent shakiness */
   }
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Enhanced button hover effects - removed transform to prevent shakiness */
+  /* Removed button hover effects to prevent shakiness */
   .onboarding-form button {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .onboarding-form button:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
-  /* Enhanced progress bar transitions - removed transform to prevent shakiness */
+  /* Removed progress step transitions to prevent shakiness */
   .progress-step {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .progress-step.active {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Optimized background image loading */
+  /* Optimized background image loading - removed transform and transition to prevent shakiness */
   .onboarding-bg {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    will-change: transform;
-    transform: translateZ(0);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Enhanced therapy question highlighting */
@@ -468,7 +444,7 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-weight: 500;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   /* Enhanced loading states */
@@ -534,9 +510,9 @@
     100% { }
   }
 
-  /* Enhanced navigation smoothness */
+  /* Removed navigation smoothness to prevent shakiness */
   .nav-item-smooth {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
     position: relative;
   }
 
@@ -548,16 +524,16 @@
     width: 0;
     height: 2px;
     background: currentColor;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .nav-item-smooth:hover::after {
     width: 100%;
   }
 
-  /* Enhanced card interactions */
+  /* Removed card interactive effects to prevent shakiness */
   .card-interactive {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
     cursor: pointer;
   }
 
@@ -565,9 +541,9 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   }
 
-  /* Enhanced button interactions */
+  /* Removed button interactive effects to prevent shakiness */
   .btn-interactive {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
     position: relative;
     overflow: hidden;
   }
@@ -580,7 +556,7 @@
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
+    /* Removed transition to prevent shakiness */
   }
 
   .btn-interactive:hover::before {
@@ -592,81 +568,53 @@
   }
 
   .btn-interactive:active {
-    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Enhanced input focus states - removed transform to prevent shakiness */
+  /* Removed input enhanced effects to prevent shakiness */
   .input-enhanced {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .input-enhanced:focus {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  /* Enhanced modal animations */
+  /* Removed modal enhanced effects to prevent shakiness */
   .modal-enhanced {
     animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  @keyframes modalSlideIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* Enhanced page transitions */
+  /* Removed page transition enhanced effects to prevent shakiness */
   .page-transition-enhanced {
     animation: pageFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  @keyframes pageFadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* Enhanced loading spinners */
-  .spinner-smooth {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  /* Enhanced hover effects for all interactive elements - removed transform to prevent shakiness */
+  /* Removed hover smooth effects to prevent shakiness */
   .hover-smooth {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
   .hover-smooth:hover {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Enhanced focus states for accessibility */
+  /* Removed focus smooth effects to prevent shakiness */
   .focus-smooth:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Enhanced disabled states */
+  /* Removed disabled smooth effects to prevent shakiness */
   .disabled-smooth {
     opacity: 0.6;
     cursor: not-allowed;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 
-  /* Enhanced active states - removed transform to prevent shakiness */
+  /* Removed active smooth effects to prevent shakiness */
   .active-smooth {
-    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Removed transition to prevent shakiness */
   }
 }

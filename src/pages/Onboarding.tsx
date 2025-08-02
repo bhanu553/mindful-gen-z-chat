@@ -266,7 +266,7 @@ const Onboarding = () => {
           value={formData.full_name}
           onChange={(e) => updateFormData('full_name', e.target.value)}
           placeholder="Enter your full name"
-          className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200"
+          className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400"
         />
       </div>
 
@@ -290,7 +290,7 @@ const Onboarding = () => {
           value={formData.phone_number}
           onChange={(e) => updateFormData('phone_number', e.target.value)}
           placeholder="+1 (555) 123-4567"
-          className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200"
+          className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400"
         />
       </div>
 
@@ -306,7 +306,7 @@ const Onboarding = () => {
             onChange={(e) => updateFormData('age', e.target.value)}
             placeholder="25"
             required
-            className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200"
+            className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400"
           />
           {formData.age && parseInt(formData.age) < 18 && (
             <p className="text-sm text-red-400">You must be at least 18 years old to use EchoMind.</p>
@@ -319,7 +319,7 @@ const Onboarding = () => {
             value={formData.gender}
             onValueChange={(value) => updateFormData('gender', value)}
           >
-            <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200">
+            <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent className="bg-gray-800 text-white border-gray-700">
@@ -339,7 +339,7 @@ const Onboarding = () => {
           onValueChange={(value) => updateFormData('timezone', value)}
           required
         >
-          <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200">
+          <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400">
             <SelectValue placeholder="Select your timezone" />
           </SelectTrigger>
           <SelectContent className="bg-gray-800 text-white border-gray-700 max-h-60 overflow-y-auto">
@@ -669,7 +669,7 @@ const Onboarding = () => {
               return (
                 <div key={index} className="flex items-center">
                   <div className={`flex flex-col items-center progress-step ${isActive ? 'active' : ''} ${isActive || isCompleted ? 'text-blue-300' : 'text-white/60'}`}>
-                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all ${
+                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 ${
                       isActive ? 'border-blue-300 bg-blue-300/20 shadow-lg shadow-blue-300/25' : 
                       isCompleted ? 'border-blue-300 bg-blue-300 text-white' : 
                       'border-white/30 bg-white/10'
@@ -679,7 +679,7 @@ const Onboarding = () => {
                     <span className="text-xs font-medium text-shadow-sm">{section.title}</span>
                   </div>
                   {index < sections.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-2 transition-all ${isCompleted ? 'bg-blue-300' : 'bg-white/30'}`}></div>
+                    <div className={`flex-1 h-0.5 mx-2 ${isCompleted ? 'bg-blue-300' : 'bg-white/30'}`}></div>
                   )}
                 </div>
               );
