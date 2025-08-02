@@ -1,6 +1,10 @@
 
 {
   "rewrites": [
+    { "source": "/api/chat", "destination": "/api/chat.js" },
+    { "source": "/api/session", "destination": "/api/session.js" },
+    { "source": "/api/onboarding", "destination": "/api/onboarding-complete.js" },
+    { "source": "/api/new-session", "destination": "/api/new-session.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

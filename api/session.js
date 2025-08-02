@@ -104,8 +104,39 @@ export async function POST(req) {
     
     // Get or create session (existing logic unchanged)
     const session = await getOrCreateCurrentSession(userId);
+    
+    // CRITICAL FIX: Only mark session as complete if the AI has sent the session end message
+    // Check if the last message from AI contains session completion indicators
     if (session.is_complete) {
-      return Response.json({ sessionComplete: true, messages: [] });
+      // Get the last AI message to check if it actually ended the session
+      const { data: lastMessages, error: lastMsgError } = await supabase
+        .from('chat_messages')
+        .select('content, role')
+        .eq('session_id', session.id)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (lastMsgError) throw lastMsgError;
+      
+      // Only mark as complete if the last message was from AI and contains session end indicators
+      const lastMessage = lastMessages?.[0];
+      const isSessionEndedByAI = lastMessage && 
+        lastMessage.role === 'assistant' && 
+        (lastMessage.content.toLowerCase().includes('see you in the next session') ||
+         lastMessage.content.toLowerCase().includes('see you next session') ||
+         lastMessage.content.toLowerCase().includes('until next session') ||
+         lastMessage.content.toLowerCase().includes('session complete') ||
+         lastMessage.content.toLowerCase().includes('session ended'));
+      
+      if (isSessionEndedByAI) {
+        return Response.json({ sessionComplete: true, messages: [] });
+      } else {
+        // Session was marked complete but AI didn't end it - reset it
+        console.log('🔄 Session was marked complete but AI didn\'t end it - resetting session');
+        await supabase.from('chat_sessions').update({ is_complete: false }).eq('id', session.id);
+        session.is_complete = false;
+      }
     }
     // Fetch all messages for this session
     const { data: messages, error: msgError } = await supabase
