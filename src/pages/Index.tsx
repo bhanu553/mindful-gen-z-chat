@@ -6,7 +6,6 @@ import Navigation from '@/components/ui/navigation';
 import PaymentModal from '@/components/ui/payment-modal';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFreeUserTherapyAccess } from '@/hooks/useFreeUserTherapyAccess';
 
 const Index = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -14,7 +13,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, isPremium } = useAuth();
   const { isOnboardingComplete, isLoading } = useOnboardingStatus();
-  const { canAccessTherapy } = useFreeUserTherapyAccess();
 
   const handleStartJourney = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -31,11 +29,7 @@ const Index = () => {
   };
 
   const handleGetStarted = () => {
-    if (!canAccessTherapy) {
-      navigate('/dashboard');
-    } else {
-      navigate('/therapy');
-    }
+    navigate('/therapy');
   };
   
   const heroImages = [

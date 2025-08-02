@@ -4,17 +4,15 @@ import { useState } from 'react';
 import { Menu, X, Brain, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useFreeUserTherapyAccess } from '@/hooks/useFreeUserTherapyAccess';
 
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isPremium, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { canAccessTherapy } = useFreeUserTherapyAccess();
 
   const navItems = [
-    { name: 'Innerflow', path: canAccessTherapy ? '/therapy' : '/dashboard', requireAuth: true },
+    { name: 'Innerflow', path: '/therapy', requireAuth: true },
     { name: 'Dashboard', path: '/dashboard', requireAuth: true },
     { name: 'Pricing Plans', path: '#pricing', scroll: true },
   ];

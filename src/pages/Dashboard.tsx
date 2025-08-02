@@ -7,14 +7,12 @@ import PaymentModal from '@/components/ui/payment-modal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTherapySessions } from '@/hooks/useTherapySessions';
 import { Button } from '@/components/ui/button';
-import { useFreeUserTherapyAccess } from '@/hooks/useFreeUserTherapyAccess';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile, isPremium } = useAuth();
   const { sessions, loading } = useTherapySessions();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const { canAccessTherapy } = useFreeUserTherapyAccess();
 
   const userName = profile?.full_name?.split(' ')[0] || 'Friend';
   const recentSessions = sessions.slice(0, 3);
@@ -42,11 +40,7 @@ const Dashboard = () => {
   };
 
   const startNewSession = () => {
-    if (!canAccessTherapy) {
-      navigate('/dashboard');
-    } else {
-      navigate('/therapy');
-    }
+    navigate('/therapy');
   };
 
   return (

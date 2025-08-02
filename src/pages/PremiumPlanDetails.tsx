@@ -4,12 +4,10 @@ import { ArrowRight, Check, Crown, Sparkles, Brain, TrendingUp, Shield, Heart } 
 import { Link, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFreeUserTherapyAccess } from '@/hooks/useFreeUserTherapyAccess';
 
 const PremiumPlanDetails = () => {
   const paypalRef = useRef<HTMLDivElement>(null);
   const { user, isPremium } = useAuth();
-  const { canAccessTherapy } = useFreeUserTherapyAccess();
   const navigate = useNavigate();
 
   const markUserAsPremium = async () => {
@@ -71,11 +69,7 @@ const PremiumPlanDetails = () => {
   }, [isPremium, user]);
 
   const handleStartTherapy = () => {
-    if (!canAccessTherapy) {
-      navigate('/dashboard');
-    } else {
-      navigate('/therapy');
-    }
+    navigate('/therapy');
   };
 
   return (

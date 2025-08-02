@@ -249,4 +249,71 @@
     background-color: rgb(31 41 55) !important;
     color: rgb(156 163 175) !important;
   }
+
+  /* Onboarding form smoothness improvements */
+  .onboarding-form {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .onboarding-form * {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .onboarding-form input,
+  .onboarding-form textarea,
+  .onboarding-form [data-radix-select-trigger] {
+    transition: all 0.2s ease-in-out !important;
+  }
+
+  .onboarding-form input:focus,
+  .onboarding-form textarea:focus,
+  .onboarding-form [data-radix-select-trigger]:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Smooth section transitions */
+  .onboarding-section {
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Improved button hover effects */
+  .onboarding-form button {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .onboarding-form button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Smooth progress bar transitions */
+  .progress-step {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .progress-step.active {
+    transform: scale(1.05);
+  }
+
+  /* Optimized background image loading */
+  .onboarding-bg {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    will-change: transform;
+    transform: translateZ(0);
+  }
 }

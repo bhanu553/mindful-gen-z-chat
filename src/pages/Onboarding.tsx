@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, ChevronRight, ArrowLeft, Heart, Info, CheckCircle } from 'lucide-react';
+import { Brain, ChevronRight, ArrowLeft, Heart, Info, CheckCircle, Check, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -260,43 +260,43 @@ const Onboarding = () => {
   const renderPersonalDetails = () => (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="full_name" className="text-white font-medium">Full Name *</Label>
+        <Label htmlFor="full_name" className="text-white/90">Full Name *</Label>
         <Input
           id="full_name"
           value={formData.full_name}
           onChange={(e) => updateFormData('full_name', e.target.value)}
           placeholder="Enter your full name"
-          className="bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50"
+          className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-white font-medium">Email Address</Label>
+        <Label htmlFor="email" className="text-white/90">Email Address</Label>
         <Input
           id="email"
           value={formData.email}
           onChange={(e) => updateFormData('email', e.target.value)}
           placeholder="your.email@example.com"
           disabled
-          className="bg-white/10 backdrop-blur-sm border-white/20 text-white/80"
+          className="bg-white/5 border-white/10 text-white/70 placeholder-white/40"
         />
-        <p className="text-sm text-white/70">Auto-filled from your account</p>
+        <p className="text-sm text-white/60">Auto-filled from your account</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone_number" className="text-white font-medium">Phone Number (Optional)</Label>
+        <Label htmlFor="phone_number" className="text-white/90">Phone Number (Optional)</Label>
         <Input
           id="phone_number"
           value={formData.phone_number}
           onChange={(e) => updateFormData('phone_number', e.target.value)}
           placeholder="+1 (555) 123-4567"
-          className="bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50"
+          className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="age" className="text-white font-medium">Age <span className="text-red-400">*</span></Label>
+          <Label htmlFor="age" className="text-white/90">Age <span className="text-red-400">*</span></Label>
           <Input
             id="age"
             type="number"
@@ -306,7 +306,7 @@ const Onboarding = () => {
             onChange={(e) => updateFormData('age', e.target.value)}
             placeholder="25"
             required
-            className="bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50"
+            className="bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200"
           />
           {formData.age && parseInt(formData.age) < 18 && (
             <p className="text-sm text-red-400">You must be at least 18 years old to use EchoMind.</p>
@@ -314,48 +314,42 @@ const Onboarding = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="gender" className="text-white font-medium">Gender</Label>
-          <Select value={formData.gender} onValueChange={(value) => updateFormData('gender', value)}>
-            <SelectTrigger className="bg-white/20 backdrop-blur-sm border-white/30 text-white">
+          <Label htmlFor="gender" className="text-white/90">Gender (Optional)</Label>
+          <Select
+            value={formData.gender}
+            onValueChange={(value) => updateFormData('gender', value)}
+          >
+            <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-gray-800 text-white border-gray-700">
               <SelectItem value="male">Male</SelectItem>
               <SelectItem value="female">Female</SelectItem>
-              <SelectItem value="non-binary">Non-Binary</SelectItem>
+              <SelectItem value="non-binary">Non-binary</SelectItem>
               <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="country" className="text-white font-medium">Country</Label>
-          <Input
-            id="country"
-            value={formData.country}
-            onChange={(e) => updateFormData('country', e.target.value)}
-            placeholder="United States"
-            className="bg-white/20 backdrop-blur-sm border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="timezone" className="text-white font-medium">Timezone</Label>
-          <Select
-            value={formData.timezone}
-            onValueChange={(value) => updateFormData('timezone', value)}
-          >
-            <SelectTrigger className="bg-white/20 backdrop-blur-sm border-white/30 text-white">
-              <SelectValue placeholder="Select timezone" />
-            </SelectTrigger>
-            <SelectContent>
-              {timezones.map((tz) => (
-                <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="timezone" className="text-white/90">Timezone *</Label>
+        <Select
+          value={formData.timezone}
+          onValueChange={(value) => updateFormData('timezone', value)}
+          required
+        >
+          <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200">
+            <SelectValue placeholder="Select your timezone" />
+          </SelectTrigger>
+          <SelectContent className="bg-gray-800 text-white border-gray-700 max-h-60 overflow-y-auto">
+            {timezones.map((tz) => (
+              <SelectItem key={tz} value={tz}>
+                {tz}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
@@ -643,16 +637,16 @@ const Onboarding = () => {
     <div className="min-h-screen relative">
       {/* Background Image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat onboarding-bg"
         style={{
-          backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 1200 800\'%3E%3Cdefs%3E%3ClinearGradient id=\'sky\' x1=\'0%25\' y1=\'0%25\' x2=\'100%25\' y2=\'100%25\'%3E%3Cstop offset=\'0%25\' style=\'stop-color:%23FF6B6B;stop-opacity:1\' /%3E%3Cstop offset=\'25%25\' style=\'stop-color:%23FFE66D;stop-opacity:1\' /%3E%3Cstop offset=\'50%25\' style=\'stop-color:%23FF8E53;stop-opacity:1\' /%3E%3Cstop offset=\'75%25\' style=\'stop-color:%23FF6B9D;stop-opacity:1\' /%3E%3Cstop offset=\'100%25\' style=\'stop-color:%234ECDC4;stop-opacity:1\' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=\'1200\' height=\'800\' fill=\'url(%23sky)\'/%3E%3C/svg%3E")',
+          backgroundImage: 'url("/lovable-uploads/onboardingimage.jpg")',
         }}
       />
       
       {/* Overlay for better readability */}
-      <div className="absolute inset-0 bg-black/40" />
-      
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="absolute inset-0 bg-black/50"></div> {/* Overlay for readability */}
+  
+      <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -660,10 +654,10 @@ const Onboarding = () => {
               <Brain className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">EchoMind</h1>
-          <p className="text-xl text-white/90 italic drop-shadow-sm">AI Therapy. Real Healing.</p>
+          <h1 className="text-4xl font-bold text-white mb-2 text-shadow-lg">EchoMind</h1>
+          <p className="text-xl text-white italic text-shadow-md">AI Therapy. Real Healing.</p>
         </div>
-
+  
         {/* Progress Bar */}
         <div className="max-w-4xl mx-auto mb-8">
           <div className="flex items-center justify-between">
@@ -671,32 +665,28 @@ const Onboarding = () => {
               const Icon = section.icon;
               const isActive = index === currentSection;
               const isCompleted = index < currentSection;
-
+  
               return (
                 <div key={index} className="flex items-center">
-                  <div className={`flex flex-col items-center ${isActive || isCompleted ? 'text-blue-300' : 'text-white/70'}`}>
-                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all backdrop-blur-sm ${
-                      isActive ? 'border-blue-300 bg-blue-400/30 shadow-lg shadow-blue-400/25' : 
-                      isCompleted ? 'border-blue-300 bg-blue-400/50 text-white' : 
-                      'border-white/40 bg-white/10'
+                  <div className={`flex flex-col items-center progress-step ${isActive ? 'active' : ''} ${isActive || isCompleted ? 'text-blue-300' : 'text-white/60'}`}>
+                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 transition-all ${
+                      isActive ? 'border-blue-300 bg-blue-300/20 shadow-lg shadow-blue-300/25' : 
+                      isCompleted ? 'border-blue-300 bg-blue-300 text-white' : 
+                      'border-white/30 bg-white/10'
                     }`}>
-                      {isCompleted ? (
-                        <CheckCircle className="w-6 h-6" />
-                      ) : (
-                        <Icon className="w-6 h-6" />
-                      )}
+                      {isCompleted ? <Check className="w-6 h-6 text-white" /> : <Icon className="w-6 h-6" />}
                     </div>
-                    <span className="text-xs text-center font-medium text-white drop-shadow-sm">{section.title}</span>
+                    <span className="text-xs font-medium text-shadow-sm">{section.title}</span>
                   </div>
                   {index < sections.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-4 ${isCompleted ? 'bg-blue-300' : 'bg-white/40'}`} />
+                    <div className={`flex-1 h-0.5 mx-2 transition-all ${isCompleted ? 'bg-blue-300' : 'bg-white/30'}`}></div>
                   )}
                 </div>
               );
             })}
           </div>
         </div>
-
+  
         {/* Form Content */}
         <Card className="max-w-4xl mx-auto shadow-2xl bg-white/10 backdrop-blur-md border-white/20">
           <CardHeader>
@@ -704,28 +694,28 @@ const Onboarding = () => {
               {sections[currentSection].title}
             </CardTitle>
           </CardHeader>
-          <CardContent className="onboarding-form">
+          <CardContent className="onboarding-form onboarding-section">
             {renderSection()}
           </CardContent>
         </Card>
-
+  
         {/* Navigation */}
         <div className="max-w-4xl mx-auto mt-8 flex justify-between">
           <Button
             variant="outline"
             onClick={handlePrevious}
             disabled={currentSection === 0}
-            className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+            className="flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white border border-white/20 shadow-md"
           >
             <ArrowLeft className="w-4 h-4" />
             Previous
           </Button>
-
+  
           {currentSection < sections.length - 1 ? (
             <Button
               onClick={handleNext}
               disabled={!isValidSection()}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500/80 to-purple-500/80 backdrop-blur-sm hover:from-blue-600/90 hover:to-purple-600/90 border border-white/20 text-white shadow-lg"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-500/80 to-purple-600/80 hover:from-blue-600/90 hover:to-purple-700/90 text-white shadow-lg"
             >
               Next
               <ChevronRight className="w-4 h-4" />
@@ -734,10 +724,19 @@ const Onboarding = () => {
             <Button
               onClick={handleSubmit}
               disabled={!isValidSection() || isSubmitting}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500/80 to-purple-500/80 backdrop-blur-sm hover:from-blue-600/90 hover:to-purple-600/90 border border-white/20 text-white shadow-lg animate-pulse"
+              className="flex items-center gap-2 bg-gradient-to-r from-green-500/80 to-teal-600/80 hover:from-green-600/90 hover:to-teal-700/90 text-white shadow-lg"
             >
-              {isSubmitting ? 'Starting...' : 'Begin Your Healing'}
-              <Heart className="w-4 h-4" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  Complete Onboarding
+                  <Check className="w-4 h-4" />
+                </>
+              )}
             </Button>
           )}
         </div>
