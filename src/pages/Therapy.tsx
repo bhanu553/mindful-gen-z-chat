@@ -401,6 +401,60 @@ const Therapy = () => {
                   </div>
                 )}
                 
+                {/* Session Complete Message in Chat Area */}
+                {sessionComplete && (
+                  <div className="flex justify-start">
+                    <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-2xl shadow-xl p-6 md:p-8 mr-4 max-w-2xl border border-white/20">
+                      <h2 className="text-xl md:text-2xl font-bold text-white mb-4">🌟 Session Complete - What's Next?</h2>
+                      <div className="text-white/90 text-left space-y-4 mb-6">
+                        <p className="text-base md:text-lg">You just experienced real therapy, not just a chat. That professional structure and evidence-based approach you felt? That's what $300/session therapy delivers.</p>
+                        
+                        <div className="bg-white/10 rounded-xl p-4 border border-white/20">
+                          <h3 className="font-semibold text-white mb-2">As a free user:</h3>
+                          <ul className="text-white/80 space-y-1 text-sm">
+                            <li>• Next session available in 30 days</li>
+                            <li>• No continuity or progress building</li>
+                            <li>• Limited breakthrough potential</li>
+                          </ul>
+                        </div>
+                        
+                        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-400/30">
+                          <h3 className="font-semibold text-yellow-300 mb-2">Ready to continue your healing?</h3>
+                          <div className="text-white/90">
+                            <p className="font-semibold">Premium: $49/month</p>
+                            <ul className="text-white/80 space-y-1 text-sm mt-2">
+                              <li>• 8 sessions (vs 1 free)</li>
+                              <li>• 3 - 4 days spacing for optimal progress</li>
+                              <li>• Session continuity that builds on your breakthrough</li>
+                              <li>• Personalized homework and skill development</li>
+                            </ul>
+                          </div>
+                        </div>
+                        
+                        <p className="text-white/80 italic">Therapy isn't a one-session miracle. Real change happens with consistent work.</p>
+                        <p className="text-yellow-300 font-semibold">Don't wait 30 days and lose momentum.</p>
+                      </div>
+                      
+                      <button
+                        className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg text-base md:text-lg w-full"
+                        onClick={() => navigate('/premium-plan-details')}
+                      >
+                        Continue My Journey - $49/month
+                      </button>
+                      
+                      {isPremium && (
+                        <button
+                          className="bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl px-4 py-2 mt-3 transition-all duration-200 border border-white/30 text-sm md:text-base w-full"
+                          onClick={handleStartNewSession}
+                          disabled={isLoading}
+                        >
+                          Start New Session
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div ref={messagesEndRef} />
               </div>
             )}
@@ -436,62 +490,7 @@ const Therapy = () => {
             </div>
           )}
           
-          {/* Session Complete Message in Chat Area */}
-          {sessionComplete && (
-            <div className="p-8 md:p-10 border-t border-white/10">
-              <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-3xl shadow-xl p-8 max-w-2xl mx-auto text-center border border-white/20">
-                <h2 className="text-2xl font-bold text-white mb-4">🌟 Session Complete - What's Next?</h2>
-                <div className="text-white/90 text-left space-y-4 mb-6">
-                  <p className="text-lg">You just experienced real therapy, not just a chat. That professional structure and evidence-based approach you felt? That's what $300/session therapy delivers.</p>
-                  
-                  <div className="bg-white/10 rounded-xl p-4 border border-white/20">
-                    <h3 className="font-semibold text-white mb-2">As a free user:</h3>
-                    <ul className="text-white/80 space-y-1 text-sm">
-                      <li>• Next session available in 30 days</li>
-                      <li>• No continuity or progress building</li>
-                      <li>• Limited breakthrough potential</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-400/30">
-                    <h3 className="font-semibold text-yellow-300 mb-2">Ready to continue your healing?</h3>
-                    <div className="text-white/90">
-                      <p className="font-semibold">Premium: $49/month</p>
-                      <ul className="text-white/80 space-y-1 text-sm mt-2">
-                        <li>• 8 sessions (vs 1 free)</li>
-                        <li>• 3 - 4 days spacing for optimal progress</li>
-                        <li>• Session continuity that builds on your breakthrough</li>
-                        <li>• Personalized homework and skill development</li>
-                      </ul>
-                    </div>
-                  </div>
-                  
-                  <p className="text-white/80 italic">Therapy isn't a one-session miracle. Real change happens with consistent work.</p>
-                  <p className="text-yellow-300 font-semibold">Don't wait 30 days and lose momentum.</p>
-                </div>
-                
-                <button
-                  className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-8 py-4 transition-all duration-200 shadow-lg text-lg w-full"
-                  onClick={() => navigate('/dashboard')}
-                >
-                  Continue My Journey - $49/month
-                </button>
-                
-                {isPremium && (
-                  <button
-                    className="bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl px-6 py-3 mt-4 transition-all duration-200 border border-white/30 text-lg"
-                    onClick={handleStartNewSession}
-                    disabled={isLoading}
-                  >
-                    Start New Session
-                  </button>
-                )}
-              </div>
-              {errorMessage && (
-                <div className="mt-4 text-red-400 text-sm font-semibold text-center">{errorMessage}</div>
-              )}
-            </div>
-          )}
+          
         </div>
       </div>
     </div>
