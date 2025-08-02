@@ -438,8 +438,8 @@ Premium: $49/month
                   </div>
                 )}
                 
-                {/* Session Complete Message in Chat Area */}
-                {sessionComplete && (
+                {/* Session Complete Message in Chat Area - Only show if not restricted */}
+                {sessionComplete && !isRestricted && (
                   <div className="flex justify-start">
                     <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-2xl shadow-xl p-6 md:p-8 mr-4 max-w-2xl border border-white/20">
                       <h2 className="text-xl md:text-2xl font-bold text-white mb-4">🌟 Session Complete - What's Next?</h2>
@@ -533,7 +533,7 @@ Premium: $49/month
               <div className="flex justify-center">
                 <Button
                   onClick={() => navigate('/premium-plan-details')}
-                  className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base"
+                  className="premium-glass border border-white/20 text-white font-bold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base hover:bg-white/10"
                 >
                   Upgrade to Premium - $49/month
                 </Button>
