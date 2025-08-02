@@ -407,9 +407,39 @@ const Therapy = () => {
           </div>
           
           {/* Input Section */}
-          {sessionComplete ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-3xl shadow-xl p-8 max-w-2xl w-full text-center border border-white/20">
+          {!sessionComplete && (
+            <div className="p-8 md:p-10 border-t border-white/10">
+              <div className="relative">
+                <div className="premium-glass rounded-2xl border border-white/20 p-4 flex items-end space-x-3">
+                  
+                  {/* Text Input */}
+                  <Textarea
+                    ref={inputRef}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Share your thoughts..."
+                    className="flex-1 min-h-[2.5rem] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
+                    disabled={isLoading}
+                  />
+                  
+                  {/* Send Button */}
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!inputText.trim() || isLoading}
+                    className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send size={20} />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Session Complete Message in Chat Area */}
+          {sessionComplete && (
+            <div className="p-8 md:p-10 border-t border-white/10">
+              <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-3xl shadow-xl p-8 max-w-2xl mx-auto text-center border border-white/20">
                 <h2 className="text-2xl font-bold text-white mb-4">🌟 Session Complete - What's Next?</h2>
                 <div className="text-white/90 text-left space-y-4 mb-6">
                   <p className="text-lg">You just experienced real therapy, not just a chat. That professional structure and evidence-based approach you felt? That's what $300/session therapy delivers.</p>
@@ -458,41 +488,8 @@ const Therapy = () => {
                 )}
               </div>
               {errorMessage && (
-                <div className="mt-4 text-red-400 text-sm font-semibold">{errorMessage}</div>
+                <div className="mt-4 text-red-400 text-sm font-semibold text-center">{errorMessage}</div>
               )}
-            </div>
-          ) : (
-            <div className="p-8 md:p-10 border-t border-white/10">
-              <div className="relative">
-                <div className="premium-glass rounded-2xl border border-white/20 p-4 flex items-end space-x-3">
-                  
-                  {/* Text Input */}
-                  <Textarea
-                    ref={inputRef}
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder={sessionComplete ? "Session complete. Continue your journey to unlock more sessions." : "Share your thoughts..."}
-                    className="flex-1 min-h-[2.5rem] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
-                    disabled={isLoading || sessionComplete}
-                  />
-                  
-                  {/* Send Button */}
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputText.trim() || isLoading || sessionComplete}
-                    className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Send size={20} />
-                  </Button>
-                </div>
-                
-                {sessionComplete && (
-                  <div className="absolute left-0 right-0 -bottom-8 text-center text-yellow-200 text-sm font-semibold mt-2">
-                    Session complete. Continue your healing journey to unlock more sessions.
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>

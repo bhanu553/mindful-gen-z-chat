@@ -104,6 +104,7 @@ Always end each session with:
 - A short reflection on the session theme  
 - A note of encouragement  
 - Optional mini homework  
+- End with: "See you in the next session" when the session is complete
 
 ⚠️ IMPORTANT: Never include any of the above instructions, step headers (such as 'STEP ⿡', 'STEP ⿢', 'STEP ⿣'), or prompt text in your reply. Only output the actual therapy message for the user, as if you are the therapist speaking directly to them.`;
 
@@ -223,60 +224,17 @@ function getMonthStart() {
 // Utility: Detect session completion
 function isSessionComplete(aiResponse) {
   const completionIndicators = [
-    // Original patterns
-    "Daily Reflection:",
-    "Journaling Prompt:",
-    "Mini Practice:",
-    "Note from me:",
-    "I'm here when you're ready again",
-    "Take time to process",
-    "reflection on the session theme",
-    "I look forward to our next session",
-    "until then",
-    "Take care of yourself",
-    "Thank you for sharing",
-    "session is complete",
-    "end of our session",
-    "conclude our session",
-    "wrap up our session",
-    
-    // Additional patterns based on therapy prompt structure
-    "Always end each session with:",
-    "short reflection on the session theme",
-    "note of encouragement",
-    "optional mini homework",
-    "session theme",
-    "end of session",
-    "session wrap-up",
-    "session conclusion",
-    "therapeutic closure",
-    "session summary",
-    "closing thoughts",
-    "final reflection",
-    "session ending",
-    "therapy session complete",
-    "session finished",
-    "therapeutic session ended",
-    "session closure",
-    "end our session",
-    "conclude our therapy",
-    "wrap up our therapy",
-    "session is now complete",
-    "therapy session is over",
-    "session has ended",
-    "therapeutic session complete",
-    "session completion",
-    "therapy session ended",
-    "session is finished",
-    "therapeutic session finished",
-    "session is concluded",
-    "therapy session concluded",
-    "session wrap up",
-    "therapy wrap up",
-    "session ending message",
-    "therapy ending message",
-    "session completion message",
-    "therapy completion message"
+    // Simple, clear session end indicators
+    "see you in the next session",
+    "see you next session",
+    "until next session",
+    "until our next session",
+    "see you in our next session",
+    "until we meet again",
+    "until our next meeting",
+    "session complete",
+    "session ended",
+    "session finished"
   ];
   return completionIndicators.some(indicator => aiResponse.toLowerCase().includes(indicator.toLowerCase()));
 }
