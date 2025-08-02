@@ -82,13 +82,12 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Smooth hover effects */
+  /* Smooth hover effects - removed transform to prevent shakiness */
   button:hover, a:hover {
-    transform: translateY(-1px);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Enhanced focus states */
+  /* Enhanced focus states - removed transform to prevent shakiness */
   button:focus, a:focus, input:focus, textarea:focus, select:focus {
     outline: none;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -153,17 +152,16 @@
     }
   }
 
-  /* Smooth card hover effects */
+  /* Smooth card hover effects - removed transform to prevent shakiness */
   .card-hover {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .card-hover:hover {
-    transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   }
 
-  /* Enhanced button animations */
+  /* Enhanced button animations - removed transform to prevent shakiness */
   .btn-smooth {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -171,31 +169,29 @@
   }
 
   .btn-smooth:hover {
-    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   .btn-smooth:active {
-    transform: translateY(0);
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Smooth input focus effects */
+  /* Smooth input focus effects - removed transform to prevent shakiness */
   .input-smooth {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .input-smooth:focus {
-    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  /* Enhanced navigation smoothness */
+  /* Enhanced navigation smoothness - removed transform to prevent shakiness */
   .nav-smooth {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .nav-smooth:hover {
-    transform: translateY(-1px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Smooth modal transitions */
@@ -224,7 +220,7 @@
     transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Enhanced glassmorphism smoothness */
+  /* Enhanced glassmorphism smoothness - removed transform to prevent shakiness */
   .glass-smooth {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(10px);
@@ -232,7 +228,6 @@
 
   .glass-smooth:hover {
     backdrop-filter: blur(15px);
-    transform: translateY(-1px);
   }
 }
 
@@ -262,7 +257,6 @@
 
   .premium-glass:hover {
     backdrop-filter: blur(25px);
-    transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   }
   
@@ -425,7 +419,6 @@
   .onboarding-form input:focus,
   .onboarding-form textarea:focus,
   .onboarding-form [data-radix-select-trigger]:focus {
-    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
@@ -445,13 +438,12 @@
     }
   }
 
-  /* Enhanced button hover effects */
+  /* Enhanced button hover effects - removed transform to prevent shakiness */
   .onboarding-form button {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .onboarding-form button:hover {
-    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
@@ -578,7 +570,6 @@
   }
 
   .card-interactive:hover {
-    transform: translateY(-4px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   }
 
@@ -605,21 +596,19 @@
   }
 
   .btn-interactive:hover {
-    transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   }
 
   .btn-interactive:active {
-    transform: translateY(0);
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Enhanced input focus states */
+  /* Enhanced input focus states - removed transform to prevent shakiness */
   .input-enhanced {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .input-enhanced:focus {
-    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
@@ -665,13 +654,13 @@
     to { transform: rotate(360deg); }
   }
 
-  /* Enhanced hover effects for all interactive elements */
+  /* Enhanced hover effects for all interactive elements - removed transform to prevent shakiness */
   .hover-smooth {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .hover-smooth:hover {
-    transform: translateY(-1px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Enhanced focus states for accessibility */
