@@ -14,6 +14,7 @@ const Navigation = () => {
   const navItems = [
     { name: 'Innerflow', path: '/therapy', requireAuth: true },
     { name: 'Dashboard', path: '/dashboard', requireAuth: true },
+    { name: 'Crisis Support', path: '/crisis-support', requireAuth: false },
     { name: 'Pricing Plans', path: '#pricing', scroll: true },
   ];
 

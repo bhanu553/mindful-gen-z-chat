@@ -19,6 +19,7 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import FreePlanDetails from "./pages/FreePlanDetails";
 import PremiumPlanDetails from "./pages/PremiumPlanDetails";
+import CrisisSupport from "./pages/CrisisSupport";
 import Admin from "./pages/Admin";
 import Onboarding from "./pages/Onboarding";
 import SessionView from "./pages/SessionView";
@@ -67,6 +68,11 @@ const App = () => (
                 <Route path="/premium-plan-details" element={
                   <ProtectedRoute requireAuth={false} requireOnboarding={false}>
                     <PremiumPlanDetails />
+                  </ProtectedRoute>
+                } />
+                <Route path="/crisis-support" element={
+                  <ProtectedRoute requireAuth={false} requireOnboarding={false}>
+                    <CrisisSupport />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin" element={
