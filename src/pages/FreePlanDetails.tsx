@@ -141,7 +141,7 @@ const FreePlanDetails = () => {
             </ul>
             <p className="text-muted-foreground">The Choice Becomes Clear:</p>
             <ul className="space-y-2 mt-2">
-              <li>Continue with 8 sessions monthly ($19.99)</li>
+              <li>Upgrade to Premium for 8 sessions monthly ($19.99)</li>
               <li>Return to $150+ human therapy sessions</li>
               <li>Go without mental health support</li>
             </ul>

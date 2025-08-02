@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(500).json({ error: 'OpenAI API key missing' });
     const openai = new OpenAI({ apiKey });
 
-    // 0. Enforce 16 session/month limit for premium users
+    // 0. Enforce 8 session/month limit for premium users
     // Get start of current month
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -47,8 +47,8 @@ export default async function handler(req, res) {
       .eq('user_id', userId)
       .gte('created_at', monthStart);
     if (monthlyError) return res.status(500).json({ error: 'Failed to check session limit' });
-    if (monthlySessions && monthlySessions.length >= 16) {
-      return res.status(403).json({ error: 'Session limit reached. You can have up to 16 sessions per month as a premium user.' });
+    if (monthlySessions && monthlySessions.length >= 8) {
+      return res.status(403).json({ error: 'Session limit reached. You can have up to 8 sessions per month as a premium user.' });
     }
 
     // 1. Create a new session

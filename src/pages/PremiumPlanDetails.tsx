@@ -111,7 +111,7 @@ const PremiumPlanDetails = () => {
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">16 Deep Therapy Sessions Monthly</h3>
+                  <h3 className="font-semibold text-foreground mb-1">8 Deep Therapy Sessions Monthly</h3>
                   <p className="text-muted-foreground text-sm">Twice-weekly intensive sessions - the same frequency that ultra-wealthy clients pay $3,200+ monthly for. Accelerate your healing timeline from years to months.</p>
                 </div>
               </div>
