@@ -33,11 +33,11 @@ const Index = () => {
   };
   
   const heroImages = [
-    '/lovable-uploads/7b219328-62cd-48c3-ba2a-f138629bc9db.png',
     '/lovable-uploads/a3872cd3-caf3-42ac-99bb-15e21499e310.png',
     '/lovable-uploads/4e0d3477-805c-4e57-b52c-82fe4a8d1c4f.png',
     '/lovable-uploads/07533b71-b782-4088-844e-83d3b08837e7.png',
-    '/lovable-uploads/63bfd61c-32c7-4ddb-aa9a-6c5a6d885cc6.png'
+    '/lovable-uploads/63bfd61c-32c7-4ddb-aa9a-6c5a6d885cc6.png',
+    '/lovable-uploads/7b219328-62cd-48c3-ba2a-f138629bc9db.png'
   ];
 
   useEffect(() => {

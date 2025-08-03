@@ -667,16 +667,16 @@ const Onboarding = () => {
               const isCompleted = index < currentSection;
 
               return (
-                <div key={index} className="flex flex-col items-center justify-center">
-                  <div className={`flex flex-col items-center progress-step ${isActive ? 'active' : ''} ${isActive || isCompleted ? 'text-blue-300' : 'text-white/60'}`}>
-                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center mb-2 ${
+                <div key={index} className="flex flex-col items-center justify-center w-full">
+                  <div className={`flex flex-col items-center progress-step w-full ${isActive ? 'active' : ''} ${isActive || isCompleted ? 'text-blue-300' : 'text-white/60'}`}>
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center mb-2 mx-auto ${
                       isActive ? 'border-blue-300 bg-blue-300/20 shadow-lg shadow-blue-300/25' : 
                       isCompleted ? 'border-blue-300 bg-blue-300 text-white' : 
                       'border-white/30 bg-white/10'
                     }`}>
                       {isCompleted ? <Check className="w-5 h-5 md:w-6 md:h-6 text-white" /> : <Icon className="w-5 h-5 md:w-6 md:h-6" />}
                     </div>
-                    <span className="text-xs md:text-sm font-medium text-shadow-sm text-center leading-tight px-1">{section.title}</span>
+                    <span className="text-xs md:text-sm font-medium text-shadow-sm text-center leading-tight px-1 w-full">{section.title}</span>
                   </div>
                 </div>
               );
