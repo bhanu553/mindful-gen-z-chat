@@ -658,29 +658,26 @@ const Onboarding = () => {
           <p className="text-xl text-white italic text-shadow-md">AI Therapy. Real Healing.</p>
         </div>
   
-        {/* Progress Bar */}
+                {/* Progress Bar */}
         <div className="max-w-4xl mx-auto mb-8">
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-4 gap-2 md:gap-4">
             {sections.map((section, index) => {
               const Icon = section.icon;
               const isActive = index === currentSection;
               const isCompleted = index < currentSection;
-  
+
               return (
-                <div key={index} className="flex items-center">
+                <div key={index} className="flex flex-col items-center justify-center">
                   <div className={`flex flex-col items-center progress-step ${isActive ? 'active' : ''} ${isActive || isCompleted ? 'text-blue-300' : 'text-white/60'}`}>
-                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2 ${
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center mb-2 ${
                       isActive ? 'border-blue-300 bg-blue-300/20 shadow-lg shadow-blue-300/25' : 
                       isCompleted ? 'border-blue-300 bg-blue-300 text-white' : 
                       'border-white/30 bg-white/10'
                     }`}>
-                      {isCompleted ? <Check className="w-6 h-6 text-white" /> : <Icon className="w-6 h-6" />}
+                      {isCompleted ? <Check className="w-5 h-5 md:w-6 md:h-6 text-white" /> : <Icon className="w-5 h-5 md:w-6 md:h-6" />}
                     </div>
-                    <span className="text-xs font-medium text-shadow-sm">{section.title}</span>
+                    <span className="text-xs md:text-sm font-medium text-shadow-sm text-center leading-tight px-1">{section.title}</span>
                   </div>
-                  {index < sections.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-2 ${isCompleted ? 'bg-blue-300' : 'bg-white/30'}`}></div>
-                  )}
                 </div>
               );
             })}
