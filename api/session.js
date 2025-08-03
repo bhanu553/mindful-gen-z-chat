@@ -34,19 +34,14 @@ async function checkUserPremiumStatus(userId) {
 // New function to check user restriction status (ONLY for free users)
 async function checkUserRestriction(userId) {
   try {
-    // First check if user is premium - if so, no restrictions
+    // First check if user is premium
     const isPremium = await checkUserPremiumStatus(userId);
-    if (isPremium) {
-      console.log('✅ Premium user detected - no restrictions applied');
-      return { isRestricted: false };
-    }
     
-    // Get user's sessions for current month
+    // Get user's sessions (ALL sessions, not just current month)
     const { data: sessions, error } = await supabase
       .from('chat_sessions')
       .select('*')
       .eq('user_id', userId)
-      .gte('created_at', getMonthStart())
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -56,16 +51,39 @@ async function checkUserRestriction(userId) {
       return { isRestricted: false };
     }
     
-    // Find the most recent session
-    const lastSession = sessions[0];
+    // Find the most recent completed session
+    const lastCompletedSession = sessions.find(s => s.is_complete);
     
-    // If session is not complete, user is not restricted
-    if (!lastSession.is_complete) {
+    // If no completed sessions, user is not restricted
+    if (!lastCompletedSession) {
       return { isRestricted: false };
     }
     
-    // Calculate days until next session (30 days from last session)
-    const sessionDate = new Date(lastSession.created_at);
+    // Handle premium users with 10-minute cooldown
+    if (isPremium) {
+      const sessionEndTime = new Date(lastCompletedSession.created_at);
+      const now = new Date();
+      const diffMinutes = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60);
+      
+      if (diffMinutes < 10) {
+        const minutesRemaining = Math.ceil(10 - diffMinutes);
+        const nextEligibleDate = new Date(sessionEndTime.getTime() + (10 * 60 * 1000));
+        
+        return {
+          isRestricted: true,
+          isPremium: true,
+          minutesRemaining,
+          nextEligibleDate: nextEligibleDate.toISOString(),
+          lastSessionDate: lastCompletedSession.created_at
+        };
+      }
+      
+      // Premium user cooldown passed
+      return { isRestricted: false };
+    }
+    
+    // Handle free users with 30-day cooldown
+    const sessionDate = new Date(lastCompletedSession.created_at);
     const now = new Date();
     const diffTime = sessionDate.getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime();
     const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -79,9 +97,10 @@ async function checkUserRestriction(userId) {
     
     return {
       isRestricted: true,
+      isPremium: false,
       daysRemaining,
       nextEligibleDate: nextEligibleDate.toISOString(),
-      lastSessionDate: lastSession.created_at
+      lastSessionDate: lastCompletedSession.created_at
     };
   } catch (error) {
     console.error('❌ Error checking user restriction:', error);
@@ -143,11 +162,11 @@ export async function POST(req) {
       });
     }
     
-    // Get or create session (existing logic unchanged)
-    const session = await getOrCreateCurrentSession(userId);
-    
     // Check if user is premium
     const isPremium = await checkUserPremiumStatus(userId);
+    
+    // Get or create session (existing logic unchanged)
+    const session = await getOrCreateCurrentSession(userId);
     
     // CRITICAL FIX: Only mark session as complete if the AI has sent the session end message
     // Check if the last message from AI contains session completion indicators
@@ -188,6 +207,18 @@ export async function POST(req) {
         }
       }
     }
+    // Handle users with session_first_message (both premium and free)
+    if (session.session_first_message) {
+      // Return first message from session_first_message column
+      return Response.json({ 
+        sessionComplete: false, 
+        messages: [],
+        firstMessage: session.session_first_message,
+        isPremium: isPremium
+      });
+    }
+    
+    // For free users, use existing logic
     // Fetch all messages for this session
     const { data: messages, error: msgError } = await supabase
       .from('chat_messages')

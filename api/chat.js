@@ -341,6 +341,7 @@ export async function POST(req) {
 
     // --- SESSION MANAGEMENT FOR ALL USERS ---
     let session = null;
+    let isPremium = false;
     if (userId) {
       session = await getOrCreateCurrentSession(userId);
       
@@ -351,7 +352,7 @@ export async function POST(req) {
         .eq('id', userId)
         .single();
       
-      const isPremium = profile?.is_premium || false;
+      isPremium = profile?.is_premium || false;
       
       // Only block if session is complete AND user is not premium
       if (session.is_complete && !isPremium) {
@@ -460,9 +461,16 @@ export async function POST(req) {
         ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       }
     } else {
-      // For all subsequent messages, do NOT reference onboarding at all
-      systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6 + '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You are conducting real therapy - respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response.';
-      console.log('🔧 Using Phase 2-6 prompt for ongoing therapy');
+      // For all subsequent messages, use different logic based on user type
+      if (isPremium) {
+        // Premium users: Always use Phase 2-6 prompt for ongoing messages
+        systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6 + '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You are conducting real therapy - respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response.';
+        console.log('🔧 Premium user - Using Phase 2-6 prompt for ongoing therapy');
+      } else {
+        // Free users: Use existing logic
+        systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6 + '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You are conducting real therapy - respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response.';
+        console.log('🔧 Free user - Using Phase 2-6 prompt for ongoing therapy');
+      }
     }
     console.log('📝 System prompt sent to OpenAI:', systemPrompt.substring(0, 500));
     console.log('📝 Full system prompt length:', systemPrompt.length);

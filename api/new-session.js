@@ -93,35 +93,66 @@ export default async function handler(req, res) {
       summary = summaryResponse.choices[0].message.content.trim();
     }
 
-    // 4. Build system prompt for first message in new session
-    let systemPrompt = '';
-    if (summary) {
-      systemPrompt = `Here is a summary of the user's previous therapy sessions:\n${summary}\n\nNow, begin a new therapy session.\n\n${THERAPY_PROMPT_PHASES_2_TO_6}`;
-    } else {
-      systemPrompt = `This is a new therapy session.\n\n${THERAPY_PROMPT_PHASES_2_TO_6}`;
-    }
-
+    // 4. Check if user is premium
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_premium')
+      .eq('id', userId)
+      .single();
+    
+    const isPremium = profile?.is_premium || false;
+    
     // 5. Generate first AI message for the new session
-    const aiResponse = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: 'Begin my new therapy session as my therapist, referencing my previous progress if available.' }
-      ],
-      temperature: 0.7,
-      max_tokens: 800
-    });
-    const firstMessage = aiResponse.choices[0].message.content.trim();
-
-    // 6. Save the AI message as the first message in the new session
-    await supabase.from('chat_messages').insert({
-      session_id: newSession.id,
-      user_id: userId,
-      content: firstMessage,
-      role: 'assistant',
-      mode: 'therapy',
-      created_at: new Date().toISOString()
-    });
+    let firstMessage = '';
+    if (isPremium) {
+      // Premium users: Use summary prompt only for first message
+      let systemPrompt = '';
+      if (summary) {
+        systemPrompt = `Based on this summary of your previous therapy sessions:\n${summary}\n\nBegin the therapy session as a professional therapist. Start with a warm greeting and acknowledge their previous progress.`;
+      } else {
+        systemPrompt = `Begin a new therapy session as a professional therapist. Start with a warm greeting and ask how they're feeling today.`;
+      }
+      
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: 'Begin my new therapy session as my therapist.' }
+        ],
+        temperature: 0.7,
+        max_tokens: 800
+      });
+      firstMessage = aiResponse.choices[0].message.content.trim();
+      
+      // 6. Save the first message to session_first_message column for premium users
+      await supabase.from('chat_sessions')
+        .update({ session_first_message: firstMessage })
+        .eq('id', newSession.id);
+    } else {
+      // Free users: Use summary prompt only for first message (same as premium)
+      let systemPrompt = '';
+      if (summary) {
+        systemPrompt = `Based on this summary of your previous therapy sessions:\n${summary}\n\nBegin the therapy session as a professional therapist. Start with a warm greeting and acknowledge their previous progress.`;
+      } else {
+        systemPrompt = `Begin a new therapy session as a professional therapist. Start with a warm greeting and ask how they're feeling today.`;
+      }
+      
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: 'Begin my new therapy session as my therapist.' }
+        ],
+        temperature: 0.7,
+        max_tokens: 800
+      });
+      firstMessage = aiResponse.choices[0].message.content.trim();
+      
+      // 6. Save the first message to session_first_message column for free users (same as premium)
+      await supabase.from('chat_sessions')
+        .update({ session_first_message: firstMessage })
+        .eq('id', newSession.id);
+    }
 
     return res.status(200).json({ firstMessage });
   } catch (error) {

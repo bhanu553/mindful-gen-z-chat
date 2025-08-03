@@ -130,10 +130,25 @@ const Therapy = () => {
         setRestrictionInfo(data.restrictionInfo);
         setSessionComplete(true);
         
-        // Add restriction message as a chat message
-        const restrictionMessage: Message = {
-          id: 'restriction-message',
-          text: `⏰ **Your Free Trial is Over**
+        // Add restriction message as a chat message - different for premium vs free users
+        let restrictionText = '';
+        if (data.restrictionInfo.isPremium) {
+          restrictionText = `⏰ **Session Cooldown - Premium User**
+
+You've completed your therapy session. Premium users have a 10-minute cooldown between sessions for optimal processing and integration.
+
+**Next Session Available:** ${data.restrictionInfo.minutesRemaining} minutes
+${data.restrictionInfo.nextEligibleDate ? `Available at ${new Date(data.restrictionInfo.nextEligibleDate).toLocaleString()}` : 'Time calculation in progress...'}
+
+**Premium Benefits:**
+• 8 sessions per month
+• 10-minute cooldown for optimal processing
+• Session continuity with AI memory
+• Personalized therapeutic framework
+
+*Your healing journey continues with premium support.*`;
+        } else {
+          restrictionText = `⏰ **Your Free Trial is Over**
 
 You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.
 
@@ -149,12 +164,31 @@ Premium: $49/month
 
 *Therapy isn't a one-session miracle. Real change happens with consistent work.*
 
-**Don't wait ${data.restrictionInfo.daysRemaining} days and lose momentum.**`,
+**Don't wait ${data.restrictionInfo.daysRemaining} days and lose momentum.**`;
+        }
+        
+        const restrictionMessage: Message = {
+          id: 'restriction-message',
+          text: restrictionText,
           isUser: false,
           timestamp: new Date()
         };
         
         setMessages([restrictionMessage]);
+        return;
+      }
+      
+      // Handle users with firstMessage (both premium and free)
+      if (data.firstMessage) {
+        console.log(`✅ ${data.isPremium ? 'Premium' : 'Free'} user - displaying first message from session_first_message`);
+        const firstMessage: Message = {
+          id: 'session-first-message',
+          text: data.firstMessage,
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages([firstMessage]);
+        setSessionComplete(false);
         return;
       }
       
