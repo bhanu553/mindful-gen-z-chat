@@ -321,6 +321,27 @@ Premium: $49/month
       if (data.sessionComplete) {
         console.log('✅ Session complete detected! Setting sessionComplete state to true.');
         setSessionComplete(true);
+        
+        // Add professional session end message for premium users in chat area
+        if (isPremium) {
+          const sessionEndMessage: Message = {
+            id: 'premium-session-end',
+            text: `🌟 **Session Complete - Premium User**
+
+You've successfully completed your therapy session. Your progress has been saved and will be carried forward to your next session.
+
+**What's Next:**
+• Your session summary will be available for your next therapy session
+• You can start a new session after a brief 10-minute processing period
+• Your therapeutic journey continues with full continuity and support
+
+*Your healing progress is being processed and integrated for optimal results.*`,
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, sessionEndMessage]);
+        }
       } else {
         console.log('❌ Session complete NOT detected from backend response.');
       }
@@ -472,8 +493,8 @@ Premium: $49/month
                   </div>
                 )}
                 
-                {/* Session Complete Message in Chat Area - Only show if not restricted */}
-                {sessionComplete && !isRestricted && (
+                {/* Session Complete Message in Chat Area - Only show for free users */}
+                {sessionComplete && !isRestricted && !isPremium && (
                   <div className="flex justify-start">
                     <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-2xl shadow-xl p-6 md:p-8 mr-4 max-w-2xl border border-white/20">
                       <h2 className="text-xl md:text-2xl font-bold text-white mb-4">🌟 Session Complete - What's Next?</h2>
@@ -512,16 +533,6 @@ Premium: $49/month
                       >
                         Continue My Journey - $49/month
                       </button>
-                      
-                      {isPremium && (
-                        <button
-                          className="bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl px-4 py-2 mt-3 transition-all duration-200 border border-white/30 text-sm md:text-base w-full"
-                          onClick={handleStartNewSession}
-                          disabled={isLoading}
-                        >
-                          Start New Session
-                        </button>
-                      )}
                     </div>
                   </div>
                 )}
@@ -557,6 +568,20 @@ Premium: $49/month
                     <Send size={20} />
                   </Button>
                 </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Continue My Journey Button for Premium Users */}
+          {sessionComplete && !isRestricted && isPremium && (
+            <div className="p-4 md:p-6 border-t border-white/10">
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => navigate('/dashboard')}
+                  className="premium-glass border border-white/20 text-white font-bold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base hover:bg-white/10"
+                >
+                  Continue My Journey
+                </Button>
               </div>
             </div>
           )}
