@@ -26,7 +26,7 @@ function highlightTherapyQuestion(text: string): JSX.Element {
   const before = text.slice(0, start);
   const question = text.slice(start, lastQ + 1);
   const after = text.slice(lastQ + 1);
-  return <>{before}<span className="therapy-question-modern">“{question.trim()}”</span>{after}</>;
+  return <>{before}<span className="therapy-question-modern">"{question.trim()}"</span>{after}</>;
 }
 
 const Therapy = () => {
@@ -133,20 +133,23 @@ const Therapy = () => {
         // Add restriction message as a chat message - different for premium vs free users
         let restrictionText = '';
         if (data.restrictionInfo.isPremium) {
-          restrictionText = `⏰ **Session Cooldown - Premium User**
+          restrictionText = `🌱 *Session Complete - Integration Time*
 
-You've completed your therapy session. Premium users have a 10-minute cooldown between sessions for optimal processing and integration.
+You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
 
-**Next Session Available:** ${data.restrictionInfo.minutesRemaining} minutes
-${data.restrictionInfo.nextEligibleDate ? `Available at ${new Date(data.restrictionInfo.nextEligibleDate).toLocaleString()}` : 'Time calculation in progress...'}
+Your next session unlocks in *${data.restrictionInfo.minutesRemaining} minutes* - this isn't a limitation, it's intentional therapeutic design.
 
-**Premium Benefits:**
-• 8 sessions per month
-• 10-minute cooldown for optimal processing
-• Session continuity with AI memory
-• Personalized therapeutic framework
+*What happens now:*
+• Your insights need time to settle
+• Your homework gives you real-world practice  
+• Your nervous system processes what we explored
+• You integrate today's breakthroughs naturally
 
-*Your healing journey continues with premium support.*`;
+*Remember:* Therapy isn't a Netflix binge. It's a garden that grows with patience.
+
+Your healing journey continues even when we're not talking.
+
+${data.restrictionInfo.nextEligibleDate ? `Available at ${new Date(data.restrictionInfo.nextEligibleDate).toLocaleString()}` : 'Time calculation in progress...'}`;
         } else {
           restrictionText = `⏰ **Your Free Trial is Over**
 
@@ -326,16 +329,21 @@ Premium: $49/month
         if (isPremium) {
           const sessionEndMessage: Message = {
             id: 'premium-session-end',
-            text: `🌟 **Session Complete - Premium User**
+            text: `🌱 *Session Complete - Integration Time*
 
-You've successfully completed your therapy session. Your progress has been saved and will be carried forward to your next session.
+You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
 
-**What's Next:**
-• Your session summary will be available for your next therapy session
-• You can start a new session after a brief 10-minute processing period
-• Your therapeutic journey continues with full continuity and support
+Your next session unlocks in *3 days* - this isn't a limitation, it's intentional therapeutic design.
 
-*Your healing progress is being processed and integrated for optimal results.*`,
+*What happens now:*
+• Your insights need time to settle
+• Your homework gives you real-world practice  
+• Your nervous system processes what we explored
+• You integrate today's breakthroughs naturally
+
+*Remember:* Therapy isn't a Netflix binge. It's a garden that grows with patience.
+
+Your healing journey continues even when we're not talking.`,
             isUser: false,
             timestamp: new Date()
           };
@@ -529,7 +537,7 @@ You've successfully completed your therapy session. Your progress has been saved
                       
                       <button
                         className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg text-base md:text-lg w-full"
-                        onClick={() => navigate('/premium-plan-details')}
+                        onClick={() => navigate('/dashboard')}
                       >
                         Continue My Journey - $49/month
                       </button>
@@ -607,4 +615,4 @@ You've successfully completed your therapy session. Your progress has been saved
   );
 };
 
-export default Therapy; 
+export default Therapy;
