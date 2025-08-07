@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { PremiumCooldownCountdown } from '@/components/therapy/PremiumCooldownCountdown';
 
 interface Message {
   id: string;
@@ -42,6 +43,7 @@ const Therapy = () => {
   const [forceUpdate, setForceUpdate] = useState(0);
   const [isRestricted, setIsRestricted] = useState(false);
   const [restrictionInfo, setRestrictionInfo] = useState<any>(null);
+  const [countdownCompleted, setCountdownCompleted] = useState(false);
   const navigate = useNavigate();
   
   // Debug sessionComplete state changes
@@ -92,6 +94,17 @@ const Therapy = () => {
     }
   }, [messages, isLoading]);
 
+  // Handle countdown completion
+  useEffect(() => {
+    if (countdownCompleted) {
+      setCountdownCompleted(false);
+      // Refresh the session after a short delay to ensure the backend has updated
+      setTimeout(() => {
+        fetchSessionAndMessages();
+      }, 1000);
+    }
+  }, [countdownCompleted]);
+
   // Fetch or create session and load messages on initial mount only
   useEffect(() => {
     if (user && !hasInitialized) {
@@ -137,7 +150,7 @@ const Therapy = () => {
 
 You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
 
-Your next session unlocks in *${data.restrictionInfo.minutesRemaining} minutes* - this isn't a limitation, it's intentional therapeutic design.
+Your next session unlocks in *10 minutes* - this isn't a limitation, it's intentional therapeutic design.
 
 *What happens now:*
 • Your insights need time to settle
@@ -147,9 +160,7 @@ Your next session unlocks in *${data.restrictionInfo.minutesRemaining} minutes* 
 
 *Remember:* Therapy isn't a Netflix binge. It's a garden that grows with patience.
 
-Your healing journey continues even when we're not talking.
-
-${data.restrictionInfo.nextEligibleDate ? `Available at ${new Date(data.restrictionInfo.nextEligibleDate).toLocaleString()}` : 'Time calculation in progress...'}`;
+Your healing journey continues even when we're not talking.`;
         } else {
           restrictionText = `⏰ **Your Free Trial is Over**
 
@@ -473,6 +484,29 @@ Your healing journey continues even when we're not talking.`,
                         <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
                           {message.isUser ? message.text : highlightTherapyQuestion(message.text)}
                         </p>
+                        
+                        {/* Add countdown for premium users with restriction */}
+                        {!message.isUser && message.id === 'restriction-message' && isPremium && restrictionInfo?.nextEligibleDate && (
+                          <div className="mt-4 p-4 bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-xl border border-purple-400/50 shadow-lg">
+                            <div className="text-center">
+                              <p className="text-sm text-white/90 mb-3 font-medium">⏰ Next session available in:</p>
+                              <PremiumCooldownCountdown 
+                                nextEligibleDate={restrictionInfo.nextEligibleDate}
+                                onComplete={() => {
+                                  // Refresh the session when countdown completes
+                                  setCountdownCompleted(true);
+                                  setIsRestricted(false);
+                                  setRestrictionInfo(null);
+                                  fetchSessionAndMessages();
+                                }}
+                              />
+                              <p className="text-xs text-white/70 mt-2 italic">
+                                This brief pause helps integrate your insights
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        
                         <p className="text-xs text-white/50 mt-2">
                           {formatTimestamp(message.timestamp)}
                         </p>

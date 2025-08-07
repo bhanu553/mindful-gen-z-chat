@@ -104,7 +104,7 @@ Always end each session with:
 - A short reflection on the session theme  
 - A note of encouragement  
 - Optional mini homework  
-- End with: "See you in the next session" when the session is complete
+- End with: "See you in the next session" ONLY when the session has naturally concluded after substantial therapeutic work (at least 3-4 exchanges)
 
 🚨 *CRISIS PROTOCOL*: If user expresses suicidal ideation, self-harm, or immediate danger:
 - IMMEDIATELY respond: "I'm genuinely concerned about your safety. Please contact emergency services (911) or crisis hotline (988) right now. I care about you, but I cannot provide crisis intervention."
@@ -163,7 +163,7 @@ Always end each session with:
 - A short reflection on the session theme  
 - A note of encouragement  
 - Optional mini homework  
-- End with: "See you in the next session" when the session is complete
+- End with: "See you in the next session" ONLY when the session has naturally concluded after substantial therapeutic work (at least 3-4 exchanges)
 
 🚨 *CRISIS PROTOCOL*: If user expresses suicidal ideation, self-harm, or immediate danger:
 - IMMEDIATELY respond: "I'm genuinely concerned about your safety. Please contact emergency services (911) or crisis hotline (988) right now. I care about you, but I cannot provide crisis intervention."
@@ -265,11 +265,11 @@ function getMonthStart() {
 }
 
 // Utility: Detect session completion
-function isSessionComplete(aiResponse) {
+async function isSessionComplete(aiResponse, session, userId, isPremium = false) {
   const completionIndicators = [
     // Simple, clear session end indicators
     "see you in the next session",
-    "see you next session",
+    "see you next session", 
     "until next session",
     "until our next session",
     "see you in our next session",
@@ -279,7 +279,61 @@ function isSessionComplete(aiResponse) {
     "session ended",
     "session finished"
   ];
-  return completionIndicators.some(indicator => aiResponse.toLowerCase().includes(indicator.toLowerCase()));
+  
+  // Check if AI response contains session end indicators
+  const hasEndIndicator = completionIndicators.some(indicator => 
+    aiResponse.toLowerCase().includes(indicator.toLowerCase())
+  );
+  
+  if (!hasEndIndicator) {
+    return false;
+  }
+  
+  // For premium users, require additional criteria before ending session
+  if (isPremium && session && userId) {
+    try {
+      const { data: messages, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('session_id', session.id)
+        .order('created_at', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching messages for session completion check:', error);
+        return false;
+      }
+      
+      // Premium users need at least 6 messages (3 exchanges) before session can end
+      // Add 1 to account for the current AI response that hasn't been saved yet
+      const minMessagesForPremium = 6;
+      const currentMessageCount = (messages?.length || 0) + 1; // +1 for current AI response
+      const hasSubstantialConversation = currentMessageCount >= minMessagesForPremium;
+      
+      if (!hasSubstantialConversation) {
+        console.log(`🔄 Premium user session not ready to end - only ${currentMessageCount} messages (including current), need at least ${minMessagesForPremium}`);
+        return false;
+      }
+      
+      // Additional check: ensure the session end message is intentional, not just mentioned
+      const isIntentionalEnd = aiResponse.toLowerCase().includes('see you in the next session') ||
+                              aiResponse.toLowerCase().includes('session complete') ||
+                              aiResponse.toLowerCase().includes('session ended');
+      
+      if (!isIntentionalEnd) {
+        console.log('🔄 Premium user session end mentioned but not intentional');
+        return false;
+      }
+      
+      console.log(`✅ Premium user session ready to end - substantial conversation completed (${currentMessageCount} messages)`);
+      return true;
+    } catch (error) {
+      console.error('Error in premium session completion check:', error);
+      return false;
+    }
+  }
+  
+  // For free users, use the original logic
+  return true;
 }
 
 // Utility: Get or create current session for free user
@@ -348,11 +402,11 @@ export async function POST(req) {
       // Check if user is premium
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('is_premium')
+        .select('is_premium, email')
         .eq('id', userId)
         .single();
       
-      isPremium = profile?.is_premium || false;
+      isPremium = profile?.is_premium || profile?.email === 'ucchishth31@gmail.com' || false;
       
       // Only block if session is complete AND user is not premium
       if (session.is_complete && !isPremium) {
@@ -660,12 +714,18 @@ export async function POST(req) {
          // --- SESSION COMPLETION DETECTION (SAME FOR ALL USERS) ---
      let sessionComplete = false;
      console.log('🔍 Checking session completion for AI response:', aiReply.substring(0, 100) + '...');
-     if (isSessionComplete(aiReply) && session && userId) {
-       console.log('✅ Session completion detected! Marking session as complete.');
-       await supabase.from('chat_sessions').update({ is_complete: true }).eq('id', session.id);
-       sessionComplete = true;
-     } else {
-       console.log('❌ Session completion NOT detected for this response.');
+     try {
+       if (await isSessionComplete(aiReply, session, userId, isPremium)) {
+         console.log('✅ Session completion detected! Marking session as complete.');
+         await supabase.from('chat_sessions').update({ is_complete: true }).eq('id', session.id);
+         sessionComplete = true;
+       } else {
+         console.log('❌ Session completion NOT detected for this response.');
+       }
+     } catch (error) {
+       console.error('❌ Error checking session completion:', error);
+       // Don't mark session as complete if there's an error checking completion
+       sessionComplete = false;
      }
 
     const responseData = { reply: aiReply, sessionComplete };

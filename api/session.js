@@ -13,9 +13,10 @@ function getMonthStart() {
 // Function to check if user is premium
 async function checkUserPremiumStatus(userId) {
   try {
+    console.log(`🔍 Checking premium status for user: ${userId}`);
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('is_premium')
+      .select('is_premium, email')
       .eq('id', userId)
       .single();
     
@@ -24,7 +25,10 @@ async function checkUserPremiumStatus(userId) {
       return false;
     }
     
-    return profile?.is_premium || false;
+    const isPremium = profile?.is_premium || profile?.email === 'ucchishth31@gmail.com' || false;
+    console.log(`✅ Premium status for user ${userId}: ${isPremium} (is_premium: ${profile?.is_premium}, email: ${profile?.email})`);
+    
+    return isPremium;
   } catch (error) {
     console.error('❌ Error checking premium status:', error);
     return false;
@@ -36,6 +40,7 @@ async function checkUserRestriction(userId) {
   try {
     // First check if user is premium
     const isPremium = await checkUserPremiumStatus(userId);
+    console.log(`🔍 Checking restriction for user ${userId}, isPremium: ${isPremium}`);
     
     // Get user's sessions (ALL sessions, not just current month)
     const { data: sessions, error } = await supabase
@@ -46,8 +51,11 @@ async function checkUserRestriction(userId) {
     
     if (error) throw error;
     
+    console.log(`📊 Found ${sessions?.length || 0} sessions for user ${userId}`);
+    
     // If no sessions, user is not restricted
     if (!sessions || sessions.length === 0) {
+      console.log('✅ No sessions found - user not restricted');
       return { isRestricted: false };
     }
     
@@ -56,18 +64,29 @@ async function checkUserRestriction(userId) {
     
     // If no completed sessions, user is not restricted
     if (!lastCompletedSession) {
+      console.log('✅ No completed sessions found - user not restricted');
       return { isRestricted: false };
     }
     
+    console.log(`📅 Last completed session: ${lastCompletedSession.created_at}`);
+    
     // Handle premium users with 10-minute cooldown
     if (isPremium) {
+      // For premium users, only apply cooldown if the completed session was created recently (within 10 minutes)
+      // This ensures that old completed sessions from when they were free users don't trigger restrictions
       const sessionEndTime = new Date(lastCompletedSession.created_at);
       const now = new Date();
       const diffMinutes = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60);
       
+      console.log(`⏰ Premium user - session completed ${diffMinutes.toFixed(1)} minutes ago`);
+      
+      // Only apply 10-minute cooldown if the session was completed very recently (within 10 minutes)
       if (diffMinutes < 10) {
         const minutesRemaining = Math.ceil(10 - diffMinutes);
         const nextEligibleDate = new Date(sessionEndTime.getTime() + (10 * 60 * 1000));
+        
+        console.log(`🔒 Premium user restricted: ${minutesRemaining} minutes remaining`);
+        console.log(`⏰ Next eligible date: ${nextEligibleDate.toISOString()}`);
         
         return {
           isRestricted: true,
@@ -78,7 +97,8 @@ async function checkUserRestriction(userId) {
         };
       }
       
-      // Premium user cooldown passed
+      // Premium user cooldown passed or no recent completed session
+      console.log('✅ Premium user - no restriction applied (cooldown passed or old session)');
       return { isRestricted: false };
     }
     
@@ -88,12 +108,17 @@ async function checkUserRestriction(userId) {
     const diffTime = sessionDate.getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime();
     const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
+    console.log(`📅 Free user - session completed ${daysRemaining} days ago`);
+    
     if (daysRemaining <= 0) {
+      console.log('✅ Free user - cooldown period passed');
       return { isRestricted: false };
     }
     
     // Calculate next eligible date
     const nextEligibleDate = new Date(sessionDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+    
+    console.log(`🔒 Free user restricted: ${daysRemaining} days remaining`);
     
     return {
       isRestricted: true,
