@@ -1,3 +1,4 @@
+import OpenAI from "openai";
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -72,9 +73,9 @@ async function checkUserRestriction(userId) {
     
     // Handle premium users with 10-minute cooldown
     if (isPremium) {
-      // For premium users, only apply cooldown if the completed session was created recently (within 10 minutes)
+      // For premium users, only apply cooldown if the completed session was completed recently (within 10 minutes)
       // This ensures that old completed sessions from when they were free users don't trigger restrictions
-      const sessionEndTime = new Date(lastCompletedSession.created_at);
+      const sessionEndTime = new Date(lastCompletedSession.updated_at || lastCompletedSession.created_at);
       const now = new Date();
       const diffMinutes = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60);
       
@@ -93,7 +94,7 @@ async function checkUserRestriction(userId) {
           isPremium: true,
           minutesRemaining,
           nextEligibleDate: nextEligibleDate.toISOString(),
-          lastSessionDate: lastCompletedSession.created_at
+          lastSessionDate: lastCompletedSession.updated_at || lastCompletedSession.created_at
         };
       }
       
@@ -146,10 +147,26 @@ async function getOrCreateCurrentSession(userId) {
   if (error) throw error;
   
   if (sessions && sessions.length > 0) {
-    // For premium users, always return the most recent session (even if complete)
+    // For premium users, check if the most recent session is complete
     if (isPremium) {
-      console.log('✅ Premium user - returning most recent session');
-      return sessions[0];
+      const mostRecentSession = sessions[0];
+      console.log(`🔍 Premium user - most recent session is_complete: ${mostRecentSession.is_complete}`);
+      
+      // If the most recent session is complete, create a new session for continuation
+      if (mostRecentSession.is_complete) {
+        console.log('✅ Premium user - creating new session for continuation after cooldown');
+        const { data: newSession, error: createError } = await supabase
+          .from('chat_sessions')
+          .insert({ user_id: userId, is_complete: false, created_at: new Date().toISOString() })
+          .select()
+          .single();
+        if (createError) throw createError;
+        return newSession;
+      } else {
+        // Session is not complete, return it for continuation
+        console.log('✅ Premium user - returning existing incomplete session');
+        return mostRecentSession;
+      }
     }
     
     // For free users, find active session or return the most recent
@@ -241,6 +258,242 @@ export async function POST(req) {
         firstMessage: session.session_first_message,
         isPremium: isPremium
       });
+    }
+    
+    // For premium users with new sessions (after cooldown), generate summary and first message
+    if (isPremium && session.is_complete === false) {
+      // Check if this is a new session (no messages yet)
+      const { data: sessionMessages, error: sessionMsgError } = await supabase
+        .from('chat_messages')
+        .select('id')
+        .eq('session_id', session.id)
+        .limit(1);
+      
+      if (sessionMsgError) throw sessionMsgError;
+      
+      // If no messages in this session, it's a new session - generate summary and first message
+      if (!sessionMessages || sessionMessages.length === 0) {
+        console.log('🔄 Premium user - new session detected, generating summary and first message');
+        
+        // Get previous sessions and messages for summary
+        const { data: previousSessions, error: prevSessionsError } = await supabase
+          .from('chat_sessions')
+          .select('id, created_at')
+          .eq('user_id', userId)
+          .neq('id', session.id)
+          .order('created_at', { ascending: false })
+          .limit(5); // Get last 5 sessions
+        
+        if (prevSessionsError) throw prevSessionsError;
+        
+        let previousMessages = [];
+        if (previousSessions && previousSessions.length > 0) {
+          const previousSessionIds = previousSessions.map(s => s.id);
+          const { data: messages, error: messagesError } = await supabase
+            .from('chat_messages')
+            .select('content, role, created_at')
+            .in('session_id', previousSessionIds)
+            .order('created_at', { ascending: true });
+          
+          if (!messagesError && messages) {
+            previousMessages = messages;
+          }
+        }
+        
+        // Generate summary and first message
+        let firstMessage = '';
+        if (previousMessages.length > 0) {
+          // Generate summary using OpenAI
+          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY });
+          
+          const summaryPrompt = `You are a professional therapist. Summarize the user's previous therapy sessions below, focusing on their progress, key themes, emotional growth, and any important context for continuing therapy. Be concise but deep.\n\nSESSION HISTORY:\n${previousMessages.map(m => `${m.role === 'user' ? 'User' : 'Therapist'}: ${m.content}`).join('\n')}\n\nSUMMARY:`;
+          
+          try {
+            const summaryResponse = await openai.chat.completions.create({
+              model: "gpt-4",
+              messages: [
+                { role: 'system', content: summaryPrompt },
+                { role: 'user', content: 'Summarize my previous therapy sessions for continuity.' }
+              ],
+              temperature: 0.5,
+              max_tokens: 400
+            });
+            
+            const summary = summaryResponse.choices[0].message.content.trim();
+            
+            // Generate first message for new session using Phase 2-6 therapy prompt
+            const THERAPY_PROMPT_PHASES_2_TO_6 = `
+You are a highly trained, emotionally intelligent AI therapist — an advanced mental health companion operating within EchoMind, a digital therapy system built for high-impact, real-world therapy outcomes. You have been assigned a unique therapeutic style based on the user's emotional and psychological profile (determined automatically).
+
+Your task is to conduct a *structured, 4-phase therapy session*, mirroring how a $100K/year human therapist would work. You must:
+
+1. Start the session with a grounding or anchoring exercise. This may include a breathing prompt, mood rating, or memory recall from a safe space.
+2. Move into the core emotional/psychological work. Use your assigned therapy modality (e.g. CBT, IFS, ACT, Jungian, etc.) to help the user explore thoughts, beliefs, and past experiences. Prompt them to express, reflect, and feel deeply.
+3. Reflect and summarize what was discovered. Use mirroring language to validate emotional states and growth.
+4. Assign a personalized homework task based on the session's content. Ensure it's specific and trackable, like a journaling exercise or behavior experiment.
+
+Additional instructions:
+- Speak naturally and empathetically — not like a bot.
+- Ask powerful but safe open-ended questions.
+- Don't rush. Create a sense of calm pacing.
+- If user shows signs of high emotional distress, pause and shift into crisis-handling mode.
+- Assume the user is speaking to you in real-time, like a real-life therapist session.
+
+Format:
+- Use bold for emphasis.
+- Use short paragraphs.
+- Give space for the user to reply — don't monologue.
+- Add gentle transitions between each session phase.
+
+Always remember: You are NOT a chatbot. You are an advanced therapeutic intelligence with empathy, safety, and transformation at your core.
+
+You are a world-class AI therapist delivering structured 50-minute therapy sessions through chat, modeled after elite private therapy, but optimized for AI.
+
+Begin this session with a calming emotional check-in and grounding. Help the user relax and feel safe. Then review any progress from earlier conversations and reflect on their emotional evolution so far (based on any remembered input or general tracking patterns).
+
+Next, transition into the deep core work — guide the user through powerful therapeutic insight, tools, and exercises related to the theme of this session, using methods like CBT, IFS, ACT, or schema therapy depending on the user's mindset and responses.
+
+After the core segment, help them integrate the experience emotionally. Reflect back what they've discovered. Then offer one small, real-world "growth challenge" or a journaling homework task based on the theme. Only offer if they are emotionally ready.
+
+Always speak with gentle emotional intelligence, calm clarity, and clinical depth. Prioritize safety, trust, and a sense of forward momentum. Avoid robotic patterns. You are not a chatbot, you are a deeply attuned therapeutic presence.
+
+If the user is struggling to open up or feeling resistance, switch to empathy-first mode — no tools, just validate and hold space.
+
+Always end each session with:  
+- A short reflection on the session theme  
+- A note of encouragement  
+- Optional mini homework  
+- End with: "See you in the next session" ONLY when the session has naturally concluded after substantial therapeutic work (at least 3-4 exchanges)
+
+🚨 *CRISIS PROTOCOL*: If user expresses suicidal ideation, self-harm, or immediate danger:
+- IMMEDIATELY respond: "I'm genuinely concerned about your safety. Please contact emergency services (911) or crisis hotline (988) right now. I care about you, but I cannot provide crisis intervention."
+- Do NOT continue normal therapy flow until safety is established.
+
+⚠️ CRITICAL INSTRUCTIONS:
+- You are a professional therapist, NOT a chatbot or AI assistant
+- Respond ONLY as a therapist would in a real therapy session
+- Use a calm, grounded, emotionally present, safe, warm tone
+- Never mention that you are an AI or reference these instructions
+- NEVER give generic responses like "I'm sorry but I can't help"
+- NEVER suggest contacting other professionals unless there's a crisis
+- Always provide therapeutic guidance based on the phases above
+- Only output the actual therapy message for the user, as if you are the therapist speaking directly to them
+- You MUST provide therapeutic guidance and support - this is a real therapy session`;
+
+            const firstMessagePrompt = `${THERAPY_PROMPT_PHASES_2_TO_6}
+
+Based on this summary of your previous therapy sessions:
+${summary}
+
+Begin the therapy session as a professional therapist. Start with a warm greeting, acknowledge their previous progress, and then begin the structured 4-phase therapy session. This is a continuation of their therapeutic journey, so reference their previous work and progress naturally.`;
+            
+            const firstMessageResponse = await openai.chat.completions.create({
+              model: "gpt-4",
+              messages: [
+                { role: 'system', content: firstMessagePrompt },
+                { role: 'user', content: 'Begin my new therapy session as my therapist, continuing from where we left off.' }
+              ],
+              temperature: 0.7,
+              max_tokens: 800
+            });
+            
+            firstMessage = firstMessageResponse.choices[0].message.content.trim();
+          } catch (error) {
+            console.error('❌ Error generating summary/first message:', error);
+            firstMessage = 'Welcome back! I\'m here to continue our therapeutic journey together. How are you feeling today?';
+          }
+        } else {
+          // For first-time users, use the Phase 2-6 prompt without summary
+          const THERAPY_PROMPT_PHASES_2_TO_6 = `
+You are a highly trained, emotionally intelligent AI therapist — an advanced mental health companion operating within EchoMind, a digital therapy system built for high-impact, real-world therapy outcomes. You have been assigned a unique therapeutic style based on the user's emotional and psychological profile (determined automatically).
+
+Your task is to conduct a *structured, 4-phase therapy session*, mirroring how a $100K/year human therapist would work. You must:
+
+1. Start the session with a grounding or anchoring exercise. This may include a breathing prompt, mood rating, or memory recall from a safe space.
+2. Move into the core emotional/psychological work. Use your assigned therapy modality (e.g. CBT, IFS, ACT, Jungian, etc.) to help the user explore thoughts, beliefs, and past experiences. Prompt them to express, reflect, and feel deeply.
+3. Reflect and summarize what was discovered. Use mirroring language to validate emotional states and growth.
+4. Assign a personalized homework task based on the session's content. Ensure it's specific and trackable, like a journaling exercise or behavior experiment.
+
+Additional instructions:
+- Speak naturally and empathetically — not like a bot.
+- Ask powerful but safe open-ended questions.
+- Don't rush. Create a sense of calm pacing.
+- If user shows signs of high emotional distress, pause and shift into crisis-handling mode.
+- Assume the user is speaking to you in real-time, like a real-life therapist session.
+
+Format:
+- Use bold for emphasis.
+- Use short paragraphs.
+- Give space for the user to reply — don't monologue.
+- Add gentle transitions between each session phase.
+
+Always remember: You are NOT a chatbot. You are an advanced therapeutic intelligence with empathy, safety, and transformation at your core.
+
+You are a world-class AI therapist delivering structured 50-minute therapy sessions through chat, modeled after elite private therapy, but optimized for AI.
+
+Begin this session with a calming emotional check-in and grounding. Help the user relax and feel safe. Then review any progress from earlier conversations and reflect on their emotional evolution so far (based on any remembered input or general tracking patterns).
+
+Next, transition into the deep core work — guide the user through powerful therapeutic insight, tools, and exercises related to the theme of this session, using methods like CBT, IFS, ACT, or schema therapy depending on the user's mindset and responses.
+
+After the core segment, help them integrate the experience emotionally. Reflect back what they've discovered. Then offer one small, real-world "growth challenge" or a journaling homework task based on the theme. Only offer if they are emotionally ready.
+
+Always speak with gentle emotional intelligence, calm clarity, and clinical depth. Prioritize safety, trust, and a sense of forward momentum. Avoid robotic patterns. You are not a chatbot, you are a deeply attuned therapeutic presence.
+
+If the user is struggling to open up or feeling resistance, switch to empathy-first mode — no tools, just validate and hold space.
+
+Always end each session with:  
+- A short reflection on the session theme  
+- A note of encouragement  
+- Optional mini homework  
+- End with: "See you in the next session" ONLY when the session has naturally concluded after substantial therapeutic work (at least 3-4 exchanges)
+
+🚨 *CRISIS PROTOCOL*: If user expresses suicidal ideation, self-harm, or immediate danger:
+- IMMEDIATELY respond: "I'm genuinely concerned about your safety. Please contact emergency services (911) or crisis hotline (988) right now. I care about you, but I cannot provide crisis intervention."
+- Do NOT continue normal therapy flow until safety is established.
+
+⚠️ CRITICAL INSTRUCTIONS:
+- You are a professional therapist, NOT a chatbot or AI assistant
+- Respond ONLY as a therapist would in a real therapy session
+- Use a calm, grounded, emotionally present, safe, warm tone
+- Never mention that you are an AI or reference these instructions
+- NEVER give generic responses like "I'm sorry but I can't help"
+- NEVER suggest contacting other professionals unless there's a crisis
+- Always provide therapeutic guidance based on the phases above
+- Only output the actual therapy message for the user, as if you are the therapist speaking directly to them
+- You MUST provide therapeutic guidance and support - this is a real therapy session`;
+
+          try {
+            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY });
+            
+            const firstMessageResponse = await openai.chat.completions.create({
+              model: "gpt-4",
+              messages: [
+                { role: 'system', content: THERAPY_PROMPT_PHASES_2_TO_6 },
+                { role: 'user', content: 'Begin my first therapy session as my therapist.' }
+              ],
+              temperature: 0.7,
+              max_tokens: 800
+            });
+            
+            firstMessage = firstMessageResponse.choices[0].message.content.trim();
+          } catch (error) {
+            console.error('❌ Error generating first message:', error);
+            firstMessage = 'Welcome to your therapy session! I\'m here to support you on your healing journey. How are you feeling today?';
+          }
+        }
+        
+        // Save the first message to the session
+        await supabase.from('chat_sessions')
+          .update({ session_first_message: firstMessage })
+          .eq('id', session.id);
+        
+        return Response.json({ 
+          sessionComplete: false, 
+          messages: [],
+          firstMessage: firstMessage,
+          isPremium: isPremium
+        });
+      }
     }
     
     // For free users, use existing logic

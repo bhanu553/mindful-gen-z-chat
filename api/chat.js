@@ -717,7 +717,10 @@ export async function POST(req) {
      try {
        if (await isSessionComplete(aiReply, session, userId, isPremium)) {
          console.log('✅ Session completion detected! Marking session as complete.');
-         await supabase.from('chat_sessions').update({ is_complete: true }).eq('id', session.id);
+         await supabase.from('chat_sessions').update({ 
+           is_complete: true,
+           updated_at: new Date().toISOString()
+         }).eq('id', session.id);
          sessionComplete = true;
        } else {
          console.log('❌ Session completion NOT detected for this response.');

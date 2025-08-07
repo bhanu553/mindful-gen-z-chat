@@ -628,8 +628,8 @@ Your healing journey continues even when we're not talking.`,
             </div>
           )}
           
-          {/* Small Upgrade Button for Restricted Users */}
-          {isRestricted && (
+          {/* Small Upgrade Button for Restricted Users - Only for Free Users */}
+          {isRestricted && !isPremium && (
             <div className="p-3 md:p-4 lg:p-6 border-t border-white/10">
               <div className="flex justify-center">
                 <Button
