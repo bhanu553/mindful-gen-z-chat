@@ -75,33 +75,33 @@ const Index = () => {
         
         {/* Content */}
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex justify-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Brain className="w-8 h-8 text-white" />
+          <div className="flex justify-center mb-6 md:mb-8">
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Brain className="w-6 h-6 md:w-8 md:h-8 text-white" />
             </div>
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
             Your AI Therapist for
             <span className="text-gradient block">Real Healing</span>
           </h1>
           
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-xl text-gray-300 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed">
             Experience structured therapy sessions that work like $300/hour human therapy - but accessible, private, and available when you need it. No chatbot fluff, just real therapeutic change.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
             <button
               onClick={handleStartJourney}
               disabled={isLoading}
-              className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-primary to-purple-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] w-full sm:w-auto"
             >
               {isLoading ? 'Loading...' : 'Start Your Journey'}
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <Link 
               to="/dashboard" 
-              className="glass-effect text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all duration-300"
+              className="glass-effect text-white px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold hover:bg-white/10 transition-all duration-300 min-h-[44px] w-full sm:w-auto flex items-center justify-center"
             >
               View Dashboard
             </Link>
@@ -109,7 +109,7 @@ const Index = () => {
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 animate-bounce">
+        <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 animate-bounce">
           <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
             <div className="w-1 h-3 bg-white/60 rounded-full mt-2"></div>
           </div>
@@ -117,39 +117,39 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 gradient-bg">
+      <section className="py-12 md:py-20 gradient-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3 md:mb-4">
               Why Choose EchoMind?
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Professional AI therapy with scheduled sessions, clinical outcomes, and therapeutic excellence
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className="gradient-card p-6 md:p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
               <div className="p-3 bg-blue-500/20 rounded-lg w-fit mb-4">
-                <MessageSquare className="w-8 h-8 text-blue-400" />
+                <MessageSquare className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Real Therapy Scheduling</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-lg md:text-xl font-semibold text-foreground mb-3">Real Therapy Scheduling</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
                 Book actual therapy appointments, not endless chat sessions. Fixed 50-minute sessions with therapeutic boundaries - because healing happens with structure, not 24/7 emotional dependency.
               </p>
             </div>
 
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+            <div className="gradient-card p-6 md:p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
               <div className="p-3 bg-green-500/20 rounded-lg w-fit mb-4">
-                <TrendingUp className="w-8 h-8 text-green-400" />
+                <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Measurable Therapeutic Results</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-lg md:text-xl font-semibold text-foreground mb-3">Measurable Therapeutic Results</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
                 Track real progress with validated psychological assessments. Depression scores, anxiety reduction, and breakthrough insights - see the data behind your healing journey.
               </p>
             </div>
 
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+            <div className="gradient-card p-6 md:p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
               <div className="p-3 bg-purple-500/20 rounded-lg w-fit mb-4">
                 <Heart className="w-8 h-8 text-purple-400" />
               </div>
@@ -159,7 +159,7 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+            <div className="gradient-card p-6 md:p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
               <div className="p-3 bg-yellow-500/20 rounded-lg w-fit mb-4">
                 <Shield className="w-8 h-8 text-yellow-400" />
               </div>
@@ -169,7 +169,7 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+            <div className="gradient-card p-6 md:p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
               <div className="p-3 bg-pink-500/20 rounded-lg w-fit mb-4">
                 <Sparkles className="w-8 h-8 text-pink-400" />
               </div>
@@ -179,7 +179,7 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="gradient-card p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
+            <div className="gradient-card p-6 md:p-8 rounded-lg border border-border/50 shadow-sm hover:shadow-lg transition-shadow">
               <div className="p-3 bg-indigo-500/20 rounded-lg w-fit mb-4">
                 <Brain className="w-8 h-8 text-indigo-400" />
               </div>

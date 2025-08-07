@@ -438,12 +438,12 @@ Your healing journey continues even when we're not talking.`,
         <div className="w-full max-w-5xl h-[90vh] md:h-[85vh] premium-glass rounded-3xl flex flex-col">
           
           {/* Chat Messages Area */}
-          <div className="flex-1 overflow-y-auto p-8 md:p-10 scrollable-container scroll-smooth">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scrollable-container scroll-smooth">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center text-white/70">
-                  <p className="text-xl md:text-2xl mb-2 font-serif">Your therapeutic session begins now</p>
-                  <p className="text-base md:text-lg text-white/50">What's the most important emotional challenge you're ready to work on today?</p>
+                  <p className="text-lg md:text-xl lg:text-2xl mb-2 font-serif">Your therapeutic session begins now</p>
+                  <p className="text-sm md:text-base lg:text-lg text-white/50">What's the most important emotional challenge you're ready to work on today?</p>
                   {isLoading && (
                     <div className="mt-4 flex justify-center">
                       <div className="flex items-center space-x-2">
@@ -459,15 +459,15 @@ Your healing journey continues even when we're not talking.`,
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] md:max-w-2xl ${message.isUser ? 'order-2' : 'order-1'}`}>
+                    <div className={`max-w-[90%] md:max-w-[85%] lg:max-w-2xl ${message.isUser ? 'order-2' : 'order-1'}`}>
                       <div
-                        className={`p-4 md:p-5 rounded-2xl backdrop-blur-sm ${
+                        className={`p-3 md:p-4 lg:p-5 rounded-2xl backdrop-blur-sm ${
                           message.isUser
-                            ? 'bg-white/15 border border-white/20 text-white ml-4'
-                            : 'bg-black/20 border border-white/10 text-white/95 mr-4'
+                            ? 'bg-white/15 border border-white/20 text-white ml-2 md:ml-4'
+                            : 'bg-black/20 border border-white/10 text-white/95 mr-2 md:mr-4'
                         }`}
                       >
                         <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
@@ -483,7 +483,7 @@ Your healing journey continues even when we're not talking.`,
                 
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-black/20 border border-white/10 text-white/95 p-4 md:p-5 rounded-2xl backdrop-blur-sm mr-4 max-w-2xl">
+                    <div className="bg-black/20 border border-white/10 text-white/95 p-3 md:p-4 lg:p-5 rounded-2xl backdrop-blur-sm mr-2 md:mr-4 max-w-2xl">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
                         <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
@@ -495,7 +495,7 @@ Your healing journey continues even when we're not talking.`,
                 
                 {errorMessage && (
                   <div className="flex justify-start">
-                    <div className="bg-red-900/80 border border-red-400/40 text-white/95 p-4 md:p-5 rounded-2xl backdrop-blur-sm mr-4 max-w-2xl">
+                    <div className="bg-red-900/80 border border-red-400/40 text-white/95 p-3 md:p-4 lg:p-5 rounded-2xl backdrop-blur-sm mr-2 md:mr-4 max-w-2xl">
                       <div className="text-red-200 font-semibold">{errorMessage}</div>
                     </div>
                   </div>
@@ -504,25 +504,25 @@ Your healing journey continues even when we're not talking.`,
                 {/* Session Complete Message in Chat Area - Only show for free users */}
                 {sessionComplete && !isRestricted && !isPremium && (
                   <div className="flex justify-start">
-                    <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-2xl shadow-xl p-6 md:p-8 mr-4 max-w-2xl border border-white/20">
-                      <h2 className="text-xl md:text-2xl font-bold text-white mb-4">🌟 Session Complete - What's Next?</h2>
-                      <div className="text-white/90 text-left space-y-4 mb-6">
-                        <p className="text-base md:text-lg">You just experienced real therapy, not just a chat. That professional structure and evidence-based approach you felt? That's what $300/session therapy delivers.</p>
+                    <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 mr-2 md:mr-4 max-w-2xl border border-white/20">
+                      <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 md:mb-4">🌟 Session Complete - What's Next?</h2>
+                      <div className="text-white/90 text-left space-y-3 md:space-y-4 mb-4 md:mb-6">
+                        <p className="text-sm md:text-base lg:text-lg">You just experienced real therapy, not just a chat. That professional structure and evidence-based approach you felt? That's what $300/session therapy delivers.</p>
                         
-                        <div className="bg-white/10 rounded-xl p-4 border border-white/20">
+                        <div className="bg-white/10 rounded-xl p-3 md:p-4 border border-white/20">
                           <h3 className="font-semibold text-white mb-2">As a free user:</h3>
-                          <ul className="text-white/80 space-y-1 text-sm">
+                          <ul className="text-white/80 space-y-1 text-xs md:text-sm">
                             <li>• Next session available in 30 days</li>
                             <li>• No continuity or progress building</li>
                             <li>• Limited breakthrough potential</li>
                           </ul>
                         </div>
                         
-                        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-400/30">
+                        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-3 md:p-4 border border-yellow-400/30">
                           <h3 className="font-semibold text-yellow-300 mb-2">Ready to continue your healing?</h3>
                           <div className="text-white/90">
                             <p className="font-semibold">Premium: $49/month</p>
-                            <ul className="text-white/80 space-y-1 text-sm mt-2">
+                            <ul className="text-white/80 space-y-1 text-xs md:text-sm mt-2">
                               <li>• 8 sessions (vs 1 free)</li>
                               <li>• 3 - 4 days spacing for optimal progress</li>
                               <li>• Session continuity that builds on your breakthrough</li>
@@ -531,12 +531,12 @@ Your healing journey continues even when we're not talking.`,
                           </div>
                         </div>
                         
-                        <p className="text-white/80 italic">Therapy isn't a one-session miracle. Real change happens with consistent work.</p>
-                        <p className="text-yellow-300 font-semibold">Don't wait 30 days and lose momentum.</p>
+                        <p className="text-white/80 italic text-sm md:text-base">Therapy isn't a one-session miracle. Real change happens with consistent work.</p>
+                        <p className="text-yellow-300 font-semibold text-sm md:text-base">Don't wait 30 days and lose momentum.</p>
                       </div>
                       
                       <button
-                        className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg text-base md:text-lg w-full"
+                        className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg w-full min-h-[44px]"
                         onClick={() => navigate('/dashboard')}
                       >
                         Continue My Journey - $49/month
@@ -552,9 +552,9 @@ Your healing journey continues even when we're not talking.`,
           
           {/* Input Section */}
           {!sessionComplete && !isRestricted && (
-            <div className="p-8 md:p-10 border-t border-white/10">
+            <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
               <div className="relative">
-                <div className="premium-glass rounded-2xl border border-white/20 p-4 flex items-end space-x-3">
+                <div className="premium-glass rounded-2xl border border-white/20 p-3 md:p-4 flex items-end space-x-2 md:space-x-3">
                   
                   {/* Text Input */}
                   <Textarea
@@ -563,7 +563,7 @@ Your healing journey continues even when we're not talking.`,
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Share your thoughts..."
-                    className="flex-1 min-h-[2.5rem] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
+                    className="flex-1 min-h-[44px] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
                     disabled={isLoading}
                   />
                   
@@ -571,9 +571,9 @@ Your healing journey continues even when we're not talking.`,
                   <Button
                     onClick={handleSendMessage}
                     disabled={!inputText.trim() || isLoading}
-                    className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 md:p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
                   >
-                    <Send size={20} />
+                    <Send size={18} className="md:w-5 md:h-5" />
                   </Button>
                 </div>
               </div>
@@ -582,11 +582,11 @@ Your healing journey continues even when we're not talking.`,
           
           {/* Continue My Journey Button for Premium Users */}
           {sessionComplete && !isRestricted && isPremium && (
-            <div className="p-4 md:p-6 border-t border-white/10">
+            <div className="p-3 md:p-4 lg:p-6 border-t border-white/10">
               <div className="flex justify-center">
                 <Button
                   onClick={() => navigate('/dashboard')}
-                  className="premium-glass border border-white/20 text-white font-bold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base hover:bg-white/10"
+                  className="premium-glass border border-white/20 text-white font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base hover:bg-white/10 min-h-[44px]"
                 >
                   Continue My Journey
                 </Button>
@@ -596,11 +596,11 @@ Your healing journey continues even when we're not talking.`,
           
           {/* Small Upgrade Button for Restricted Users */}
           {isRestricted && (
-            <div className="p-4 md:p-6 border-t border-white/10">
+            <div className="p-3 md:p-4 lg:p-6 border-t border-white/10">
               <div className="flex justify-center">
                 <Button
                   onClick={() => navigate('/premium-plan-details')}
-                  className="premium-glass border border-white/20 text-white font-bold rounded-xl px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base hover:bg-white/10"
+                  className="premium-glass border border-white/20 text-white font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base hover:bg-white/10 min-h-[44px]"
                 >
                   Upgrade to Premium - $49/month
                 </Button>

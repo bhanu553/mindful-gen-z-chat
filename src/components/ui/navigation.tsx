@@ -76,11 +76,11 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center space-x-2 md:space-x-3">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
+                <Brain className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
-              <span className="font-semibold text-xl text-foreground">EchoMind</span>
+              <span className="font-semibold text-lg md:text-xl text-foreground">EchoMind</span>
             </Link>
           </div>
 
@@ -141,14 +141,14 @@ const Navigation = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-muted-foreground hover:text-foreground p-2"
+              className="text-muted-foreground hover:text-foreground p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border/50">
@@ -159,7 +159,7 @@ const Navigation = () => {
                     handleNavClick(item);
                     setMobileMenuOpen(false);
                   }}
-                  className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  className={`block w-full text-left px-3 py-3 rounded-md text-base font-medium transition-colors min-h-[44px] flex items-center ${
                     isActive(item.path)
                       ? 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -171,7 +171,7 @@ const Navigation = () => {
               
               {user ? (
                 <div className="border-t border-border/50 pt-3 mt-3">
-                  <div className="flex items-center space-x-3 px-3 py-2">
+                  <div className="flex items-center space-x-3 px-3 py-3">
                     {user.user_metadata?.avatar_url && (
                       <img 
                         src={user.user_metadata.avatar_url} 
@@ -190,7 +190,7 @@ const Navigation = () => {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors rounded-md flex items-center space-x-2"
+                    className="w-full text-left px-3 py-3 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors rounded-md flex items-center space-x-2 min-h-[44px]"
                   >
                     <LogOut size={16} />
                     <span>Logout</span>
@@ -199,7 +199,7 @@ const Navigation = () => {
               ) : (
                 <button
                   onClick={handleGoogleSignIn}
-                  className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-2 rounded-lg font-medium mx-3 my-2"
+                  className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-3 rounded-lg font-medium mx-3 my-2 min-h-[44px]"
                 >
                   Sign in with Google
                 </button>

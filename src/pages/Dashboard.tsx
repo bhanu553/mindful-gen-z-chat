@@ -60,64 +60,64 @@ const Dashboard = () => {
       <div className="relative z-10">
         <Navigation />
         
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           {/* Welcome Section */}
-          <div className="text-center mb-12">
-            <div className="premium-glass rounded-3xl p-8 md:p-12 border border-white/20 shadow-2xl">
-              <div className="flex items-center justify-center mb-6">
-                <User className="w-8 h-8 text-white/70 mr-3" />
-                <h1 className="text-4xl md:text-5xl font-serif font-light text-white">
+          <div className="text-center mb-8 md:mb-12">
+            <div className="premium-glass rounded-3xl p-6 md:p-8 lg:p-12 border border-white/20 shadow-2xl">
+              <div className="flex items-center justify-center mb-4 md:mb-6">
+                <User className="w-6 h-6 md:w-8 md:h-8 text-white/70 mr-2 md:mr-3" />
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-light text-white">
                   {getTimeBasedGreeting()}, {userName}
                 </h1>
               </div>
-              <p className="text-xl md:text-2xl text-white/80 font-light mb-2">
+              <p className="text-lg md:text-xl lg:text-2xl text-white/80 font-light mb-2">
                 Your space is safe here.
               </p>
-              <p className="text-lg text-white/60">
+              <p className="text-base md:text-lg text-white/60">
                 Your Innerflow therapy session awaits when you're ready.
               </p>
             </div>
           </div>
 
           {/* Main Dashboard Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-12">
             
             {/* Start New Session */}
-            <div className="premium-glass rounded-3xl p-8 border border-white/20 shadow-2xl">
+            <div className="premium-glass rounded-3xl p-6 md:p-8 border border-white/20 shadow-2xl">
               <div className="text-center">
-                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Sparkles className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+                  <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-serif text-white mb-4">Begin Today's Therapy</h3>
-                <p className="text-white/70 mb-8">
+                <h3 className="text-xl md:text-2xl font-serif text-white mb-3 md:mb-4">Begin Today's Therapy</h3>
+                <p className="text-white/70 mb-6 md:mb-8 text-sm md:text-base">
                   Let's reflect and heal deeply — one conversation at a time.
                 </p>
                 <Button 
                   onClick={startNewSession}
-                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-8 py-3 rounded-2xl font-medium transition-all duration-300 hover:scale-105"
+                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-6 md:px-8 py-3 rounded-2xl font-medium transition-all duration-300 hover:scale-105 min-h-[44px] w-full md:w-auto"
                 >
                   Start Session
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2" />
                 </Button>
               </div>
             </div>
 
             {/* Next Session Schedule */}
-            <div className="premium-glass rounded-3xl p-8 border border-white/20 shadow-2xl">
+            <div className="premium-glass rounded-3xl p-6 md:p-8 border border-white/20 shadow-2xl">
               <div className="text-center">
-                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Clock className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+                  <Clock className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-serif text-white mb-4">Next Session</h3>
-                <p className="text-white/70 mb-4">
+                <h3 className="text-xl md:text-2xl font-serif text-white mb-3 md:mb-4">Next Session</h3>
+                <p className="text-white/70 mb-3 md:mb-4 text-sm md:text-base">
                   Your next session is scheduled for this evening.
                 </p>
-                <p className="text-white/50 text-sm mb-6">
+                <p className="text-white/50 text-xs md:text-sm mb-4 md:mb-6">
                   Spacing between sessions allows your thoughts to settle.
                 </p>
                 <Button 
                   variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 px-6 py-2 rounded-xl"
+                  className="border-white/30 text-white hover:bg-white/10 px-4 md:px-6 py-2 rounded-xl min-h-[44px] w-full md:w-auto"
                 >
                   Set Reminder
                 </Button>
@@ -126,13 +126,13 @@ const Dashboard = () => {
           </div>
 
           {/* Previous Sessions & Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             
             {/* Previous Sessions Archive */}
-            <div className="lg:col-span-2 premium-glass rounded-3xl p-8 border border-white/20 shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-serif text-white">Previous Sessions</h3>
-                <BookOpen className="w-6 h-6 text-white/70" />
+            <div className="lg:col-span-2 premium-glass rounded-3xl p-6 md:p-8 border border-white/20 shadow-2xl">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h3 className="text-xl md:text-2xl font-serif text-white">Previous Sessions</h3>
+                <BookOpen className="w-5 h-5 md:w-6 md:h-6 text-white/70" />
               </div>
               
               {loading ? (
