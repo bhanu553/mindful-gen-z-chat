@@ -562,7 +562,7 @@ export async function POST(req) {
         model: "gpt-4",
         messages: messages,
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: isPremium ? 1200 : 1000 // Increased tokens for premium users for better session quality
       });
       aiReply = response.choices[0].message.content;
       console.log('✅ OpenAI response received successfully');
@@ -650,7 +650,7 @@ export async function POST(req) {
           model: "gpt-4",
           messages: retryMessages,
           temperature: 0.7,
-          max_tokens: 1000
+          max_tokens: isPremium ? 1200 : 1000 // Consistent with main response
         });
         aiReply = retryResponse.choices[0].message.content;
         console.log('✅ Retry successful, new response:', aiReply.substring(0, 200) + '...');

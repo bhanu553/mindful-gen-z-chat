@@ -281,22 +281,24 @@ export async function POST(req) {
           .select('id, created_at')
           .eq('user_id', userId)
           .neq('id', session.id)
-          .order('created_at', { ascending: false })
-          .limit(5); // Get last 5 sessions
+          .order('created_at', { ascending: true }); // Get sessions in chronological order
         
         if (prevSessionsError) throw prevSessionsError;
         
         let previousMessages = [];
         if (previousSessions && previousSessions.length > 0) {
+          console.log(`🔄 Found ${previousSessions.length} previous sessions for cumulative summary`);
+          
           const previousSessionIds = previousSessions.map(s => s.id);
           const { data: messages, error: messagesError } = await supabase
             .from('chat_messages')
-            .select('content, role, created_at')
+            .select('content, role, created_at, session_id')
             .in('session_id', previousSessionIds)
             .order('created_at', { ascending: true });
           
           if (!messagesError && messages) {
             previousMessages = messages;
+            console.log(`📝 Found ${previousMessages.length} previous messages for cumulative summary`);
           }
         }
         
@@ -306,20 +308,60 @@ export async function POST(req) {
           // Generate summary using OpenAI
           const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY });
           
-          const summaryPrompt = `You are a professional therapist. Summarize the user's previous therapy sessions below, focusing on their progress, key themes, emotional growth, and any important context for continuing therapy. Be concise but deep.\n\nSESSION HISTORY:\n${previousMessages.map(m => `${m.role === 'user' ? 'User' : 'Therapist'}: ${m.content}`).join('\n')}\n\nSUMMARY:`;
+          // Group messages by session for better context
+          const messagesBySession = {};
+          previousMessages.forEach(msg => {
+            if (!messagesBySession[msg.session_id]) {
+              messagesBySession[msg.session_id] = [];
+            }
+            messagesBySession[msg.session_id].push(msg);
+          });
+          
+          // Create a structured session history with proper chronological numbering
+          // Sort sessions by their order in previousSessions (which is already chronological)
+          const sessionEntries = previousSessions
+            .map(session => [session.id, messagesBySession[session.id] || []])
+            .filter(([sessionId, messages]) => messages.length > 0);
+          
+          const sessionHistory = sessionEntries
+            .map(([sessionId, messages], index) => {
+              const sessionMessages = messages.map(m => `${m.role === 'user' ? 'User' : 'Therapist'}: ${m.content}`).join('\n');
+              return `SESSION ${index + 1}:\n${sessionMessages}\n`;
+            })
+            .join('\n---\n');
+          
+          const summaryPrompt = `You are a professional therapist. Summarize the user's complete therapy journey across all previous sessions below, focusing on their progress, key themes, emotional growth, breakthroughs, patterns, and any important context for continuing therapy. This is a cumulative summary of their entire therapeutic journey so far.
+
+SESSION HISTORY:
+${sessionHistory}
+
+Please provide a comprehensive summary that includes:
+1. Overall progress and growth
+2. Key themes and patterns that emerged
+3. Emotional breakthroughs and insights
+4. Therapeutic techniques that were effective
+5. Areas that still need work
+6. Important context for the next session
+7. Specific details about their emotional state, coping mechanisms, and therapeutic goals
+8. Any recurring patterns or themes that need continued attention
+9. Progress on previous homework assignments or growth challenges
+10. Relationship dynamics, life events, or external factors that influenced their therapy
+
+Be thorough and detailed - this summary will be used to create a seamless continuation of their therapeutic journey. Include specific examples, emotional states, and therapeutic insights that will help the next session build naturally upon this foundation.`;
           
           try {
             const summaryResponse = await openai.chat.completions.create({
               model: "gpt-4",
               messages: [
                 { role: 'system', content: summaryPrompt },
-                { role: 'user', content: 'Summarize my previous therapy sessions for continuity.' }
+                { role: 'user', content: 'Summarize my complete therapy journey across all previous sessions for continuity.' }
               ],
               temperature: 0.5,
-              max_tokens: 400
+              max_tokens: 1200 // Increased from 600 to 1200 for more comprehensive summary
             });
             
             const summary = summaryResponse.choices[0].message.content.trim();
+            console.log('📋 Generated cumulative summary:', summary.substring(0, 200) + '...');
             
             // Generate first message for new session using Phase 2-6 therapy prompt
             const THERAPY_PROMPT_PHASES_2_TO_6 = `
@@ -382,22 +424,25 @@ Always end each session with:
 
             const firstMessagePrompt = `${THERAPY_PROMPT_PHASES_2_TO_6}
 
-Based on this summary of your previous therapy sessions:
+Based on this comprehensive summary of your complete therapy journey across all previous sessions:
 ${summary}
 
-Begin the therapy session as a professional therapist. Start with a warm greeting, acknowledge their previous progress, and then begin the structured 4-phase therapy session. This is a continuation of their therapeutic journey, so reference their previous work and progress naturally.`;
+Begin the therapy session as a professional therapist. Start with a warm greeting, acknowledge their previous progress and therapeutic journey, and then begin the structured 4-phase therapy session. This is a continuation of their therapeutic journey, so reference their previous work, progress, and growth naturally. Build upon the foundation they've already established.
+
+IMPORTANT: Use specific details from their therapy history to create a truly connected experience. Reference their emotional states, breakthroughs, challenges, and progress from previous sessions. Make them feel seen and understood by showing you remember their journey.`;
             
             const firstMessageResponse = await openai.chat.completions.create({
               model: "gpt-4",
               messages: [
                 { role: 'system', content: firstMessagePrompt },
-                { role: 'user', content: 'Begin my new therapy session as my therapist, continuing from where we left off.' }
+                { role: 'user', content: 'Begin my new therapy session as my therapist, continuing from where we left off and building on my previous therapeutic work.' }
               ],
               temperature: 0.7,
-              max_tokens: 800
+              max_tokens: 1200 // Increased from 800 to 1200 for more detailed first message
             });
             
             firstMessage = firstMessageResponse.choices[0].message.content.trim();
+            console.log('✅ Generated first message with cumulative summary context');
           } catch (error) {
             console.error('❌ Error generating summary/first message:', error);
             firstMessage = 'Welcome back! I\'m here to continue our therapeutic journey together. How are you feeling today?';
