@@ -280,6 +280,75 @@
       text-rendering: optimizeLegibility;
     }
   }
+  
+  /* Dynamic gradient classes for different backgrounds */
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #a855f7 0%, #f3f4f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .text-gradient-cyan {
+    background: linear-gradient(135deg, #06b6d4 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .text-gradient-green {
+    background: linear-gradient(135deg, #10b981 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .text-gradient-pink {
+    background: linear-gradient(135deg, #ec4899 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Mobile-specific dynamic gradient fixes */
+  @media (max-width: 768px) {
+    .text-gradient-purple,
+    .text-gradient-cyan,
+    .text-gradient-orange,
+    .text-gradient-green,
+    .text-gradient-pink {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      will-change: auto;
+      text-shadow: none !important;
+      filter: none !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+  }
 
   .handwriting {
     font-family: 'Kalam', cursive;

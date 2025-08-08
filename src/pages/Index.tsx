@@ -14,6 +14,24 @@ const Index = () => {
   const { user, isPremium } = useAuth();
   const { isOnboardingComplete, isLoading } = useOnboardingStatus();
 
+  // Dynamic gradient classes based on background
+  const getGradientClass = () => {
+    switch (currentImageIndex) {
+      case 0: // First image - purple works well
+        return 'text-gradient-purple';
+      case 1: // Second image - use bright cyan
+        return 'text-gradient-cyan';
+      case 2: // Third image - use bright orange
+        return 'text-gradient-orange';
+      case 3: // Fourth image - use bright green
+        return 'text-gradient-green';
+      case 4: // Fifth image - use bright pink
+        return 'text-gradient-pink';
+      default:
+        return 'text-gradient-purple';
+    }
+  };
+
   const handleStartJourney = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!user) {
@@ -81,9 +99,9 @@ const Index = () => {
             </div>
           </div>
           
-          <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
             Your AI Therapist for
-            <span className="text-gradient block">Real Healing</span>
+            <span className={`${getGradientClass()} block`}>Real Healing</span>
           </h1>
           
           <p className="text-base md:text-xl text-gray-300 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed">
