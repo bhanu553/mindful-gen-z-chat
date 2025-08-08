@@ -150,7 +150,7 @@ const Therapy = () => {
 
 You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
 
-Your next session unlocks in *10 minutes* - this isn't a limitation, it's intentional therapeutic design.
+Your next session unlocks in *3 days* - this isn't a limitation, it's intentional therapeutic design.
 
 *What happens now:*
 • Your insights need time to settle
@@ -332,11 +332,11 @@ Premium: $49/month
       }, 100);
       
       console.log('🔍 Checking sessionComplete flag from backend:', data.sessionComplete);
-      if (data.sessionComplete) {
+      if (data.sessionComplete && !isRestricted && !data.restrictionInfo?.isRestricted) {
         console.log('✅ Session complete detected! Setting sessionComplete state to true.');
         setSessionComplete(true);
         
-        // Add professional session end message for premium users in chat area
+        // Add professional session end message for premium users in chat area (only if not restricted)
         if (isPremium) {
           const sessionEndMessage: Message = {
             id: 'premium-session-end',
@@ -361,6 +361,9 @@ Your healing journey continues even when we're not talking.`,
           
           setMessages(prev => [...prev, sessionEndMessage]);
         }
+      } else if (data.sessionComplete && (isRestricted || data.restrictionInfo?.isRestricted)) {
+        console.log('✅ Session complete detected but user is restricted - restriction message already shown');
+        setSessionComplete(true);
       } else {
         console.log('❌ Session complete NOT detected from backend response.');
       }
