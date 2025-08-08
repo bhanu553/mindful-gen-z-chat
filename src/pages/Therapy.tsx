@@ -210,16 +210,26 @@ Premium: $49/month
         setSessionComplete(true);
         return;
       }
-      // Map backend messages to local format
-      setMessages(
-        (data.messages || []).map((msg: any) => ({
-          id: msg.id,
-          text: msg.content,
-          isUser: msg.role === 'user',
-          timestamp: new Date(msg.created_at)
-        }))
-      );
-      setSessionComplete(false);
+      
+      // ONLY load previous chat messages if user is NOT restricted
+      // This prevents showing old chats during cooldown periods
+      if (!data.restrictionInfo?.isRestricted) {
+        console.log('✅ User not restricted - loading previous chat messages');
+        // Map backend messages to local format
+        setMessages(
+          (data.messages || []).map((msg: any) => ({
+            id: msg.id,
+            text: msg.content,
+            isUser: msg.role === 'user',
+            timestamp: new Date(msg.created_at)
+          }))
+        );
+        setSessionComplete(false);
+      } else {
+        console.log('🚫 User is restricted - NOT loading previous chat messages to prevent showing old chats during cooldown');
+        // Keep only the restriction message, don't load old chats
+        setSessionComplete(true);
+      }
     } catch (error: any) {
       // Suppress onboarding errors from user view
       const errMsg = (error.message || '').toLowerCase();
@@ -331,16 +341,16 @@ Premium: $49/month
         console.log('🔄 Additional force update triggered');
       }, 100);
       
-      console.log('🔍 Checking sessionComplete flag from backend:', data.sessionComplete);
-      if (data.sessionComplete && !isRestricted && !data.restrictionInfo?.isRestricted) {
-        console.log('✅ Session complete detected! Setting sessionComplete state to true.');
-        setSessionComplete(true);
-        
-        // Add professional session end message for premium users in chat area (only if not restricted)
-        if (isPremium) {
-          const sessionEndMessage: Message = {
-            id: 'premium-session-end',
-            text: `🌱 *Session Complete - Integration Time*
+             console.log('🔍 Checking sessionComplete flag from backend:', data.sessionComplete);
+       if (data.sessionComplete && !isRestricted && !data.restrictionInfo?.isRestricted) {
+         console.log('✅ Session complete detected! Setting sessionComplete state to true.');
+         setSessionComplete(true);
+         
+         // Add session end message for both premium and free users in chat area (only if not restricted)
+         if (isPremium) {
+           const sessionEndMessage: Message = {
+             id: 'premium-session-end',
+             text: `🌱 *Session Complete - Integration Time*
 
 You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
 
@@ -355,18 +365,44 @@ Your next session unlocks in *3 days* - this isn't a limitation, it's intentiona
 *Remember:* Therapy isn't a Netflix binge. It's a garden that grows with patience.
 
 Your healing journey continues even when we're not talking.`,
-            isUser: false,
-            timestamp: new Date()
-          };
-          
-          setMessages(prev => [...prev, sessionEndMessage]);
-        }
-      } else if (data.sessionComplete && (isRestricted || data.restrictionInfo?.isRestricted)) {
-        console.log('✅ Session complete detected but user is restricted - restriction message already shown');
-        setSessionComplete(true);
-      } else {
-        console.log('❌ Session complete NOT detected from backend response.');
-      }
+             isUser: false,
+             timestamp: new Date()
+           };
+           
+           setMessages(prev => [...prev, sessionEndMessage]);
+         } else {
+           // Add session end message for free users
+           const sessionEndMessage: Message = {
+             id: 'free-session-end',
+             text: `⏰ **Your Free Trial is Over**
+
+You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.
+
+**Next Free Session Available:** 30 days
+Available on ${new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toLocaleDateString()}
+
+**Ready to continue your healing?**
+Premium: $49/month
+• 8 sessions (vs 1 free)
+• 3 - 4 days spacing for optimal progress
+• Session continuity that builds on your breakthrough
+• Personalized homework and skill development
+
+*Therapy isn't a one-session miracle. Real change happens with consistent work.*
+
+**Don't wait 30 days and lose momentum.**`,
+             isUser: false,
+             timestamp: new Date()
+           };
+           
+           setMessages(prev => [...prev, sessionEndMessage]);
+         }
+       } else if (data.sessionComplete && (isRestricted || data.restrictionInfo?.isRestricted)) {
+         console.log('✅ Session complete detected but user is restricted - restriction message already shown');
+         setSessionComplete(true);
+       } else {
+         console.log('❌ Session complete NOT detected from backend response.');
+       }
     } catch (error: any) {
       console.error('❌ Frontend error:', error);
       // Suppress onboarding errors from user view
@@ -538,84 +574,70 @@ Your healing journey continues even when we're not talking.`,
                   </div>
                 )}
                 
-                {/* Session Complete Message in Chat Area - Only show for free users */}
-                {sessionComplete && !isRestricted && !isPremium && (
-                  <div className="flex justify-start">
-                    <div className="bg-gradient-to-br from-purple-700/80 to-blue-600/80 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 mr-2 md:mr-4 max-w-2xl border border-white/20">
-                      <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 md:mb-4">🌟 Session Complete - What's Next?</h2>
-                      <div className="text-white/90 text-left space-y-3 md:space-y-4 mb-4 md:mb-6">
-                        <p className="text-sm md:text-base lg:text-lg">You just experienced real therapy, not just a chat. That professional structure and evidence-based approach you felt? That's what $300/session therapy delivers.</p>
-                        
-                        <div className="bg-white/10 rounded-xl p-3 md:p-4 border border-white/20">
-                          <h3 className="font-semibold text-white mb-2">As a free user:</h3>
-                          <ul className="text-white/80 space-y-1 text-xs md:text-sm">
-                            <li>• Next session available in 30 days</li>
-                            <li>• No continuity or progress building</li>
-                            <li>• Limited breakthrough potential</li>
-                          </ul>
-                        </div>
-                        
-                        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-3 md:p-4 border border-yellow-400/30">
-                          <h3 className="font-semibold text-yellow-300 mb-2">Ready to continue your healing?</h3>
-                          <div className="text-white/90">
-                            <p className="font-semibold">Premium: $49/month</p>
-                            <ul className="text-white/80 space-y-1 text-xs md:text-sm mt-2">
-                              <li>• 8 sessions (vs 1 free)</li>
-                              <li>• 3 - 4 days spacing for optimal progress</li>
-                              <li>• Session continuity that builds on your breakthrough</li>
-                              <li>• Personalized homework and skill development</li>
-                            </ul>
-                          </div>
-                        </div>
-                        
-                        <p className="text-white/80 italic text-sm md:text-base">Therapy isn't a one-session miracle. Real change happens with consistent work.</p>
-                        <p className="text-yellow-300 font-semibold text-sm md:text-base">Don't wait 30 days and lose momentum.</p>
-                      </div>
-                      
-                      <button
-                        className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg w-full min-h-[44px]"
-                        onClick={() => navigate('/dashboard')}
-                      >
-                        Continue My Journey - $49/month
-                      </button>
-                    </div>
-                  </div>
-                )}
+                
                 
                 <div ref={messagesEndRef} />
               </div>
             )}
           </div>
           
-          {/* Input Section */}
-          {!sessionComplete && !isRestricted && (
-            <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-              <div className="relative">
-                <div className="premium-glass rounded-2xl border border-white/20 p-3 md:p-4 flex items-end space-x-2 md:space-x-3">
-                  
-                  {/* Text Input */}
-                  <Textarea
-                    ref={inputRef}
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Share your thoughts..."
-                    className="flex-1 min-h-[44px] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
-                    disabled={isLoading}
-                  />
-                  
-                  {/* Send Button */}
+                     {/* Input Section */}
+           {!sessionComplete && !isRestricted && (
+             <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+               <div className="relative">
+                 <div className="premium-glass rounded-2xl border border-white/20 p-3 md:p-4 flex items-end space-x-2 md:space-x-3">
+                   
+                   {/* Text Input */}
+                   <Textarea
+                     ref={inputRef}
+                     value={inputText}
+                     onChange={(e) => setInputText(e.target.value)}
+                     onKeyPress={handleKeyPress}
+                     placeholder="Share your thoughts..."
+                     className="flex-1 min-h-[44px] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
+                     disabled={isLoading}
+                   />
+                   
+                   {/* Send Button */}
+                   <Button
+                     onClick={handleSendMessage}
+                     disabled={!inputText.trim() || isLoading}
+                     className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 md:p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
+                   >
+                     <Send size={18} className="md:w-5 md:h-5" />
+                   </Button>
+                 </div>
+               </div>
+             </div>
+           )}
+           
+                       {/* Upgrade Button for Free Users When Session Complete */}
+            {sessionComplete && !isRestricted && !isPremium && (
+              <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+                <div className="relative">
                   <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputText.trim() || isLoading}
-                    className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 md:p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
+                    onClick={() => navigate('/#pricing')}
+                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg w-full min-h-[44px]"
                   >
-                    <Send size={18} className="md:w-5 md:h-5" />
+                    Upgrade to Premium - $49/month
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            
+            {/* Upgrade Button for Restricted Free Users */}
+            {isRestricted && !isPremium && (
+              <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+                <div className="relative">
+                  <Button
+                    onClick={() => navigate('/#pricing')}
+                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg w-full min-h-[44px]"
+                  >
+                    Upgrade to Premium - $49/month
+                  </Button>
+                </div>
+              </div>
+            )}
           
           {/* Continue My Journey Button for Premium Users */}
           {sessionComplete && !isRestricted && isPremium && (
@@ -631,19 +653,7 @@ Your healing journey continues even when we're not talking.`,
             </div>
           )}
           
-          {/* Small Upgrade Button for Restricted Users - Only for Free Users */}
-          {isRestricted && !isPremium && (
-            <div className="p-3 md:p-4 lg:p-6 border-t border-white/10">
-              <div className="flex justify-center">
-                <Button
-                  onClick={() => navigate('/premium-plan-details')}
-                  className="premium-glass border border-white/20 text-white font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base hover:bg-white/10 min-h-[44px]"
-                >
-                  Upgrade to Premium - $49/month
-                </Button>
-              </div>
-            </div>
-          )}
+          
           
           
         </div>
