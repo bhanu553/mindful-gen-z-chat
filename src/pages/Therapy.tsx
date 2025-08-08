@@ -672,10 +672,10 @@ Premium: $49/month
               <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
                 <div className="relative">
                   <Button
-                    onClick={() => navigate('/#pricing')}
-                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-6 md:px-8 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg min-h-[44px] mx-auto block"
+                    onClick={() => navigate('/premium-plan-details')}
+                    className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white font-bold rounded-xl px-6 md:px-8 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg min-h-[44px] mx-auto block"
                   >
-                    Continue My Journey - $49/month
+                    Continue My Journey
                   </Button>
                 </div>
               </div>
@@ -686,10 +686,10 @@ Premium: $49/month
               <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
                 <div className="relative">
                   <Button
-                    onClick={() => navigate('/#pricing')}
-                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-6 md:px-8 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg min-h-[44px] mx-auto block"
+                    onClick={() => navigate('/premium-plan-details')}
+                    className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white font-bold rounded-xl px-6 md:px-8 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg min-h-[44px] mx-auto block"
                   >
-                    Continue My Journey - $49/month
+                    Continue My Journey
                   </Button>
                 </div>
               </div>
