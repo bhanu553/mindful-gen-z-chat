@@ -266,18 +266,17 @@ function getMonthStart() {
 
 // Utility: Detect session completion
 async function isSessionComplete(aiResponse, session, userId, isPremium = false) {
+  console.log(`🔍 Checking session completion for user ${userId} (Premium: ${isPremium})`);
+  console.log(`🔍 AI Response preview: ${aiResponse.substring(0, 200)}...`);
+  
+  // CRITICAL: Only use the most specific and intentional session end phrases
+  // These must be phrases that the AI would ONLY use when intentionally ending a session
   const completionIndicators = [
-    // Primary session end indicators (exact matches)
     "see you in the next session",
     "see you next session", 
     "until next session",
     "until our next session",
-    "see you in our next session",
-    "until we meet again",
-    "until our next meeting",
-    "session complete",
-    "session ended",
-    "session finished"
+    "see you in our next session"
   ];
   
   // Check if AI response contains session end indicators
@@ -285,29 +284,43 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
     aiResponse.toLowerCase().includes(indicator.toLowerCase())
   );
   
+  console.log(`🔍 Has end indicator: ${hasEndIndicator}`);
+  if (hasEndIndicator) {
+    console.log(`🔍 Found end indicators: ${completionIndicators.filter(indicator => 
+      aiResponse.toLowerCase().includes(indicator.toLowerCase())
+    ).join(', ')}`);
+  }
+  
   if (!hasEndIndicator) {
+    console.log('❌ No session end indicators found - session not complete');
     return false;
   }
   
-  // Additional check: ensure the session end message is intentional and prominent
+  // CRITICAL: Ensure the session end message is intentional and prominent
+  // The phrase must appear at the end of the response or as a clear concluding statement
   const responseLower = aiResponse.toLowerCase();
   const isIntentionalEnd = completionIndicators.some(indicator => {
     const indicatorLower = indicator.toLowerCase();
-    // Check if the indicator appears as a standalone phrase or at the end
+    // Check if the indicator appears as a concluding phrase
     return responseLower.includes(indicatorLower) && 
-           (responseLower.endsWith(indicatorLower) || 
+           (responseLower.endsWith(indicatorLower.trim()) || 
             responseLower.includes(`. ${indicatorLower}`) ||
             responseLower.includes(`! ${indicatorLower}`) ||
-            responseLower.includes(`\n${indicatorLower}`));
+            responseLower.includes(`\n${indicatorLower}`) ||
+            responseLower.includes(`\n\n${indicatorLower}`));
   });
+  
+  console.log(`🔍 Is intentional end: ${isIntentionalEnd}`);
   
   if (!isIntentionalEnd) {
     console.log('🔄 Session end mentioned but not intentional - continuing session');
     return false;
   }
   
-  // For premium users, require additional criteria before ending session
-  if (isPremium && session && userId) {
+  // CRITICAL: ALL users (both free and premium) need minimum message requirements
+  // This prevents premature session endings
+  if (session && userId) {
+    console.log('🔍 Checking minimum message requirements for session completion...');
     try {
       const { data: messages, error } = await supabase
         .from('chat_messages')
@@ -316,57 +329,72 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
         .order('created_at', { ascending: true });
       
       if (error) {
-        console.error('Error fetching messages for session completion check:', error);
+        console.error('❌ Error fetching messages for session completion check:', error);
         return false;
       }
       
-      // Premium users need at least 6 messages (3 exchanges) before session can end
-      // Add 1 to account for the current AI response that hasn't been saved yet
-      const minMessagesForPremium = 6;
+      // ALL users need at least 4 messages (2 exchanges) before session can end
+      // This ensures some therapeutic work has been done
+      const minMessagesForAll = 4;
       const currentMessageCount = (messages?.length || 0) + 1; // +1 for current AI response
-      const hasSubstantialConversation = currentMessageCount >= minMessagesForPremium;
+      const hasSubstantialConversation = currentMessageCount >= minMessagesForAll;
+      
+      console.log(`🔍 Message count: ${currentMessageCount} (need at least ${minMessagesForAll})`);
+      console.log(`🔍 Has substantial conversation: ${hasSubstantialConversation}`);
       
       if (!hasSubstantialConversation) {
-        console.log(`🔄 Premium user session not ready to end - only ${currentMessageCount} messages (including current), need at least ${minMessagesForPremium}`);
+        console.log(`🔄 Session not ready to end - only ${currentMessageCount} messages (including current), need at least ${minMessagesForAll}`);
         return false;
       }
       
-      console.log(`✅ Premium user session ready to end - substantial conversation completed (${currentMessageCount} messages)`);
+      console.log(`✅ Session ready to end - substantial conversation completed (${currentMessageCount} messages)`);
       return true;
     } catch (error) {
-      console.error('Error in premium session completion check:', error);
+      console.error('❌ Error in session completion check:', error);
       return false;
     }
   }
   
-  // For free users, use the original logic
-  return true;
+  // If no session or userId, be extra conservative
+  console.log('⚠️ No session or userId provided - being conservative, not marking as complete');
+  return false;
 }
 
 // Utility: Get or create current session for free user
 async function getOrCreateCurrentSession(userId) {
-  // 1. Check for an active session for this month
+  console.log(`🔍 Getting or creating session for user: ${userId}`);
+  
+  // 1. Check for an active session (removed monthly filter to ensure all sessions are considered)
   const { data: sessions, error } = await supabase
     .from('chat_sessions')
     .select('*')
     .eq('user_id', userId)
-    .gte('created_at', getMonthStart())
     .order('created_at', { ascending: false });
   if (error) throw error;
+  
+  console.log(`🔍 Found ${sessions?.length || 0} sessions for user`);
+  
   if (sessions && sessions.length > 0) {
     // If session is not complete, return it
     const active = sessions.find(s => !s.is_complete);
-    if (active) return active;
+    if (active) {
+      console.log(`✅ Found active session: ${active.id}`);
+      return active;
+    }
     // If all sessions are complete, return the most recent (to block further use)
+    console.log(`✅ All sessions complete, returning most recent: ${sessions[0].id}`);
     return sessions[0];
   }
+  
   // 2. No session: create one
+  console.log('✅ No sessions found, creating new session');
   const { data: newSession, error: createError } = await supabase
     .from('chat_sessions')
     .insert({ user_id: userId, is_complete: false, created_at: new Date().toISOString() })
     .select()
     .single();
   if (createError) throw createError;
+  console.log(`✅ Created new session: ${newSession.id}`);
   return newSession;
 }
 
@@ -404,7 +432,14 @@ export async function POST(req) {
     let session = null;
     let isPremium = false;
     if (userId) {
+      console.log(`🔍 Managing session for user: ${userId}`);
       session = await getOrCreateCurrentSession(userId);
+      console.log(`🔍 Session details:`, {
+        id: session?.id,
+        is_complete: session?.is_complete,
+        created_at: session?.created_at,
+        updated_at: session?.updated_at
+      });
       
       // Check if user is premium
       const { data: profile, error: profileError } = await supabase
@@ -414,9 +449,11 @@ export async function POST(req) {
         .single();
       
       isPremium = profile?.is_premium || profile?.email === 'ucchishth31@gmail.com' || false;
+      console.log(`🔍 User premium status: ${isPremium} (email: ${profile?.email})`);
       
       // Only block if session is complete AND user is not premium
       if (session.is_complete && !isPremium) {
+        console.log('🚫 Free user with completed session - blocking access');
         // Session is already complete for this month (free users only)
         return Response.json({ error: "Session complete", sessionComplete: true }, { status: 403 });
       }
@@ -733,14 +770,31 @@ export async function POST(req) {
          // --- SESSION COMPLETION DETECTION (SAME FOR ALL USERS) ---
      let sessionComplete = false;
      console.log('🔍 Checking session completion for AI response:', aiReply.substring(0, 100) + '...');
+     console.log(`🔍 Session ID: ${session?.id}, User ID: ${userId}, Is Premium: ${isPremium}`);
      try {
-       if (await isSessionComplete(aiReply, session, userId, isPremium)) {
+       const isComplete = await isSessionComplete(aiReply, session, userId, isPremium);
+       console.log(`🔍 isSessionComplete returned: ${isComplete}`);
+       
+       if (isComplete) {
          console.log('✅ Session completion detected! Marking session as complete.');
-         await supabase.from('chat_sessions').update({ 
-           is_complete: true,
-           updated_at: new Date().toISOString()
-         }).eq('id', session.id);
-         sessionComplete = true;
+         console.log(`🔍 Updating session ${session.id} with is_complete: true`);
+         
+         const { data: updateResult, error: updateError } = await supabase
+           .from('chat_sessions')
+           .update({ 
+             is_complete: true,
+             updated_at: new Date().toISOString()
+           })
+           .eq('id', session.id)
+           .select();
+         
+         if (updateError) {
+           console.error('❌ Error updating session completion status:', updateError);
+           sessionComplete = false;
+         } else {
+           console.log('✅ Session successfully marked as complete:', updateResult);
+           sessionComplete = true;
+         }
        } else {
          console.log('❌ Session completion NOT detected for this response.');
        }
