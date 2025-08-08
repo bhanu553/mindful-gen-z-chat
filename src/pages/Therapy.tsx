@@ -141,6 +141,12 @@ const Therapy = () => {
       console.log('🔍 Checking restriction info:', data.restrictionInfo);
       if (data.restrictionInfo && data.restrictionInfo.isRestricted) {
         console.log('🚫 User is restricted - showing restriction message only');
+        console.log('🔍 Restriction details:', {
+          isPremium: data.restrictionInfo.isPremium,
+          daysRemaining: data.restrictionInfo.daysRemaining,
+          minutesRemaining: data.restrictionInfo.minutesRemaining,
+          nextEligibleDate: data.restrictionInfo.nextEligibleDate
+        });
         setIsRestricted(true);
         setRestrictionInfo(data.restrictionInfo);
         setSessionComplete(true);

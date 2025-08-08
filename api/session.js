@@ -104,12 +104,17 @@ async function checkUserRestriction(userId) {
     }
     
     // Handle free users with 30-day cooldown
-    const sessionDate = new Date(lastCompletedSession.created_at);
+    // Use updated_at (when session was marked complete) instead of created_at
+    const sessionEndDate = new Date(lastCompletedSession.updated_at || lastCompletedSession.created_at);
     const now = new Date();
-    const diffTime = sessionDate.getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime();
+    const diffTime = sessionEndDate.getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime();
     const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    console.log(`📅 Free user - session completed ${daysRemaining} days ago`);
+    console.log(`📅 Free user restriction calculation:`);
+    console.log(`   - Session end date: ${sessionEndDate.toISOString()}`);
+    console.log(`   - Current date: ${now.toISOString()}`);
+    console.log(`   - Days remaining: ${daysRemaining}`);
+    console.log(`   - Session was completed ${Math.abs(daysRemaining)} days ago`);
     
     if (daysRemaining <= 0) {
       console.log('✅ Free user - cooldown period passed');
@@ -117,7 +122,7 @@ async function checkUserRestriction(userId) {
     }
     
     // Calculate next eligible date
-    const nextEligibleDate = new Date(sessionDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+    const nextEligibleDate = new Date(sessionEndDate.getTime() + (30 * 24 * 60 * 60 * 1000));
     
     console.log(`🔒 Free user restricted: ${daysRemaining} days remaining`);
     
@@ -126,7 +131,7 @@ async function checkUserRestriction(userId) {
       isPremium: false,
       daysRemaining,
       nextEligibleDate: nextEligibleDate.toISOString(),
-      lastSessionDate: lastCompletedSession.created_at
+      lastSessionDate: lastCompletedSession.updated_at || lastCompletedSession.created_at
     };
   } catch (error) {
     console.error('❌ Error checking user restriction:', error);
@@ -166,6 +171,24 @@ async function getOrCreateCurrentSession(userId) {
         // Session is not complete, return it for continuation
         console.log('✅ Premium user - returning existing incomplete session');
         return mostRecentSession;
+      }
+    }
+    
+    // For free users, check if they have a completed session that's still within cooldown
+    const lastCompletedSession = sessions.find(s => s.is_complete);
+    if (lastCompletedSession) {
+      // Check if the completed session is still within the 30-day cooldown period
+      const sessionEndDate = new Date(lastCompletedSession.updated_at || lastCompletedSession.created_at);
+      const now = new Date();
+      const diffTime = sessionEndDate.getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime();
+      const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      console.log(`🔍 Free user - last completed session was ${daysRemaining} days ago`);
+      
+      // If still within cooldown, don't create new session - let the restriction logic handle it
+      if (daysRemaining > 0) {
+        console.log('🚫 Free user - still within cooldown period, not creating new session');
+        return null; // This will trigger restriction logic in the main handler
       }
     }
     
@@ -209,6 +232,16 @@ export async function POST(req) {
     
     // Get or create session (existing logic unchanged)
     const session = await getOrCreateCurrentSession(userId);
+    
+    // If session is null, it means the user is restricted (free user within cooldown)
+    if (!session) {
+      console.log('🚫 Free user is restricted - returning restriction info');
+      return Response.json({ 
+        sessionComplete: true, 
+        messages: [],
+        restrictionInfo 
+      });
+    }
     
     // CRITICAL FIX: Only mark session as complete if the AI has sent the session end message
     // Check if the last message from AI contains session completion indicators
