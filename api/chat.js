@@ -267,7 +267,7 @@ function getMonthStart() {
 // Utility: Detect session completion
 async function isSessionComplete(aiResponse, session, userId, isPremium = false) {
   const completionIndicators = [
-    // Simple, clear session end indicators
+    // Primary session end indicators (exact matches)
     "see you in the next session",
     "see you next session", 
     "until next session",
@@ -286,6 +286,23 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
   );
   
   if (!hasEndIndicator) {
+    return false;
+  }
+  
+  // Additional check: ensure the session end message is intentional and prominent
+  const responseLower = aiResponse.toLowerCase();
+  const isIntentionalEnd = completionIndicators.some(indicator => {
+    const indicatorLower = indicator.toLowerCase();
+    // Check if the indicator appears as a standalone phrase or at the end
+    return responseLower.includes(indicatorLower) && 
+           (responseLower.endsWith(indicatorLower) || 
+            responseLower.includes(`. ${indicatorLower}`) ||
+            responseLower.includes(`! ${indicatorLower}`) ||
+            responseLower.includes(`\n${indicatorLower}`));
+  });
+  
+  if (!isIntentionalEnd) {
+    console.log('🔄 Session end mentioned but not intentional - continuing session');
     return false;
   }
   
@@ -311,16 +328,6 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
       
       if (!hasSubstantialConversation) {
         console.log(`🔄 Premium user session not ready to end - only ${currentMessageCount} messages (including current), need at least ${minMessagesForPremium}`);
-        return false;
-      }
-      
-      // Additional check: ensure the session end message is intentional, not just mentioned
-      const isIntentionalEnd = aiResponse.toLowerCase().includes('see you in the next session') ||
-                              aiResponse.toLowerCase().includes('session complete') ||
-                              aiResponse.toLowerCase().includes('session ended');
-      
-      if (!isIntentionalEnd) {
-        console.log('🔄 Premium user session end mentioned but not intentional');
         return false;
       }
       
@@ -421,7 +428,23 @@ export async function POST(req) {
       }
     }
 
-    // --- SAVE USER MESSAGE BEFORE CALLING OPENAI ---
+    // --- FETCH ALL CHAT HISTORY BEFORE SAVING USER MESSAGE ---
+    let chatHistory = [];
+    if (session && userId) {
+      const { data: history, error: chatError } = await supabase
+        .from('chat_messages')
+        .select('role, content')
+        .eq('session_id', session.id)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true });
+      if (chatError) {
+        console.error('❌ Error fetching chat history:', chatError);
+        return Response.json({ error: 'Failed to fetch chat history.' }, { status: 500 });
+      }
+      chatHistory = history || [];
+    }
+
+    // --- SAVE USER MESSAGE AFTER FETCHING CHAT HISTORY ---
     if (session && userId) {
       await supabase.from('chat_messages').insert({
         session_id: session.id,
@@ -436,7 +459,12 @@ export async function POST(req) {
     // --- SYSTEM PROMPT LOGIC ---
     let onboardingAnalysis = '';
     let systemPrompt = '';
-    if (userId && (generateAnalysis || isFirstMessage)) {
+    
+    // Check if this is the first message by looking at chat history
+    const isActuallyFirstMessage = chatHistory.length === 0;
+    
+    if (userId && (generateAnalysis || isFirstMessage || isActuallyFirstMessage)) {
+      // FIRST MESSAGE LOGIC - Use Phase 1 prompt
       const { data: onboarding, error: onboardingError } = await supabase
         .from('user_onboarding')
         .select('*')
@@ -445,6 +473,7 @@ export async function POST(req) {
         .order('updated_at', { ascending: false })
         .limit(1)
         .single();
+      
       if (onboardingError || !onboarding) {
         console.error('❌ Error fetching onboarding data or onboarding not found:', onboardingError);
         onboardingAnalysis = '';
@@ -452,7 +481,7 @@ export async function POST(req) {
           '{user_intake_form_here}',
           'No onboarding data available. Please proceed with a welcoming, supportive first message.'
         ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
-      } else if (generateAnalysis && onboarding && (!onboarding.ai_analysis || onboarding.ai_analysis === null || onboarding.ai_analysis === '')) {
+      } else if ((generateAnalysis || isActuallyFirstMessage) && onboarding && (!onboarding.ai_analysis || onboarding.ai_analysis === null || onboarding.ai_analysis === '')) {
         console.log('🔄 Generating initial AI analysis based on onboarding form...');
         
         // Format the onboarding data for the prompt
@@ -501,6 +530,12 @@ export async function POST(req) {
         
         onboardingAnalysis = aiAnalysis;
         console.log('✅ Initial AI analysis generated and saved successfully');
+        
+        // Set the system prompt for first messages with generated analysis
+        systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
+          '{user_intake_form_here}',
+          aiAnalysis
+        ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       } else if (onboarding && onboarding.ai_analysis) {
         onboardingAnalysis = onboarding.ai_analysis;
         systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
@@ -515,35 +550,12 @@ export async function POST(req) {
         ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       }
     } else {
-      // For all subsequent messages, use different logic based on user type
-      if (isPremium) {
-        // Premium users: Always use Phase 2-6 prompt for ongoing messages
-        systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6 + '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You are conducting real therapy - respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response.';
-        console.log('🔧 Premium user - Using Phase 2-6 prompt for ongoing therapy');
-      } else {
-        // Free users: Use existing logic
-        systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6 + '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You are conducting real therapy - respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response.';
-        console.log('🔧 Free user - Using Phase 2-6 prompt for ongoing therapy');
-      }
+      // SUBSEQUENT MESSAGES LOGIC - Use Phase 2-6 prompt for ALL users
+      systemPrompt = THERAPY_PROMPT_PHASES_2_TO_6 + '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You are conducting real therapy - respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response.';
+      console.log('🔧 Subsequent message - Using Phase 2-6 prompt for ongoing therapy');
     }
     console.log('📝 System prompt sent to OpenAI:', systemPrompt.substring(0, 500));
     console.log('📝 Full system prompt length:', systemPrompt.length);
-
-    // --- FETCH ALL CHAT HISTORY ---
-    let chatHistory = [];
-    if (session && userId) {
-      const { data: history, error: chatError } = await supabase
-        .from('chat_messages')
-        .select('role, content')
-        .eq('session_id', session.id)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: true });
-      if (chatError) {
-        console.error('❌ Error fetching chat history:', chatError);
-        return Response.json({ error: 'Failed to fetch chat history.' }, { status: 500 });
-      }
-      chatHistory = history || [];
-    }
 
     // --- BUILD MESSAGES ARRAY WITH YOUR PROMPT ---
     const messages = [
@@ -662,9 +674,16 @@ export async function POST(req) {
         
         if (isRetryGeneric) {
           console.log('⚠️ Retry also gave generic response, trying with maximum enforcement...');
-          // Final retry with maximum enforcement
+          // Final retry with maximum enforcement - use the same prompt type as the original
+          const finalRetryPrompt = isActuallyFirstMessage ? 
+            THERAPY_PROMPT_TEMPLATE.replace(
+              '{user_intake_form_here}',
+              onboardingAnalysis || 'No onboarding data available. Please proceed with a welcoming, supportive first message.'
+            ) + '\n\n🚨 MAXIMUM ENFORCEMENT - YOU ARE A PROFESSIONAL THERAPIST: You are conducting a real therapy session. You MUST provide therapeutic guidance and support. You are NOT allowed to give any generic responses, safety fallbacks, or suggest contacting other professionals. You MUST respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response. You MUST follow the therapy prompt structure exactly. You are a professional therapist conducting real therapy.' :
+            THERAPY_PROMPT_PHASES_2_TO_6 + '\n\n🚨 MAXIMUM ENFORCEMENT - YOU ARE A PROFESSIONAL THERAPIST: You are conducting a real therapy session. You MUST provide therapeutic guidance and support. You are NOT allowed to give any generic responses, safety fallbacks, or suggest contacting other professionals. You MUST respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response. You MUST follow the therapy prompt structure exactly. You are a professional therapist conducting real therapy.';
+          
           const finalRetryMessages = [
-            { role: 'system', content: THERAPY_PROMPT_PHASES_2_TO_6 + '\n\n🚨 MAXIMUM ENFORCEMENT - YOU ARE A PROFESSIONAL THERAPIST: You are conducting a real therapy session. You MUST provide therapeutic guidance and support. You are NOT allowed to give any generic responses, safety fallbacks, or suggest contacting other professionals. You MUST respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response. You MUST follow the therapy prompt structure exactly. You are a professional therapist conducting real therapy.' },
+            { role: 'system', content: finalRetryPrompt },
             ...chatHistory.map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: message }
           ];
