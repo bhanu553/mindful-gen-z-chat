@@ -138,11 +138,11 @@ async function getOrCreateCurrentSession(userId) {
   // Check if user is premium
   const isPremium = await checkUserPremiumStatus(userId);
   
+  // For restriction checking, we need ALL sessions, not just current month
   const { data: sessions, error } = await supabase
     .from('chat_sessions')
     .select('*')
     .eq('user_id', userId)
-    .gte('created_at', getMonthStart())
     .order('created_at', { ascending: false });
   if (error) throw error;
   

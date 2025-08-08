@@ -138,7 +138,9 @@ const Therapy = () => {
       const data = await response.json();
       
       // Check for restriction info first
+      console.log('🔍 Checking restriction info:', data.restrictionInfo);
       if (data.restrictionInfo && data.restrictionInfo.isRestricted) {
+        console.log('🚫 User is restricted - showing restriction message only');
         setIsRestricted(true);
         setRestrictionInfo(data.restrictionInfo);
         setSessionComplete(true);
@@ -213,7 +215,65 @@ Premium: $49/month
       
       // ONLY load previous chat messages if user is NOT restricted
       // This prevents showing old chats during cooldown periods
-      if (!data.restrictionInfo?.isRestricted) {
+      console.log('🔍 Restriction check for message loading:', {
+        restrictionInfo: data.restrictionInfo,
+        isRestricted: data.restrictionInfo?.isRestricted,
+        messagesCount: data.messages?.length || 0
+      });
+      
+      // CRITICAL: If user is restricted, NEVER load old messages
+      if (data.restrictionInfo?.isRestricted) {
+        console.log('🚫 User is restricted - NOT loading previous chat messages to prevent showing old chats during cooldown');
+        // Keep only the restriction message, don't load old chats
+        setSessionComplete(true);
+        
+        // Add restriction message for restricted users
+        let restrictionText = '';
+        if (data.restrictionInfo.isPremium) {
+          restrictionText = `🌱 *Session Complete - Integration Time*
+
+You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
+
+Your next session unlocks in *3 days* - this isn't a limitation, it's intentional therapeutic design.
+
+*What happens now:*
+• Your insights need time to settle
+• Your homework gives you real-world practice  
+• Your nervous system processes what we explored
+• You integrate today's breakthroughs naturally
+
+*Remember:* Therapy isn't a Netflix binge. It's a garden that grows with patience.
+
+Your healing journey continues even when we're not talking.`;
+        } else {
+          restrictionText = `⏰ **Your Free Trial is Over**
+
+You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.
+
+**Next Free Session Available:** ${data.restrictionInfo.daysRemaining} days
+${data.restrictionInfo.nextEligibleDate ? `Available on ${new Date(data.restrictionInfo.nextEligibleDate).toLocaleDateString()}` : 'Date calculation in progress...'}
+
+**Ready to continue your healing?**
+Premium: $49/month
+• 8 sessions (vs 1 free)
+• 3 - 4 days spacing for optimal progress
+• Session continuity that builds on your breakthrough
+• Personalized homework and skill development
+
+*Therapy isn't a one-session miracle. Real change happens with consistent work.*
+
+**Don't wait ${data.restrictionInfo.daysRemaining} days and lose momentum.**`;
+        }
+        
+        const restrictionMessage: Message = {
+          id: 'restriction-message',
+          text: restrictionText,
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages([restrictionMessage]);
+      } else {
         console.log('✅ User not restricted - loading previous chat messages');
         // Map backend messages to local format
         setMessages(
@@ -225,10 +285,6 @@ Premium: $49/month
           }))
         );
         setSessionComplete(false);
-      } else {
-        console.log('🚫 User is restricted - NOT loading previous chat messages to prevent showing old chats during cooldown');
-        // Keep only the restriction message, don't load old chats
-        setSessionComplete(true);
       }
     } catch (error: any) {
       // Suppress onboarding errors from user view
@@ -611,29 +667,29 @@ Premium: $49/month
              </div>
            )}
            
-                       {/* Upgrade Button for Free Users When Session Complete */}
+                       {/* Continue My Journey Button for Free Users When Session Complete */}
             {sessionComplete && !isRestricted && !isPremium && (
               <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
                 <div className="relative">
                   <Button
                     onClick={() => navigate('/#pricing')}
-                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg w-full min-h-[44px]"
+                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-6 md:px-8 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg min-h-[44px] mx-auto block"
                   >
-                    Upgrade to Premium - $49/month
+                    Continue My Journey - $49/month
                   </Button>
                 </div>
               </div>
             )}
             
-            {/* Upgrade Button for Restricted Free Users */}
+            {/* Continue My Journey Button for Restricted Free Users */}
             {isRestricted && !isPremium && (
               <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
                 <div className="relative">
                   <Button
                     onClick={() => navigate('/#pricing')}
-                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg w-full min-h-[44px]"
+                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-black font-bold rounded-xl px-6 md:px-8 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg min-h-[44px] mx-auto block"
                   >
-                    Upgrade to Premium - $49/month
+                    Continue My Journey - $49/month
                   </Button>
                 </div>
               </div>
