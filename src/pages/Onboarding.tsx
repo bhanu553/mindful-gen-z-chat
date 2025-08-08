@@ -361,7 +361,7 @@ const Onboarding = () => {
           <SelectTrigger className="bg-white/20 backdrop-blur-sm border-white/30 text-white">
             <SelectValue placeholder="Select your primary focus" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="mobile-dropdown-scroll">
             <SelectItem value="anxiety">Anxiety & Panic – Feeling overwhelmed, panic attacks, constant worry</SelectItem>
             <SelectItem value="depression">Depression & Low Mood – Sadness, hopelessness, emotional numbness</SelectItem>
             <SelectItem value="trauma">Trauma & Past Experiences – Childhood issues, traumatic events, flashbacks</SelectItem>
