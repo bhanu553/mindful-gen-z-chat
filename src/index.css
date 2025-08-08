@@ -258,6 +258,28 @@
     font-feature-settings: "kern" 1;
     font-kerning: normal;
   }
+  
+  /* Mobile-specific text gradient fix */
+  @media (max-width: 768px) {
+    .text-gradient {
+      background: linear-gradient(135deg, #a855f7 0%, #f3f4f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      /* Force gradient rendering on mobile */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      /* Ensure proper gradient display */
+      will-change: auto;
+      /* Remove any 3D effects */
+      text-shadow: none;
+      filter: none;
+      /* Enhanced mobile rendering */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+  }
 
   .handwriting {
     font-family: 'Kalam', cursive;
@@ -352,6 +374,26 @@
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Mobile gradient text fix - ensure proper rendering */
+    .text-gradient {
+      background: linear-gradient(135deg, #a855f7 0%, #f3f4f6 100%) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+      /* Force hardware acceleration for gradient rendering */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      /* Remove any 3D effects that might interfere */
+      text-shadow: none !important;
+      filter: none !important;
+      /* Ensure proper gradient display */
+      will-change: auto;
+      /* Enhanced mobile rendering */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
     }
     
     /* 3. Enhanced Dropdown Scrolling for Mobile */
