@@ -283,11 +283,11 @@ export async function POST(req) {
         const lastMessage = lastMessages?.[0];
         const isSessionEndedByAI = lastMessage && 
           lastMessage.role === 'assistant' && 
-          (lastMessage.content.toLowerCase().includes('see you in the next session') ||
+          (lastMessage.content.toLowerCase().includes('see you in our next session') ||
+           lastMessage.content.toLowerCase().includes('see you in the next session') ||
            lastMessage.content.toLowerCase().includes('see you next session') ||
            lastMessage.content.toLowerCase().includes('until next session') ||
-           lastMessage.content.toLowerCase().includes('session complete') ||
-           lastMessage.content.toLowerCase().includes('session ended'));
+           lastMessage.content.toLowerCase().includes('until our next session'));
         
         if (isSessionEndedByAI) {
           return Response.json({ sessionComplete: true, messages: [] });
@@ -455,7 +455,7 @@ Always end each session with:
 - A short reflection on the session theme  
 - A note of encouragement  
 - Optional mini homework  
-- End with: "See you in the next session" ONLY when the session has naturally concluded after substantial therapeutic work (at least 3-4 exchanges)
+- **CRITICAL SESSION ENDING**: When the session has naturally concluded after substantial therapeutic work (at least 3-4 exchanges), you MUST end your response with the exact phrase: **"See you in our next session"** - this is non-negotiable and required for proper session completion detection.
 
 🚨 *CRISIS PROTOCOL*: If user expresses suicidal ideation, self-harm, or immediate danger:
 - IMMEDIATELY respond: "I'm genuinely concerned about your safety. Please contact emergency services (911) or crisis hotline (988) right now. I care about you, but I cannot provide crisis intervention."
@@ -540,7 +540,7 @@ Always end each session with:
 - A short reflection on the session theme  
 - A note of encouragement  
 - Optional mini homework  
-- End with: "See you in the next session" ONLY when the session has naturally concluded after substantial therapeutic work (at least 3-4 exchanges)
+- **CRITICAL SESSION ENDING**: When the session has naturally concluded after substantial therapeutic work (at least 3-4 exchanges), you MUST end your response with the exact phrase: **"See you in our next session"** - this is non-negotiable and required for proper session completion detection.
 
 🚨 *CRISIS PROTOCOL*: If user expresses suicidal ideation, self-harm, or immediate danger:
 - IMMEDIATELY respond: "I'm genuinely concerned about your safety. Please contact emergency services (911) or crisis hotline (988) right now. I care about you, but I cannot provide crisis intervention."
