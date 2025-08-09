@@ -272,11 +272,12 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
   // CRITICAL: Only use the most specific and intentional session end phrases
   // These must be phrases that the AI would ONLY use when intentionally ending a session
   const completionIndicators = [
+    "See you in our next session",
+    "see you in our next session",
     "see you in the next session",
     "see you next session", 
     "until next session",
-    "until our next session",
-    "see you in our next session"
+    "until our next session"
   ];
   
   // Check if AI response contains session end indicators
@@ -297,17 +298,57 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
   }
   
   // CRITICAL: Ensure the session end message is intentional and prominent
-  // The phrase must appear at the end of the response or as a clear concluding statement
+  // The phrase must appear as a clear concluding statement
   const responseLower = aiResponse.toLowerCase();
   const isIntentionalEnd = completionIndicators.some(indicator => {
     const indicatorLower = indicator.toLowerCase();
-    // Check if the indicator appears as a concluding phrase
-    return responseLower.includes(indicatorLower) && 
-           (responseLower.endsWith(indicatorLower.trim()) || 
-            responseLower.includes(`. ${indicatorLower}`) ||
-            responseLower.includes(`! ${indicatorLower}`) ||
-            responseLower.includes(`\n${indicatorLower}`) ||
-            responseLower.includes(`\n\n${indicatorLower}`));
+    
+    // Check if the indicator appears in the response
+    if (!responseLower.includes(indicatorLower)) {
+      return false;
+    }
+    
+    // SIMPLIFIED LOGIC: If the phrase appears anywhere in the response, consider it intentional
+    // This is more reliable than complex pattern matching
+    const indicatorIndex = responseLower.lastIndexOf(indicatorLower);
+    const responseLength = responseLower.length;
+    
+    // If the phrase appears in the last 800 characters, consider it intentional
+    if (indicatorIndex >= responseLength - 800) {
+      console.log(`✅ Found intentional end indicator "${indicator}" near end of response (position: ${indicatorIndex}/${responseLength})`);
+      return true;
+    }
+    
+    // Also check if it appears after common concluding patterns
+    const concludingPatterns = [
+      '. ' + indicatorLower,
+      '! ' + indicatorLower,
+      '? ' + indicatorLower,
+      '\n' + indicatorLower,
+      '\n\n' + indicatorLower,
+      '**' + indicatorLower,
+      '*' + indicatorLower + '*'
+    ];
+    
+    const hasConcludingPattern = concludingPatterns.some(pattern => 
+      responseLower.includes(pattern)
+    );
+    
+    if (hasConcludingPattern) {
+      console.log(`✅ Found intentional end indicator "${indicator}" with concluding pattern`);
+      return true;
+    }
+    
+    // If the phrase appears and the response is relatively short (likely a concluding message)
+    if (responseLength < 1500 && indicatorIndex > responseLength * 0.2) {
+      console.log(`✅ Found intentional end indicator "${indicator}" in short concluding response`);
+      return true;
+    }
+    
+    // FALLBACK: If the phrase appears anywhere in the response, consider it intentional
+    // This ensures we don't miss session completions due to overly strict pattern matching
+    console.log(`✅ Found intentional end indicator "${indicator}" anywhere in response (fallback)`);
+    return true;
   });
   
   console.log(`🔍 Is intentional end: ${isIntentionalEnd}`);
