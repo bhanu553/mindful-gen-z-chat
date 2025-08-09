@@ -80,6 +80,8 @@ async function checkUserRestriction(userId) {
       const diffMinutes = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60);
       
       console.log(`⏰ Premium user - session completed ${diffMinutes.toFixed(1)} minutes ago`);
+      console.log(`⏰ Session end time: ${sessionEndTime.toISOString()}`);
+      console.log(`⏰ Current time: ${now.toISOString()}`);
       
       // Only apply 10-minute cooldown if the session was completed very recently (within 10 minutes)
       if (diffMinutes < 10) {

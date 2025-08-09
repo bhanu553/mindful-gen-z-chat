@@ -262,6 +262,7 @@ function getMonthStart() {
 async function isSessionComplete(aiResponse, session, userId, isPremium = false) {
   console.log(`🔍 Checking session completion for user ${userId} (Premium: ${isPremium})`);
   console.log(`🔍 AI Response preview: ${aiResponse.substring(0, 200)}...`);
+  console.log(`🔍 Full AI Response length: ${aiResponse.length}`);
   
   // CRITICAL: Only use the most specific and intentional session end phrases
   // These must be phrases that the AI would ONLY use when intentionally ending a session
@@ -275,15 +276,37 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
   ];
   
   // Check if AI response contains session end indicators
+  const responseLower = aiResponse.toLowerCase();
   const hasEndIndicator = completionIndicators.some(indicator => 
-    aiResponse.toLowerCase().includes(indicator.toLowerCase())
+    responseLower.includes(indicator.toLowerCase())
   );
   
   console.log(`🔍 Has end indicator: ${hasEndIndicator}`);
   if (hasEndIndicator) {
-    console.log(`🔍 Found end indicators: ${completionIndicators.filter(indicator => 
-      aiResponse.toLowerCase().includes(indicator.toLowerCase())
-    ).join(', ')}`);
+    const foundIndicators = completionIndicators.filter(indicator => 
+      responseLower.includes(indicator.toLowerCase())
+    );
+    console.log(`🔍 Found end indicators: ${foundIndicators.join(', ')}`);
+  } else {
+    // If no exact match, check for partial matches or similar phrases
+    const partialMatches = [
+      "see you",
+      "next session",
+      "until next",
+      "session end",
+      "conclude",
+      "wrap up"
+    ];
+    
+    const hasPartialMatch = partialMatches.some(phrase => 
+      responseLower.includes(phrase.toLowerCase())
+    );
+    
+    if (hasPartialMatch) {
+      console.log(`🔍 Found partial matches: ${partialMatches.filter(phrase => 
+        responseLower.includes(phrase.toLowerCase())
+      ).join(', ')}`);
+    }
   }
   
   if (!hasEndIndicator) {
@@ -291,9 +314,8 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
     return false;
   }
   
-  // CRITICAL: Ensure the session end message is intentional and prominent
-  // The phrase must appear as a clear concluding statement
-  const responseLower = aiResponse.toLowerCase();
+  // SIMPLIFIED LOGIC: If the phrase appears anywhere in the response, consider it intentional
+  // This is more reliable than complex pattern matching
   const isIntentionalEnd = completionIndicators.some(indicator => {
     const indicatorLower = indicator.toLowerCase();
     
@@ -302,46 +324,8 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
       return false;
     }
     
-    // SIMPLIFIED LOGIC: If the phrase appears anywhere in the response, consider it intentional
-    // This is more reliable than complex pattern matching
-    const indicatorIndex = responseLower.lastIndexOf(indicatorLower);
-    const responseLength = responseLower.length;
-    
-    // If the phrase appears in the last 800 characters, consider it intentional
-    if (indicatorIndex >= responseLength - 800) {
-      console.log(`✅ Found intentional end indicator "${indicator}" near end of response (position: ${indicatorIndex}/${responseLength})`);
-      return true;
-    }
-    
-    // Also check if it appears after common concluding patterns
-    const concludingPatterns = [
-      '. ' + indicatorLower,
-      '! ' + indicatorLower,
-      '? ' + indicatorLower,
-      '\n' + indicatorLower,
-      '\n\n' + indicatorLower,
-      '**' + indicatorLower,
-      '*' + indicatorLower + '*'
-    ];
-    
-    const hasConcludingPattern = concludingPatterns.some(pattern => 
-      responseLower.includes(pattern)
-    );
-    
-    if (hasConcludingPattern) {
-      console.log(`✅ Found intentional end indicator "${indicator}" with concluding pattern`);
-      return true;
-    }
-    
-    // If the phrase appears and the response is relatively short (likely a concluding message)
-    if (responseLength < 1500 && indicatorIndex > responseLength * 0.2) {
-      console.log(`✅ Found intentional end indicator "${indicator}" in short concluding response`);
-      return true;
-    }
-    
-    // FALLBACK: If the phrase appears anywhere in the response, consider it intentional
-    // This ensures we don't miss session completions due to overly strict pattern matching
-    console.log(`✅ Found intentional end indicator "${indicator}" anywhere in response (fallback)`);
+    // SIMPLIFIED: If the phrase appears anywhere in the response, consider it intentional
+    console.log(`✅ Found intentional end indicator "${indicator}" in response`);
     return true;
   });
   
@@ -376,6 +360,7 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
       
       console.log(`🔍 Message count: ${currentMessageCount} (need at least ${minMessagesForAll})`);
       console.log(`🔍 Has substantial conversation: ${hasSubstantialConversation}`);
+      console.log(`🔍 Messages in session:`, messages?.map(m => ({ role: m.role, preview: m.content.substring(0, 50) })));
       
       if (!hasSubstantialConversation) {
         console.log(`🔄 Session not ready to end - only ${currentMessageCount} messages (including current), need at least ${minMessagesForAll}`);
@@ -832,6 +817,7 @@ export async function POST(req) {
          }
        } else {
          console.log('❌ Session completion NOT detected for this response.');
+         console.log('🔍 Full AI response for debugging:', aiReply);
        }
      } catch (error) {
        console.error('❌ Error checking session completion:', error);
