@@ -266,7 +266,10 @@ export async function POST(req) {
       // For premium users, always allow continuation regardless of session completion
       if (isPremium) {
         console.log('✅ Premium user - allowing continuation despite session completion');
+        // CRITICAL FIX: Update database to match memory state for premium users
+        await supabase.from('chat_sessions').update({ is_complete: false }).eq('id', session.id);
         session.is_complete = false; // Reset for premium users
+        console.log('✅ Premium user session completion status reset in database');
       } else {
         // For free users, check if AI actually ended the session
         const { data: lastMessages, error: lastMsgError } = await supabase
