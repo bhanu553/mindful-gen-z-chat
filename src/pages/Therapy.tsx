@@ -307,6 +307,34 @@ Premium: $49/month
       } else {
         console.log('❌ Session complete NOT detected from backend response.');
       }
+      
+      // FALLBACK: If no firstMessage and no sessionComplete, check for existing messages
+      if (!data.firstMessage && !data.sessionComplete) {
+        console.log('🔍 No firstMessage or sessionComplete - checking for existing messages');
+        if (data.messages && data.messages.length > 0) {
+          console.log(`✅ Found ${data.messages.length} existing messages - loading them`);
+          // Map backend messages to local format
+          const existingMessages = data.messages.map((msg: any) => ({
+            id: msg.id,
+            text: msg.content,
+            isUser: msg.role === 'user',
+            timestamp: new Date(msg.created_at)
+          }));
+          setMessages(existingMessages);
+          setSessionComplete(false);
+        } else {
+          console.log('⚠️ No existing messages found - this might be a new session');
+          // For new sessions, show a welcome message
+          const welcomeMessage: Message = {
+            id: 'welcome-message',
+            text: 'Welcome to your therapy session! I\'m here to support you on your healing journey. How are you feeling today?',
+            isUser: false,
+            timestamp: new Date()
+          };
+          setMessages([welcomeMessage]);
+          setSessionComplete(false);
+        }
+      }
     } catch (error: any) {
       // Suppress onboarding errors from user view
       const errMsg = (error.message || '').toLowerCase();

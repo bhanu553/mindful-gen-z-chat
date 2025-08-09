@@ -598,6 +598,7 @@ Always end each session with:
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
     if (msgError) throw msgError;
+    
     // Fetch AI analysis message from onboarding
     const { data: onboarding, error: onboardingError } = await supabase
       .from('user_onboarding')
@@ -607,8 +608,10 @@ Always end each session with:
       .order('updated_at', { ascending: false })
       .limit(1)
       .single();
+    
     let allMessages = messages || [];
     let aiAnalysisToUse = onboarding && onboarding.ai_analysis ? onboarding.ai_analysis : 'Welcome to your first therapy session. Let\'s begin.';
+    
     // Only prepend if there are no assistant messages yet
     const hasAssistantMessage = allMessages.some(m => m.role === 'assistant');
     if (!hasAssistantMessage) {
@@ -622,6 +625,25 @@ Always end each session with:
         ...allMessages
       ];
     }
+    
+    // For free users, return firstMessage if no messages exist yet
+    if (messages.length === 0) {
+      // This is a new session for free user, return firstMessage
+      const firstMessage = aiAnalysisToUse;
+      
+      // Save the first message to the session
+      await supabase.from('chat_sessions')
+        .update({ session_first_message: firstMessage })
+        .eq('id', session.id);
+      
+      return Response.json({ 
+        sessionComplete: false, 
+        messages: [],
+        firstMessage: firstMessage,
+        isPremium: isPremium
+      });
+    }
+    
     // If onboarding is missing or onboardingError, just proceed with allMessages (no error)
     return Response.json({ sessionComplete: false, messages: allMessages });
   } catch (error) {
