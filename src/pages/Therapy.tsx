@@ -403,16 +403,16 @@ Premium: $49/month
         console.log('🔄 Additional force update triggered');
       }, 100);
       
-             console.log('🔍 Checking sessionComplete flag from backend:', data.sessionComplete);
-       if (data.sessionComplete && !isRestricted && !data.restrictionInfo?.isRestricted) {
-         console.log('✅ Session complete detected! Setting sessionComplete state to true.');
-         setSessionComplete(true);
-         
-         // Add session end message for both premium and free users in chat area (only if not restricted)
-         if (isPremium) {
-           const sessionEndMessage: Message = {
-             id: 'premium-session-end',
-             text: `🌱 *Session Complete - Integration Time*
+      console.log('🔍 Checking sessionComplete flag from backend:', data.sessionComplete);
+      if (data.sessionComplete) {
+        console.log('✅ Session complete detected! Setting sessionComplete state to true.');
+        setSessionComplete(true);
+        
+        // Add session end message for both premium and free users in chat area
+        if (isPremium) {
+          const sessionEndMessage: Message = {
+            id: 'premium-session-end',
+            text: `🌱 *Session Complete - Integration Time*
 
 You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
 
@@ -427,16 +427,16 @@ Your next session unlocks in *3 days* - this isn't a limitation, it's intentiona
 *Remember:* Therapy isn't a Netflix binge. It's a garden that grows with patience.
 
 Your healing journey continues even when we're not talking.`,
-             isUser: false,
-             timestamp: new Date()
-           };
-           
-           setMessages(prev => [...prev, sessionEndMessage]);
-         } else {
-           // Add session end message for free users
-           const sessionEndMessage: Message = {
-             id: 'free-session-end',
-             text: `⏰ **Your Free Trial is Over**
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, sessionEndMessage]);
+        } else {
+          // Add session end message for free users
+          const sessionEndMessage: Message = {
+            id: 'free-session-end',
+            text: `⏰ **Your Free Trial is Over**
 
 You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.
 
@@ -453,18 +453,15 @@ Premium: $49/month
 *Therapy isn't a one-session miracle. Real change happens with consistent work.*
 
 **Don't wait 30 days and lose momentum.**`,
-             isUser: false,
-             timestamp: new Date()
-           };
-           
-           setMessages(prev => [...prev, sessionEndMessage]);
-         }
-       } else if (data.sessionComplete && (isRestricted || data.restrictionInfo?.isRestricted)) {
-         console.log('✅ Session complete detected but user is restricted - restriction message already shown');
-         setSessionComplete(true);
-       } else {
-         console.log('❌ Session complete NOT detected from backend response.');
-       }
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, sessionEndMessage]);
+        }
+      } else {
+        console.log('❌ Session complete NOT detected from backend response.');
+      }
     } catch (error: any) {
       console.error('❌ Frontend error:', error);
       // Suppress onboarding errors from user view
