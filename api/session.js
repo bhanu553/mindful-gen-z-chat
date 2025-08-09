@@ -157,9 +157,24 @@ async function getOrCreateCurrentSession(userId) {
       const mostRecentSession = sessions[0];
       console.log(`🔍 Premium user - most recent session is_complete: ${mostRecentSession.is_complete}`);
       
-      // If the most recent session is complete, create a new session for continuation
+      // If the most recent session is complete, check if user is still in cooldown
       if (mostRecentSession.is_complete) {
-        console.log('✅ Premium user - creating new session for continuation after cooldown');
+        console.log('🔍 Premium user - checking cooldown before creating new session');
+        
+        // Check if the completed session was completed recently (within 10 minutes)
+        const sessionEndTime = new Date(mostRecentSession.updated_at || mostRecentSession.created_at);
+        const now = new Date();
+        const diffMinutes = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60);
+        
+        console.log(`⏰ Premium user - session completed ${diffMinutes.toFixed(1)} minutes ago`);
+        
+        // If still within 10-minute cooldown, don't create new session - let restriction logic handle it
+        if (diffMinutes < 10) {
+          console.log('🚫 Premium user - still within 10-minute cooldown, not creating new session');
+          return null; // This will trigger restriction logic in the main handler
+        }
+        
+        console.log('✅ Premium user - cooldown passed, creating new session for continuation');
         const { data: newSession, error: createError } = await supabase
           .from('chat_sessions')
           .insert({ user_id: userId, is_complete: false, created_at: new Date().toISOString() })
