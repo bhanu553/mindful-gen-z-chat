@@ -355,7 +355,7 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
       // ALL users need at least 4 messages (2 exchanges) before session can end
       // This ensures some therapeutic work has been done
       const minMessagesForAll = 4;
-      const currentMessageCount = (messages?.length || 0) + 1; // +1 for current AI response
+      const currentMessageCount = messages?.length || 0; // Remove +1 since AI response is already saved
       const hasSubstantialConversation = currentMessageCount >= minMessagesForAll;
       
       console.log(`🔍 Message count: ${currentMessageCount} (need at least ${minMessagesForAll})`);
@@ -363,7 +363,7 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
       console.log(`🔍 Messages in session:`, messages?.map(m => ({ role: m.role, preview: m.content.substring(0, 50) })));
       
       if (!hasSubstantialConversation) {
-        console.log(`🔄 Session not ready to end - only ${currentMessageCount} messages (including current), need at least ${minMessagesForAll}`);
+        console.log(`🔄 Session not ready to end - only ${currentMessageCount} messages, need at least ${minMessagesForAll}`);
         return false;
       }
       

@@ -210,75 +210,33 @@ Premium: $49/month
         console.log('✅ Session complete detected! Setting sessionComplete state to true.');
         setSessionComplete(true);
         
-        // Add session end message for both premium and free users in chat area
+        // Immediately show session completion message based on user type
         if (isPremium) {
+          // Premium user session completion message
           const sessionEndMessage: Message = {
             id: 'premium-session-end',
-            text: `🌱 *Session Complete - Integration Time*
+            text: `⏰ **Session Complete - Integration Time**
 
-You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
+Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
 
-Your next session unlocks in *3 days* - this isn't a limitation, it's intentional therapeutic design.
+**Next session available in:** 10 minutes
 
-*What happens now:*
-• Your insights need time to settle
-• Your homework gives you real-world practice  
-• Your nervous system processes what we explored
-• You integrate today's breakthroughs naturally
-
-*Remember:* Therapy isn't a Netflix binge. It's a garden that grows with patience.
-
-Your healing journey continues even when we're not talking.`,
+*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*`,
             isUser: false,
             timestamp: new Date()
           };
           
           setMessages(prev => [...prev, sessionEndMessage]);
-          
-          // CRITICAL: Check for premium user cooldown IMMEDIATELY after session end message
-          // This ensures the cooldown message appears right after session completion
-          console.log('🔍 Checking for premium user cooldown immediately after session completion...');
-          try {
-            const cooldownResponse = await fetch('/api/session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: user?.id })
-            });
-            
-            if (cooldownResponse.ok) {
-              const cooldownData = await cooldownResponse.json();
-              console.log('🔍 Cooldown check response:', cooldownData);
-              
-              if (cooldownData.restrictionInfo && cooldownData.restrictionInfo.isRestricted && cooldownData.restrictionInfo.isPremium) {
-                console.log('🔒 Premium user cooldown detected - showing cooldown message');
-                setIsRestricted(true);
-                setRestrictionInfo(cooldownData.restrictionInfo);
-                
-                // Add cooldown message for premium users
-                const cooldownMessage: Message = {
-                  id: 'premium-cooldown-message',
-                  text: `⏰ **Session Cooldown - Integration Time**
-
-Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
-
-**Next session available in:** ${cooldownData.restrictionInfo.minutesRemaining} minutes
-
-*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*`,
-                  isUser: false,
-                  timestamp: new Date()
-                };
-                
-                setMessages(prev => [...prev, cooldownMessage]);
-              } else {
-                console.log('✅ No cooldown restriction detected for premium user');
-              }
-            }
-          } catch (error) {
-            console.error('❌ Error checking premium user cooldown:', error);
-          }
+          setIsRestricted(true);
+          setRestrictionInfo({
+            isRestricted: true,
+            isPremium: true,
+            minutesRemaining: 10,
+            nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+          });
           
         } else {
-          // Add session end message for free users
+          // Free user session completion message
           const sessionEndMessage: Message = {
             id: 'free-session-end',
             text: `⏰ **Your Free Trial is Over**
@@ -291,7 +249,7 @@ Available on ${new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toLocaleDateStr
 **Ready to continue your healing?**
 Premium: $49/month
 • 8 sessions (vs 1 free)
-• 3 - 4 days spacing for optimal progress
+• 3-4 days spacing for optimal progress
 • Session continuity that builds on your breakthrough
 • Personalized homework and skill development
 
@@ -303,9 +261,16 @@ Premium: $49/month
           };
           
           setMessages(prev => [...prev, sessionEndMessage]);
+          setIsRestricted(true);
+          setRestrictionInfo({
+            isRestricted: true,
+            isPremium: false,
+            daysRemaining: 30,
+            nextEligibleDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString()
+          });
         }
       } else {
-        console.log('❌ Session complete NOT detected from backend response.');
+        console.log('❌ Session complete NOT detected from backend.');
       }
       
       // FALLBACK: If no firstMessage and no sessionComplete, check for existing messages
@@ -451,77 +416,33 @@ Premium: $49/month
         console.log('✅ Session complete detected! Setting sessionComplete state to true.');
         setSessionComplete(true);
         
-        // Add session end message for both premium and free users in chat area
+        // Immediately show session completion message based on user type
         if (isPremium) {
+          // Premium user session completion message
           const sessionEndMessage: Message = {
             id: 'premium-session-end',
-            text: `🌱 *Session Complete - Integration Time*
+            text: `⏰ **Session Complete - Integration Time**
 
-You've done meaningful work today. Real healing happens in the quiet moments between sessions, not in endless conversations.
+Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
 
-Your next session unlocks in *3 days* - this isn't a limitation, it's intentional therapeutic design.
+**Next session available in:** 10 minutes
 
-*What happens now:*
-• Your insights need time to settle
-• Your homework gives you real-world practice  
-• Your nervous system processes what we explored
-• You integrate today's breakthroughs naturally
-
-*Remember:* Therapy isn't a Netflix binge. It's a garden that grows with patience.
-
-Your healing journey continues even when we're not talking.`,
+*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*`,
             isUser: false,
             timestamp: new Date()
           };
           
           setMessages(prev => [...prev, sessionEndMessage]);
-          
-          // CRITICAL: Check for premium user cooldown after session end message
-          // This ensures the cooldown message appears immediately after session completion
-          setTimeout(async () => {
-            console.log('🔍 Checking for premium user cooldown after session completion...');
-            try {
-              const cooldownResponse = await fetch('/api/session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user?.id })
-              });
-              
-              if (cooldownResponse.ok) {
-                const cooldownData = await cooldownResponse.json();
-                console.log('🔍 Cooldown check response:', cooldownData);
-                
-                if (cooldownData.restrictionInfo && cooldownData.restrictionInfo.isRestricted && cooldownData.restrictionInfo.isPremium) {
-                  console.log('🔒 Premium user cooldown detected - showing cooldown message');
-                  setIsRestricted(true);
-                  setRestrictionInfo(cooldownData.restrictionInfo);
-                  
-                  // Add cooldown message for premium users
-                  const cooldownMessage: Message = {
-                    id: 'premium-cooldown-message',
-                    text: `⏰ **Session Cooldown - Integration Time**
-
-Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
-
-**Next session available in:** ${cooldownData.restrictionInfo.minutesRemaining} minutes
-
-*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*`,
-                    isUser: false,
-                    timestamp: new Date()
-                  };
-                  
-                  setMessages(prev => [...prev, cooldownMessage]);
-                } else {
-                  console.log('✅ No cooldown restriction detected for premium user');
-                }
-              }
-            } catch (error) {
-              console.error('❌ Error checking premium user cooldown:', error);
-            }
-          }, 1000); // Check after 1 second to ensure session is properly marked complete
+          setIsRestricted(true);
+          setRestrictionInfo({
+            isRestricted: true,
+            isPremium: true,
+            minutesRemaining: 10,
+            nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+          });
           
         } else {
-          // Add session end message for free users
+          // Free user session completion message
           const sessionEndMessage: Message = {
             id: 'free-session-end',
             text: `⏰ **Your Free Trial is Over**
@@ -534,7 +455,7 @@ Available on ${new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toLocaleDateStr
 **Ready to continue your healing?**
 Premium: $49/month
 • 8 sessions (vs 1 free)
-• 3 - 4 days spacing for optimal progress
+• 3-4 days spacing for optimal progress
 • Session continuity that builds on your breakthrough
 • Personalized homework and skill development
 
@@ -546,6 +467,13 @@ Premium: $49/month
           };
           
           setMessages(prev => [...prev, sessionEndMessage]);
+          setIsRestricted(true);
+          setRestrictionInfo({
+            isRestricted: true,
+            isPremium: false,
+            daysRemaining: 30,
+            nextEligibleDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString()
+          });
         }
       } else {
         console.log('❌ Session complete NOT detected from backend response.');
@@ -672,7 +600,7 @@ Premium: $49/month
                         </p>
                         
                         {/* Add countdown for premium users with restriction */}
-                        {!message.isUser && (message.id === 'restriction-message' || message.id === 'premium-cooldown-message') && isPremium && restrictionInfo?.nextEligibleDate && (
+                        {!message.isUser && (message.id === 'restriction-message' || message.id === 'premium-cooldown-message' || message.id === 'premium-session-end') && isPremium && restrictionInfo?.nextEligibleDate && (
                           <div className="mt-4 p-4 bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-xl border border-purple-400/50 shadow-lg">
                             <div className="text-center">
                               <p className="text-sm text-white/90 mb-3 font-medium">⏰ Next session available in:</p>
