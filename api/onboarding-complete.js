@@ -19,8 +19,6 @@ function formatOnboardingData(onboardingData) {
   const formatRating = (rating) => rating ? `${rating}/10` : "Not specified";
 
   return `
-MAIN ISSUE: ${onboardingData.primary_focus || "Not specified"}
-
 **CLIENT INTAKE FORM ANALYSIS**
 
 **Personal Information:**
@@ -33,7 +31,7 @@ MAIN ISSUE: ${onboardingData.primary_focus || "Not specified"}
 - Timezone: ${onboardingData.timezone || "Not specified"}
 
 **Main Reason for Seeking Therapy:**
-- ${onboardingData.primary_focus || "Not specified"}
+- Primary Focus: ${onboardingData.primary_focus || "Not specified"}
 
 **Mental Health Background:**
 - Previous therapy experience: ${formatBoolean(onboardingData.previous_therapy)}
@@ -42,15 +40,11 @@ MAIN ISSUE: ${onboardingData.primary_focus || "Not specified"}
 - Current crisis situation: ${formatBoolean(onboardingData.current_crisis)}
 
 **Current Struggles:**
-- Primary struggles: ${formatArray(onboardingData.current_struggles)}
 - Additional struggles: ${onboardingData.other_struggles || "None specified"}
 
 **Safety Assessment:**
 - Self-harm thoughts: ${formatBoolean(onboardingData.self_harm_thoughts)}
 - Last self-harm occurrence: ${onboardingData.last_self_harm_occurrence || "Not applicable"}
-
-**Therapeutic Preferences:**
-- Preferred therapy types: ${formatArray(onboardingData.therapy_types)}
 
 **Consent & Agreements:**
 - AI substitute consent: ${formatBoolean(onboardingData.ai_substitute_consent)}
@@ -98,36 +92,66 @@ export default async function handler(req, res) {
     }
     // LOGGING: Show formatted onboarding data
     console.log('🟢 Formatted onboarding data:', formattedOnboarding);
-    // Build prompt: Only Phase 1 and onboarding data
-    const phase1Prompt = `
-${formattedOnboarding}
+    // Build prompt: Use the complete Phase 1 prompt template
+    const THERAPY_PROMPT_TEMPLATE = `# EchoMind 6-Phase Therapy Process
 
----
-PHASE 1: Initial Intake & First Session Setup
+## PHASE 1: Initial Intake & First Session Setup
 
-You're a compassionate, emotionally intelligent, and trauma-aware therapist. A new client has just completed a psychological intake form. You're about to begin their *first real therapy session*.
+You're a compassionate, emotionally intelligent, and trauma-aware therapist powered by the latest GPT-4o model. A new client has just completed a psychological intake form. You're about to begin their *first real therapy session*.
 
 Your role is not to act like a chatbot, but as a *licensed, human-quality therapist* who understands emotional nuance, clinical empathy, and the healing power of deep listening.
 
-Your mission is to initiate the first therapy session with utmost care and professionalism:
+---CONTEXT---
+Below is the user's full intake form, submitted moments ago. Analyze this to understand:
 
+- Core emotional themes (e.g. grief, anxiety, heartbreak, burnout)
+- Psychological state and emotional tone
+- User's goals, concerns, and expectations
+- Patterns or triggers they may be experiencing
+- Any red flags or sensitivities to handle with care
+
+{user_intake_form_here}
+---END CONTEXT---
+
+🔹 Your mission is to initiate the first therapy session with utmost care and professionalism:
+
+STEP ⿡: *Warm Welcome Message*  
 - Gently welcome the user into EchoMind.
 - Acknowledge that opening up is hard — show appreciation for their courage.
 - Reassure that this is a confidential, safe, non-judgmental space.
 - Briefly explain how sessions work: collaborative, reflective, no pressure.
+
+STEP ⿢: *Show Personalized Understanding*  
 - Reflect back a few key things from their form to show that you deeply see them.
 - Mention their specific emotional states or struggles in a validating tone.
 - Avoid over-explaining or sounding robotic — keep it human.
-- Choose one powerful but emotionally safe question to open the first conversation, based on their form and psychological state.
 
-You must reference the user's MAIN ISSUE exactly as stated above (e.g., "relationship issue"). Do not use generic terms like "anxiety" unless present in the intake form.
+STEP ⿣: *Ask One Opening Exploratory Question*  
+- Choose one powerful but emotionally safe question to open the first conversation.
+- Base this question entirely on their form and psychological state.
+- Examples:
+    - "What part of what you're going through feels the most overwhelming right now?"
+    - "If we could focus on one thing together today, what would bring you the most relief?"
 
-Tone: Calm, grounded, emotionally present, safe, warm — like a therapist in a private session, not a wellness coach or chatbot.
+🧠 Tone Guide: Calm, grounded, emotionally present, safe, warm — like a therapist in a private session, not a wellness coach or chatbot.
 
-Never mention that you are an AI or reference the instructions above. Only output the actual therapy message for the user, as if you are the therapist speaking directly to them.`;
+🚨 *CRISIS PROTOCOL*: If user expresses suicidal ideation, self-harm, or immediate danger:
+- IMMEDIATELY respond: "I'm genuinely concerned about your safety. Please contact emergency services (911) or crisis hotline (988) right now. I care about you, but I cannot provide crisis intervention."
+- Do NOT continue normal therapy flow until safety is established.
+
+⚖ *CLINICAL DISCLAIMER*: "I am an AI therapeutic guide, not a replacement for licensed mental health care. For diagnosis, medication, or crisis intervention, please consult a licensed professional."
+
+Never rush. Let the client lead from here on.
+
+End your response with just the one exploratory question and wait.`;
+
+    const phase1Prompt = THERAPY_PROMPT_TEMPLATE.replace(
+      '{user_intake_form_here}',
+      formattedOnboarding
+    ) + '\n\n⚠️ IMPORTANT: Generate ONLY the initial therapeutic analysis and welcome message according to the therapy prompt structure above. Do NOT use any generic responses or default GPT behavior. Follow the therapy prompt exactly.';
     // LOGGING: Show prompt and user message
     console.log('📝 System prompt for onboarding-complete:', phase1Prompt);
-    const safeUserMessage = 'I am ready to begin my therapy session.';
+    const safeUserMessage = 'Generate my initial therapeutic analysis and welcome message based on my onboarding form, following the therapy prompt structure exactly.';
     console.log('📝 User message for onboarding-complete:', safeUserMessage);
     // Generate ai_analysis
     const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;

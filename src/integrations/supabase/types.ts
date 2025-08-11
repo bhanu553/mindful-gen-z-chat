@@ -62,6 +62,7 @@ export type Database = {
           id: string
           is_complete: boolean | null
           message_count: number | null
+          session_first_message: string | null
           title: string | null
           updated_at: string | null
           user_id: string | null
@@ -72,6 +73,7 @@ export type Database = {
           id?: string
           is_complete?: boolean | null
           message_count?: number | null
+          session_first_message?: string | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -82,6 +84,7 @@ export type Database = {
           id?: string
           is_complete?: boolean | null
           message_count?: number | null
+          session_first_message?: string | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -275,6 +278,7 @@ export type Database = {
       user_onboarding: {
         Row: {
           age: number | null
+          ai_analysis: string | null
           ai_substitute_consent: boolean | null
           calendar_reminders_consent: boolean | null
           completed: boolean | null
@@ -294,6 +298,7 @@ export type Database = {
           other_struggles: string | null
           phone_number: string | null
           previous_therapy: boolean | null
+          primary_focus: string | null
           self_harm_thoughts: boolean | null
           therapy_types: string[] | null
           timezone: string | null
@@ -302,6 +307,7 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          ai_analysis?: string | null
           ai_substitute_consent?: boolean | null
           calendar_reminders_consent?: boolean | null
           completed?: boolean | null
@@ -321,6 +327,7 @@ export type Database = {
           other_struggles?: string | null
           phone_number?: string | null
           previous_therapy?: boolean | null
+          primary_focus?: string | null
           self_harm_thoughts?: boolean | null
           therapy_types?: string[] | null
           timezone?: string | null
@@ -329,6 +336,7 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          ai_analysis?: string | null
           ai_substitute_consent?: boolean | null
           calendar_reminders_consent?: boolean | null
           completed?: boolean | null
@@ -348,6 +356,7 @@ export type Database = {
           other_struggles?: string | null
           phone_number?: string | null
           previous_therapy?: boolean | null
+          primary_focus?: string | null
           self_harm_thoughts?: boolean | null
           therapy_types?: string[] | null
           timezone?: string | null

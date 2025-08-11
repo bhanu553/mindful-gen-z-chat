@@ -426,15 +426,14 @@ function formatOnboardingData(onboardingData) {
 - Current crisis situation: ${formatBoolean(onboardingData.current_crisis)}
 
 **Current Struggles:**
-- Primary struggles: ${formatArray(onboardingData.current_struggles)}
+
 - Additional struggles: ${onboardingData.other_struggles || "None specified"}
 
 **Safety Assessment:**
 - Self-harm thoughts: ${formatBoolean(onboardingData.self_harm_thoughts)}
 - Last self-harm occurrence: ${onboardingData.last_self_harm_occurrence || "Not applicable"}
 
-**Therapeutic Preferences:**
-- Preferred therapy types: ${formatArray(onboardingData.therapy_types)}
+
 
 **Consent & Agreements:**
 - AI substitute consent: ${formatBoolean(onboardingData.ai_substitute_consent)}
