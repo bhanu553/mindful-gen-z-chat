@@ -580,11 +580,25 @@ Always end each session with:
           }
         }
         
-        // Save the first message to the session
+        // Save the first message to the session row for quick access
         await supabase.from('chat_sessions')
           .update({ session_first_message: firstMessage })
           .eq('id', session.id);
-        
+
+        // Also persist the first assistant message into chat_messages for consistent history
+        try {
+          await supabase.from('chat_messages').insert({
+            session_id: session.id,
+            user_id: userId,
+            content: firstMessage,
+            role: 'assistant',
+            mode: 'therapy',
+            created_at: new Date().toISOString()
+          });
+        } catch (persistErr) {
+          console.error('❌ Failed to persist first assistant message:', persistErr);
+        }
+
         return Response.json({ 
           sessionComplete: false, 
           messages: [],
@@ -636,10 +650,24 @@ Always end each session with:
       // This is a new session for free user, return firstMessage
       const firstMessage = aiAnalysisToUse;
       
-      // Save the first message to the session
+      // Save the first message to the session row for quick access
       await supabase.from('chat_sessions')
         .update({ session_first_message: firstMessage })
         .eq('id', session.id);
+
+      // Also persist the first assistant message into chat_messages for consistent history
+      try {
+        await supabase.from('chat_messages').insert({
+          session_id: session.id,
+          user_id: userId,
+          content: firstMessage,
+          role: 'assistant',
+          mode: 'therapy',
+          created_at: new Date().toISOString()
+        });
+      } catch (persistErr) {
+        console.error('❌ Failed to persist first assistant message (free flow):', persistErr);
+      }
       
       return Response.json({ 
         sessionComplete: false, 
