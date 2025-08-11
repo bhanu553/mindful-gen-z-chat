@@ -404,7 +404,7 @@ Be thorough and detailed - this summary will be used to create a seamless contin
           
           try {
             const summaryResponse = await openai.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o",
               messages: [
                 { role: 'system', content: summaryPrompt },
                 { role: 'user', content: 'Summarize my complete therapy journey across all previous sessions for continuity.' }
@@ -487,7 +487,7 @@ Begin the therapy session as a professional therapist. Start with a warm greetin
 IMPORTANT: Use specific details from their therapy history to create a truly connected experience. Reference their emotional states, breakthroughs, challenges, and progress from previous sessions. Make them feel seen and understood by showing you remember their journey.`;
             
             const firstMessageResponse = await openai.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o",
               messages: [
                 { role: 'system', content: firstMessagePrompt },
                 { role: 'user', content: 'Begin my new therapy session as my therapist, continuing from where we left off and building on my previous therapeutic work.' }
@@ -568,7 +568,7 @@ Always end each session with:
             const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY });
             
             const firstMessageResponse = await openai.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o",
               messages: [
                 { role: 'system', content: THERAPY_PROMPT_PHASES_2_TO_6 },
                 { role: 'user', content: 'Begin my first therapy session as my therapist.' }
@@ -584,10 +584,7 @@ Always end each session with:
           }
         }
         
-        // Save the first message to the session row for quick access
-        await supabase.from('chat_sessions')
-          .update({ session_first_message: firstMessage })
-          .eq('id', session.id);
+        // First message is already saved to chat_messages table
 
         // Also persist the first assistant message into chat_messages for consistent history
         try {
@@ -654,10 +651,7 @@ Always end each session with:
       // This is a new session for free user, return firstMessage
       const firstMessage = aiAnalysisToUse;
       
-      // Save the first message to the session row for quick access
-      await supabase.from('chat_sessions')
-        .update({ session_first_message: firstMessage })
-        .eq('id', session.id);
+      // First message is already saved to chat_messages table
 
       // Also persist the first assistant message into chat_messages for consistent history
       try {

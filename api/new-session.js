@@ -122,7 +122,7 @@ export default async function handler(req, res) {
     if (previousMessages.length > 0) {
       const summaryPrompt = `You are a professional therapist. Summarize the user's previous therapy sessions below, focusing on their progress, key themes, emotional growth, and any important context for continuing therapy. Be concise but deep.\n\nSESSION HISTORY:\n${previousMessages.map(m => `${m.role === 'user' ? 'User' : 'Therapist'}: ${m.content}`).join('\n')}\n\nSUMMARY:`;
       const summaryResponse = await openai.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-4o",
         messages: [
           { role: 'system', content: summaryPrompt },
           { role: 'user', content: 'Summarize my previous therapy sessions for continuity.' }
@@ -154,7 +154,7 @@ export default async function handler(req, res) {
       }
       
       const aiResponse = await openai.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-4o",
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: 'Begin my new therapy session as my therapist.' }
@@ -164,10 +164,15 @@ export default async function handler(req, res) {
       });
       firstMessage = aiResponse.choices[0].message.content.trim();
       
-      // 6. Save the first message to session_first_message column for premium users
-      await supabase.from('chat_sessions')
-        .update({ session_first_message: firstMessage })
-        .eq('id', newSession.id);
+      // 6. Save the first message to chat_messages table for premium users
+      await supabase.from('chat_messages').insert({
+        session_id: newSession.id,
+        user_id: userId,
+        content: firstMessage,
+        role: 'assistant',
+        mode: 'therapy',
+        created_at: new Date().toISOString()
+      });
     } else {
       // Free users: Use summary prompt only for first message (same as premium)
       let systemPrompt = '';
@@ -178,7 +183,7 @@ export default async function handler(req, res) {
       }
       
       const aiResponse = await openai.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-4o",
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: 'Begin my new therapy session as my therapist.' }
@@ -188,10 +193,15 @@ export default async function handler(req, res) {
       });
       firstMessage = aiResponse.choices[0].message.content.trim();
       
-      // 6. Save the first message to session_first_message column for free users (same as premium)
-      await supabase.from('chat_sessions')
-        .update({ session_first_message: firstMessage })
-        .eq('id', newSession.id);
+      // 6. Save the first message to chat_messages table for free users (same as premium)
+      await supabase.from('chat_messages').insert({
+        session_id: newSession.id,
+        user_id: userId,
+        content: firstMessage,
+        role: 'assistant',
+        mode: 'therapy',
+        created_at: new Date().toISOString()
+      });
     }
 
     return res.status(200).json({ firstMessage });

@@ -62,7 +62,6 @@ export type Database = {
           id: string
           is_complete: boolean | null
           message_count: number | null
-          session_first_message: string | null
           title: string | null
           updated_at: string | null
           user_id: string | null
@@ -73,7 +72,6 @@ export type Database = {
           id?: string
           is_complete?: boolean | null
           message_count?: number | null
-          session_first_message?: string | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -84,7 +82,6 @@ export type Database = {
           id?: string
           is_complete?: boolean | null
           message_count?: number | null
-          session_first_message?: string | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null

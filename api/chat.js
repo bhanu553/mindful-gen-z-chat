@@ -417,7 +417,7 @@ function formatOnboardingData(onboardingData) {
 - Timezone: ${onboardingData.timezone || "Not specified"}
 
 **Main Reason for Seeking Therapy:**
-- ${onboardingData.primary_focus || "Not specified"}
+- Primary Focus: ${onboardingData.primary_focus || "Not specified"}
 
 **Mental Health Background:**
 - Previous therapy experience: ${formatBoolean(onboardingData.previous_therapy)}
@@ -426,14 +426,11 @@ function formatOnboardingData(onboardingData) {
 - Current crisis situation: ${formatBoolean(onboardingData.current_crisis)}
 
 **Current Struggles:**
-
 - Additional struggles: ${onboardingData.other_struggles || "None specified"}
 
 **Safety Assessment:**
 - Self-harm thoughts: ${formatBoolean(onboardingData.self_harm_thoughts)}
 - Last self-harm occurrence: ${onboardingData.last_self_harm_occurrence || "Not applicable"}
-
-
 
 **Consent & Agreements:**
 - AI substitute consent: ${formatBoolean(onboardingData.ai_substitute_consent)}
@@ -736,11 +733,12 @@ export async function POST(req) {
     let onboardingAnalysis = '';
     let systemPrompt = '';
     
-    // Check if this is the first message by looking at chat history
-    const isActuallyFirstMessage = chatHistory.length === 0;
+    // Check if this is the first message by looking for existing assistant messages
+    const hasExistingAssistantMessages = chatHistory.some(msg => msg.role === 'assistant');
+    const isActuallyFirstMessage = !hasExistingAssistantMessages;
     
     if (userId && (generateAnalysis || isFirstMessage || isActuallyFirstMessage)) {
-      // FIRST MESSAGE LOGIC - Use Phase 1 prompt
+      // FIRST MESSAGE LOGIC - Use Phase 1 prompt with existing ai_analysis
       const { data: onboarding, error: onboardingError } = await supabase
         .from('user_onboarding')
         .select('*')
@@ -757,68 +755,18 @@ export async function POST(req) {
           '{user_intake_form_here}',
           'No onboarding data available. Please proceed with a welcoming, supportive first message.'
         ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
-      } else if ((generateAnalysis || isActuallyFirstMessage) && onboarding && (!onboarding.ai_analysis || onboarding.ai_analysis === null || onboarding.ai_analysis === '')) {
-        console.log('🔄 Generating initial AI analysis based on onboarding form...');
-        
-        // Format the onboarding data for the prompt
-        const formattedOnboarding = formatOnboardingData(onboarding);
-        console.log('📋 Formatted onboarding data:', formattedOnboarding);
-        
-        // Use ONLY your complete therapy prompt template with the onboarding data
-        const analysisPrompt = THERAPY_PROMPT_TEMPLATE.replace(
-          '{user_intake_form_here}',
-          formattedOnboarding
-        ) + '\n\n⚠️ IMPORTANT: Generate ONLY the initial therapeutic analysis and welcome message according to the therapy prompt structure above. Do NOT use any generic responses or default GPT behavior. Follow the therapy prompt exactly.';
-        
-        console.log('📝 Using ONLY your therapy prompt for analysis generation');
-        
-        const analysisResponse = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-            { role: 'system', content: analysisPrompt },
-            { role: 'user', content: 'Generate my initial therapeutic analysis and welcome message based on my onboarding form, following the therapy prompt structure exactly.' }
-          ],
-          temperature: 0.7,
-          max_tokens: 800,
-        });
-        
-        const aiAnalysisRaw = analysisResponse.choices[0].message.content;
-        // Remove any step headers from the AI's response
-        const aiAnalysis = aiAnalysisRaw
-          .split('\n')
-          .filter(line => !line.match(/STEP [⿡⿢⿣]/) && !line.match(/\*\*STEP/) && !line.match(/STEP [0-9]+:/i))
-          .join('\n');
-        console.log('🤖 Generated AI analysis (cleaned):', aiAnalysis);
-        
-        // Save the analysis to the database for token reduction
-        const { error: updateError } = await supabase
-          .from('user_onboarding')
-          .update({ ai_analysis: aiAnalysis })
-          .eq('user_id', userId)
-          .eq('completed', true);
-        
-        if (updateError) {
-          console.error('❌ Error saving AI analysis:', updateError);
-          // Continue without saving - the analysis will be regenerated next time
-        } else {
-          console.log('✅ AI analysis saved to database for token reduction');
-        }
-        
-        onboardingAnalysis = aiAnalysis;
-        console.log('✅ Initial AI analysis generated and saved successfully');
-        
-        // Set the system prompt for first messages with generated analysis
-        systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
-          '{user_intake_form_here}',
-          aiAnalysis
-        ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       } else if (onboarding && onboarding.ai_analysis) {
+        // Use the existing ai_analysis that was generated during onboarding
         onboardingAnalysis = onboarding.ai_analysis;
+        console.log('✅ Using existing AI analysis from onboarding:', onboardingAnalysis);
+        
         systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
           '{user_intake_form_here}',
           onboardingAnalysis
         ) + '\n\n⚠️ IMPORTANT: You are ONLY allowed to respond as a professional therapist according to the above therapy prompt. Do NOT use any generic GPT responses, safety fallbacks, or default responses. You must follow the therapy prompt structure and persona exactly.';
       } else {
+        // Fallback if no ai_analysis exists
+        console.warn('⚠️ No ai_analysis found in onboarding data, using fallback');
         onboardingAnalysis = '';
         systemPrompt = THERAPY_PROMPT_TEMPLATE.replace(
           '{user_intake_form_here}',
@@ -833,7 +781,7 @@ export async function POST(req) {
           console.log('🧭 No therapist selected yet for this session. Running Phase 2 triage classification...');
           const triagePrompt = THERAPY_PROMPT_PHASES_2_TO_6 + '\n\nIMPORTANT: For this step, perform ONLY PHASE 2 (Therapist Triage & Assignment). Return a SINGLE therapist label exactly as listed (e.g., "The Rebuilder"). Do NOT include any other words or explanations.';
           const triageResponse = await openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-4o",
             messages: [
               { role: 'system', content: triagePrompt },
               { role: 'user', content: message }
@@ -922,7 +870,7 @@ export async function POST(req) {
       console.log('🤖 System prompt being used:', systemPrompt.substring(0, 200) + '...');
       console.log('🤖 User message:', message);
       const response = await openai.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-4o",
         messages: messages,
         temperature: 0.7,
         max_tokens: isPremium ? 1200 : 1000 // Increased tokens for premium users for better session quality
@@ -1050,7 +998,7 @@ export async function POST(req) {
             ];
             
             const retryResponse = await openai.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o",
               messages: retryMessages,
               temperature: 0.7,
               max_tokens: isPremium ? 1200 : 1000
@@ -1069,7 +1017,7 @@ export async function POST(req) {
             ];
             
             const maxEnforcementResponse = await openai.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o",
               messages: maxEnforcementMessages,
               temperature: 0.7,
               max_tokens: 1000
@@ -1098,7 +1046,7 @@ Respond now as a therapist:`;
             ];
             
             const emergencyResponse = await openai.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o",
               messages: emergencyMessages,
               temperature: 0.7,
               max_tokens: 800
