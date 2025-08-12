@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Upload, X } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -18,15 +18,27 @@ const FileUpload = ({ onUploadSuccess, className }: FileUploadProps) => {
   const checkDailyUploadCount = async () => {
     if (isPremium) return true; // No limit for premium users
     
-    const today = new Date().toISOString().split('T')[0];
-    const { count } = await supabase
-      .from('uploads')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user?.id)
-      .gte('created_at', today + 'T00:00:00.000Z')
-      .lt('created_at', today + 'T23:59:59.999Z');
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-    return (count || 0) < 5;
+    const { data: files, error } = await supabase.storage
+      .from('uploads')
+      .list(`${user?.id}`, { limit: 1000, sortBy: { column: 'created_at', order: 'desc' } });
+
+    if (error) {
+      console.error('Storage list error:', error);
+      return false;
+    }
+
+    const todayCount = (files || []).filter((f) => {
+      const created = f.created_at ? new Date(f.created_at) : null;
+      return created !== null && created >= start && created <= end;
+    }).length;
+
+    return todayCount < 5;
+
+    
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,20 +81,7 @@ const FileUpload = ({ onUploadSuccess, className }: FileUploadProps) => {
         throw uploadError;
       }
 
-      // Save metadata to database
-      const { error: dbError } = await supabase
-        .from('uploads')
-        .insert({
-          user_id: user.id,
-          file_name: file.name,
-          file_path: data.path,
-          file_size: file.size,
-          mime_type: file.type
-        });
-
-      if (dbError) {
-        throw dbError;
-      }
+      // Metadata persistence to database removed: using Storage only to avoid type errors with missing 'uploads' table.
 
       // Get public URL
       const { data: publicData } = supabase.storage
