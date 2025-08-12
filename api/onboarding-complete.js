@@ -168,15 +168,64 @@ End your response with just the one exploratory question and wait.`;
     });
     const aiAnalysisRaw = analysisResponse.choices[0].message.content;
     const aiAnalysis = aiAnalysisRaw && aiAnalysisRaw.trim() !== '' ? aiAnalysisRaw : 'Welcome to your first therapy session. Let\'s begin.';
-    // Save ai_analysis to onboarding table ONLY
+    // Save ai_analysis to onboarding table
     await supabase
       .from('user_onboarding')
       .update({ ai_analysis: aiAnalysis })
       .eq('user_id', userId)
       .eq('completed', true);
-    
-    console.log('✅ AI analysis saved to user_onboarding.ai_analysis field');
-    console.log('📝 The first message will be generated when the user starts chatting');
+
+    // Persist Phase 1 as the first assistant message in a chat session for continuity
+    // 1) Get most recent session
+    const { data: existingSessions } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    let session = existingSessions?.[0] || null;
+
+    // 2) Create a new session if none exists or last is complete
+    if (!session || session.is_complete) {
+      const { data: newSession } = await supabase
+        .from('chat_sessions')
+        .insert({ user_id: userId, is_complete: false, session_first_message: aiAnalysis, title: 'New Session' })
+        .select()
+        .single();
+      session = newSession || session;
+    } else {
+      // Update first message on existing active session for UI bootstrap
+      await supabase
+        .from('chat_sessions')
+        .update({ session_first_message: aiAnalysis })
+        .eq('id', session.id);
+    }
+
+    // 3) If no assistant messages stored yet, insert the Phase 1 message into chat_messages
+    if (session?.id) {
+      const { count: assistantCount } = await supabase
+        .from('chat_messages')
+        .select('*', { head: true, count: 'exact' })
+        .eq('session_id', session.id)
+        .eq('user_id', userId)
+        .eq('role', 'assistant');
+
+      if (!assistantCount || assistantCount === 0) {
+        await supabase
+          .from('chat_messages')
+          .insert({
+            session_id: session.id,
+            user_id: userId,
+            role: 'assistant',
+            content: aiAnalysis,
+            mode: 'therapy',
+            created_at: new Date().toISOString()
+          });
+      }
+    }
+
+    console.log('✅ AI analysis saved and persisted as the first assistant message');
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error('❌ Error in onboarding-complete:', error);
