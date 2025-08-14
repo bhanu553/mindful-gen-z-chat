@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -62,8 +62,8 @@ export type Database = {
           id: string
           is_complete: boolean | null
           message_count: number | null
+          session_first_message: string | null
           title: string | null
-          updated_at: string | null
           user_id: string | null
         }
         Insert: {
@@ -72,8 +72,8 @@ export type Database = {
           id?: string
           is_complete?: boolean | null
           message_count?: number | null
+          session_first_message?: string | null
           title?: string | null
-          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
@@ -82,46 +82,11 @@ export type Database = {
           id?: string
           is_complete?: boolean | null
           message_count?: number | null
+          session_first_message?: string | null
           title?: string | null
-          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
-      }
-      mode_transitions: {
-        Row: {
-          id: string
-          new_mode: string | null
-          old_mode: string | null
-          session_id: string | null
-          switched_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          id?: string
-          new_mode?: string | null
-          old_mode?: string | null
-          session_id?: string | null
-          switched_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          id?: string
-          new_mode?: string | null
-          old_mode?: string | null
-          session_id?: string | null
-          switched_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mode_transitions_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "chat_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       profiles: {
         Row: {
@@ -211,36 +176,6 @@ export type Database = {
           mode?: Database["public"]["Enums"]["therapy_mode"]
           title?: string
           updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      uploads: {
-        Row: {
-          created_at: string
-          file_name: string
-          file_path: string
-          file_size: number | null
-          id: string
-          mime_type: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          file_name: string
-          file_path: string
-          file_size?: number | null
-          id?: string
-          mime_type?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          file_name?: string
-          file_path?: string
-          file_size?: number | null
-          id?: string
-          mime_type?: string | null
           user_id?: string
         }
         Relationships: []
