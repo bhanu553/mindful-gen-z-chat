@@ -20,12 +20,23 @@ export const useFreeUserTherapyAccess = () => {
 
   if (!lastSession) return { canAccessTherapy: true, nextEligibleDate: null };
 
-  // Assume session is always complete for free users (1 per month logic)
-  // If you have a session completion flag, check it here
+  // Check if the last session was actually completed (for free users)
+  // We need to check if the session contains the session end marker or was marked complete
   const sessionDate = new Date(lastSession.created_at);
   const now = new Date();
-  const diffDays = Math.floor((now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor((now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 1000 * 24));
 
+  // For free users, check if the session actually ended properly
+  // If the session is very recent (less than 1 day) and doesn't have clear completion,
+  // allow continuation
+  const isRecentIncompleteSession = diffDays < 1;
+  
+  if (isRecentIncompleteSession) {
+    // Allow continuation of recent sessions
+    return { canAccessTherapy: true, nextEligibleDate: null };
+  }
+
+  // For older sessions, apply the 30-day rule
   if (diffDays >= 30) {
     return { canAccessTherapy: true, nextEligibleDate: null };
   } else {

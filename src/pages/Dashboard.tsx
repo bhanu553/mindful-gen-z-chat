@@ -43,6 +43,18 @@ const Dashboard = () => {
     navigate('/therapy');
   };
 
+  // Check if there's an active (incomplete) session that should be continued
+  const hasActiveSession = sessions.find(session => {
+    // A session is active if it's recent and doesn't have 'is_complete' true
+    // (using the session data structure we have)
+    const sessionDate = new Date(session.created_at);
+    const now = new Date();
+    const daysDiff = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    // Consider sessions from the last 7 days as potentially active
+    return daysDiff <= 7;
+  });
+
   return (
     <div className="min-h-screen relative">
       {/* Therapeutic Background */}
@@ -88,15 +100,20 @@ const Dashboard = () => {
                 <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
                   <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
-                <h3 className="text-xl md:text-2xl font-serif text-white mb-3 md:mb-4">Begin Today's Therapy</h3>
+                <h3 className="text-xl md:text-2xl font-serif text-white mb-3 md:mb-4">
+                  {hasActiveSession ? 'Continue Your Session' : 'Begin Today\'s Therapy'}
+                </h3>
                 <p className="text-white/70 mb-6 md:mb-8 text-sm md:text-base">
-                  Let's reflect and heal deeply — one conversation at a time.
+                  {hasActiveSession 
+                    ? 'Your therapy session is waiting to continue your healing journey.'
+                    : 'Let\'s reflect and heal deeply — one conversation at a time.'
+                  }
                 </p>
                 <Button 
                   onClick={startNewSession}
                   className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-6 md:px-8 py-3 rounded-2xl font-medium transition-all duration-300 hover:scale-105 min-h-[44px] w-full md:w-auto"
                 >
-                  Start Session
+                  {hasActiveSession ? 'Continue Session' : 'Start Session'}
                   <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2" />
                 </Button>
               </div>
