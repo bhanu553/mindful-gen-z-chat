@@ -48,16 +48,24 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                   const details = await actions.order.capture();
                   console.log('PayPal payment completed:', details);
 
-                  // Update user's premium status in Supabase
+                  // Verify payment and update premium status via secure Edge Function
                   if (user) {
-                    const { error } = await supabase
-                      .from('profiles')
-                      .update({ is_premium: true })
-                      .eq('id', user.id);
+                    const { data, error } = await supabase.functions.invoke('payment-verification', {
+                      body: { 
+                        paymentId: details.id,
+                        status: 'completed',
+                        amount: 49,
+                        currency: 'USD'
+                      }
+                    });
 
                     if (error) {
-                      console.error('Error updating premium status:', error);
+                      console.error('Error verifying payment:', error);
                       throw error;
+                    }
+
+                    if (!data?.success) {
+                      throw new Error('Payment verification failed');
                     }
                   }
 

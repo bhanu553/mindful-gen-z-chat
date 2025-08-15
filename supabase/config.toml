@@ -1,1 +1,10 @@
 project_id = "tvjqpmxugitehucwhdbk"
+
+[functions.payment-verification]
+verify_jwt = true
+
+[functions.therapy-api]
+verify_jwt = true
+
+[functions.classify-emotion]
+verify_jwt = false

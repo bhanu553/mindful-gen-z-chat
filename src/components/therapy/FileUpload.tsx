@@ -83,12 +83,16 @@ const FileUpload = ({ onUploadSuccess, className }: FileUploadProps) => {
 
       // Metadata persistence to database removed: using Storage only to avoid type errors with missing 'uploads' table.
 
-      // Get public URL
-      const { data: publicData } = supabase.storage
+      // Get signed URL for secure access (valid for 1 hour)
+      const { data: signedUrlData, error: urlError } = await supabase.storage
         .from('uploads')
-        .getPublicUrl(data.path);
+        .createSignedUrl(data.path, 3600); // 1 hour
 
-      onUploadSuccess?.(publicData.publicUrl);
+      if (urlError) {
+        throw urlError;
+      }
+
+      onUploadSuccess?.(signedUrlData.signedUrl);
       setUploadCount(prev => prev + 1);
       
       // Reset file input

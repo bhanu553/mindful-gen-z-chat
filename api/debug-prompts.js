@@ -12,6 +12,27 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // SECURITY: Require admin access for debug endpoints
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required for debug access' });
+  }
+
+  // Verify admin email (simple check for now)
+  const adminEmails = ['ucchishth31@gmail.com'];
+  
+  try {
+    // In production, you would verify the JWT token here
+    // For now, we'll just return a limited debug response
+    return res.status(403).json({ 
+      error: 'Debug endpoints are disabled in production for security',
+      message: 'Contact administrator for debug access',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Debug authentication failed' });
+  }
+
   try {
     const openaiApiKey = process.env.OPENAI_API_KEY;
 

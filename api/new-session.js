@@ -1,10 +1,22 @@
-import OpenAI from "openai";
-import { createClient } from '@supabase/supabase-js';
+// DEPRECATED: This endpoint has been replaced with secure Edge Functions
+export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || "https://tvjqpmxugitehucwhdbk.supabase.co",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // Return security notice
+  return res.status(410).json({ 
+    error: 'This endpoint has been permanently deprecated for security reasons.',
+    migration: 'Please use the Supabase Edge Function instead: supabase.functions.invoke("therapy-api")',
+    documentation: 'All new session functionality has been migrated to secure Edge Functions.',
+    timestamp: new Date().toISOString()
+  });
+}
 
 const THERAPY_PROMPT_PHASES_2_TO_6 = `
 🚨 CRITICAL: You are a PROFESSIONAL THERAPIST conducting REAL THERAPY. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You MUST provide therapeutic guidance and support. This is NOT a chatbot conversation.

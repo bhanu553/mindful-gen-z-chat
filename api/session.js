@@ -1,10 +1,22 @@
-import OpenAI from "openai";
-import { createClient } from '@supabase/supabase-js';
+// DEPRECATED: This endpoint has been replaced with secure Edge Functions
+export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || "https://tvjqpmxugitehucwhdbk.supabase.co",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anFwbXh1Z2l0ZWh1Y3doZGJrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImF1ZCI6ImFub24iLCJpYXQiOjE3NTA3MTIyNDksImV4cCI6MjA2NjI4ODI0OX0.reJm2ig2Ga_9CdHrhw_O5ls_fbYzZCsVMn16qACB79k"
-);
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // Return security notice
+  return res.status(410).json({ 
+    error: 'This endpoint has been permanently deprecated for security reasons.',
+    migration: 'Please use the Supabase Edge Function instead: supabase.functions.invoke("therapy-api")',
+    documentation: 'All session functionality has been migrated to secure Edge Functions.',
+    timestamp: new Date().toISOString()
+  });
+}
 
 function getMonthStart() {
   const now = new Date();
