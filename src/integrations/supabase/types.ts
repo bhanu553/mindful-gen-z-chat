@@ -23,7 +23,7 @@ export type Database = {
           role: string
           sentiment_score: number | null
           session_id: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           content: string
@@ -33,7 +33,7 @@ export type Database = {
           role: string
           sentiment_score?: number | null
           session_id?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           content?: string
@@ -43,7 +43,7 @@ export type Database = {
           role?: string
           sentiment_score?: number | null
           session_id?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -64,7 +64,7 @@ export type Database = {
           message_count: number | null
           session_first_message: string | null
           title: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
@@ -74,7 +74,7 @@ export type Database = {
           message_count?: number | null
           session_first_message?: string | null
           title?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -84,7 +84,7 @@ export type Database = {
           message_count?: number | null
           session_first_message?: string | null
           title?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
