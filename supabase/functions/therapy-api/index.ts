@@ -389,6 +389,31 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ OpenAI response received, length:', aiReply?.length)
 
+    // Clean internal instructions from AI response (remove ** ... ** patterns)
+    const cleanedAiReply = aiReply.replace(/\*\*[^*]*\*\*/g, (match) => {
+      // Keep legitimate emphasis (words/phrases), remove internal instructions (longer content)
+      const content = match.slice(2, -2).trim()
+      // If it's a short phrase (likely emphasis), keep it. If it's longer (likely internal), remove it.
+      return content.length <= 20 ? match : ''
+    }).trim()
+
+    console.log('🧹 Cleaned AI response, original length:', aiReply.length, 'cleaned length:', cleanedAiReply.length)
+
+    // Check for session end marker BEFORE saving messages
+    const sessionEndMarkers = [
+      'see you in our next session',
+      'see you in the next session', 
+      'until our next session',
+      'session is complete',
+      'end of session'
+    ]
+    
+    const hasSessionEndMarker = sessionEndMarkers.some(marker => 
+      cleanedAiReply.toLowerCase().includes(marker.toLowerCase())
+    )
+    
+    console.log('🔍 Checking for session end markers:', hasSessionEndMarker)
+
     // Save user message
     console.log('💾 Saving user message...')
     const { error: userMessageError } = await supabase
@@ -414,14 +439,14 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ User message saved')
 
-    // Save AI reply
+    // Save AI reply (with cleaned content)
     console.log('💾 Saving AI reply...')
     const { error: aiMessageError } = await supabase
       .from('chat_messages')
       .insert({
         session_id: sessionId,
         user_id: userId,
-        content: aiReply,
+        content: cleanedAiReply,
         role: 'assistant',
         mode: mode || 'evolve'
       })
@@ -439,6 +464,25 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ AI message saved')
 
+    // Instant session completion marking when session end marker is detected
+    let sessionComplete = false
+    if (hasSessionEndMarker) {
+      console.log('🔥 Session end marker detected! Marking session as complete instantly...')
+      
+      const { error: completionError } = await supabase
+        .from('chat_sessions')
+        .update({ is_complete: true })
+        .eq('id', sessionId)
+        .eq('user_id', userId)
+
+      if (completionError) {
+        console.error('❌ Error marking session complete:', completionError)
+      } else {
+        console.log('✅ Session marked as complete instantly')
+        sessionComplete = true
+      }
+    }
+
     // Update session message count
     console.log('📊 Updating session message count...')
     const { error: updateError } = await supabase
@@ -454,9 +498,10 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     console.log('✅ Message exchange completed successfully')
 
     return new Response(JSON.stringify({
-      reply: aiReply,
+      reply: cleanedAiReply,
       mode: mode || 'evolve',
       sessionId,
+      sessionComplete,
       remainingMessages: Math.max(0, 50 - ((messageCount || 0) + 1))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PremiumCooldownCountdownProps {
   nextEligibleDate: string;
@@ -14,6 +15,39 @@ export const PremiumCooldownCountdown: React.FC<PremiumCooldownCountdownProps> =
     seconds: number;
   }>({ minutes: 0, seconds: 0 });
 
+  const createNewSessionAfterCooldown = async () => {
+    try {
+      console.log('🚀 Creating new session after cooldown completion...');
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        console.error('❌ No auth session available');
+        return;
+      }
+
+      const response = await supabase.functions.invoke('session-cooldown', {
+        body: { action: 'createNewSession' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        console.error('❌ Error creating new session:', response.error);
+        return;
+      }
+
+      console.log('✅ New session created successfully after cooldown');
+      
+      // Call the completion callback to refresh the UI
+      if (onComplete) {
+        onComplete();
+      }
+    } catch (error) {
+      console.error('❌ Failed to create new session after cooldown:', error);
+    }
+  };
+
   useEffect(() => {
     const calculateTimeRemaining = () => {
       const now = new Date().getTime();
@@ -22,9 +56,8 @@ export const PremiumCooldownCountdown: React.FC<PremiumCooldownCountdownProps> =
 
       if (difference <= 0) {
         setTimeRemaining({ minutes: 0, seconds: 0 });
-        if (onComplete) {
-          onComplete();
-        }
+        // Trigger new session creation when cooldown completes
+        createNewSessionAfterCooldown();
         return;
       }
 

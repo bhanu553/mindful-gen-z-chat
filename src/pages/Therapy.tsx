@@ -413,12 +413,11 @@ Premium: $49/month
       
       console.log('🔍 Checking sessionComplete flag from backend:', data.sessionComplete);
       
-      // Check if AI response contains session end marker
-      const sessionEndMarker = aiResponse.toLowerCase().includes('see you in our next session');
-      console.log('🔍 Checking for session end marker in AI response:', sessionEndMarker);
+      // Check for session completion from backend response
+      console.log('🔍 Checking sessionComplete flag from backend:', data.sessionComplete);
       
-      if (data.sessionComplete || sessionEndMarker) {
-        console.log('✅ Session complete detected! Setting sessionComplete state to true.');
+      if (data.sessionComplete) {
+        console.log('✅ Session complete detected instantly from backend! Setting sessionComplete state to true.');
         setSessionComplete(true);
         
         // Show "Session Ended" message first
@@ -432,36 +431,35 @@ Premium: $49/month
         // Add the session ended message
         setMessages(prev => [...prev, sessionEndedMessage]);
         
-        // Then add cooldown/restriction message after a brief delay
-        setTimeout(() => {
-          let cooldownMessage: Message;
-          
-          if (isPremium) {
-            // Premium user session completion message
-            cooldownMessage = {
-              id: 'premium-session-end',
-              text: `⏰ **Integration Time**
+        // Trigger cooldown immediately when session is marked complete
+        let cooldownMessage: Message;
+        
+        if (isPremium) {
+          // Premium user session completion message
+          cooldownMessage = {
+            id: 'premium-session-end',
+            text: `⏰ **Integration Time**
 
 Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
 
 **Next session available in:** 10 minutes
 
 *This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*`,
-              isUser: false,
-              timestamp: new Date()
-            };
-            
-            setRestrictionInfo({
-              isRestricted: true,
-              isPremium: true,
-              minutesRemaining: 10,
-              nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
-            });
-            
-          } else {
-            // Free user session completion message
-            cooldownMessage = {
-              id: 'free-session-end',
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          setRestrictionInfo({
+            isRestricted: true,
+            isPremium: true,
+            minutesRemaining: 10,
+            nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+          });
+          
+        } else {
+          // Free user session completion message
+          cooldownMessage = {
+            id: 'free-session-end',
               text: `⏰ **Your Free Trial is Over**
 
 You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.
@@ -489,11 +487,11 @@ Premium: $49/month
               daysRemaining: 30,
               nextEligibleDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString()
             });
-          }
-          
-          setMessages(prev => [...prev, cooldownMessage]);
-          setIsRestricted(true);
-        }, 2000); // 2 second delay to show session ended message first
+        }
+        
+        // Add the cooldown message immediately
+        setMessages(prev => [...prev, cooldownMessage]);
+        setIsRestricted(true);
       } else {
         console.log('❌ Session complete NOT detected from backend response.');
       }
