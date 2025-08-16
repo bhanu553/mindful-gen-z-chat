@@ -230,16 +230,22 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     }
 
     const { message, sessionId, mode } = await req.json()
+    
+    // Input sanitization
+    const sanitizedMessage = sanitizeUserInput(message)
+    const sanitizedSessionId = sanitizeUserInput(sessionId)
+    const sanitizedMode = sanitizeUserInput(mode)
+    
     console.log('💬 Message details:', { 
-      messageLength: message?.length, 
-      sessionId, 
-      mode,
+      messageLength: sanitizedMessage?.length, 
+      sessionId: sanitizedSessionId, 
+      mode: sanitizedMode,
       userId,
-      messagePreview: message?.substring(0, 50) + '...'
+      messagePreview: sanitizedMessage?.substring(0, 50) + '...'
     })
 
-    if (!message || !sessionId) {
-      console.error('❌ Missing required fields:', { hasMessage: !!message, hasSessionId: !!sessionId })
+    if (!sanitizedMessage || !sanitizedSessionId) {
+      console.error('❌ Missing required fields:', { hasMessage: !!sanitizedMessage, hasSessionId: !!sanitizedSessionId })
       return new Response(JSON.stringify({ error: 'Message and sessionId are required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -287,7 +293,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     const { data: session, error: sessionError } = await supabase
       .from('chat_sessions')
       .select('*')
-      .eq('id', sessionId)
+      .eq('id', sanitizedSessionId)
       .eq('user_id', userId)
       .single()
 
@@ -309,7 +315,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     const { data: recentMessages, error: messagesError } = await supabase
       .from('chat_messages')
       .select('role, content')
-      .eq('session_id', sessionId)
+      .eq('session_id', sanitizedSessionId)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(10)
@@ -328,14 +334,14 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     console.log('📚 Conversation history length:', conversationHistory.length)
 
     // Get system prompt based on mode
-    const systemPrompt = getSystemPrompt(mode || 'evolve')
-    console.log('🎯 Using mode:', mode || 'evolve')
+    const systemPrompt = getSystemPrompt(sanitizedMode || 'evolve')
+    console.log('🎯 Using mode:', sanitizedMode || 'evolve')
 
     // Prepare OpenAI messages
     const openAIMessages = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory,
-      { role: 'user', content: message }
+      { role: 'user', content: sanitizedMessage }
     ]
 
     console.log('🤖 Calling OpenAI API with GPT-4.1...')
@@ -389,12 +395,20 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ OpenAI response received, length:', aiReply?.length)
 
-    // Clean internal instructions from AI response (remove ** ... ** patterns)
+    // Clean internal instructions from AI response (remove ** ... ** patterns that contain system instructions)
     const cleanedAiReply = aiReply.replace(/\*\*[^*]*\*\*/g, (match) => {
-      // Keep legitimate emphasis (words/phrases), remove internal instructions (longer content)
       const content = match.slice(2, -2).trim()
-      // If it's a short phrase (likely emphasis), keep it. If it's longer (likely internal), remove it.
-      return content.length <= 20 ? match : ''
+      
+      // Keep legitimate emphasis (short phrases), remove internal instructions (longer/system content)
+      if (content.length <= 30) return match
+      
+      // Remove if contains internal instruction keywords
+      const internalKeywords = ['instruction', 'note:', 'remember', 'system', 'internal', 'prompt', 'ai:', 'assistant:']
+      if (internalKeywords.some(keyword => content.toLowerCase().includes(keyword))) {
+        return ''
+      }
+      
+      return match
     }).trim()
 
     console.log('🧹 Cleaned AI response, original length:', aiReply.length, 'cleaned length:', cleanedAiReply.length)
@@ -419,11 +433,11 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     const { error: userMessageError } = await supabase
       .from('chat_messages')
       .insert({
-        session_id: sessionId,
+        session_id: sanitizedSessionId,
         user_id: userId,
-        content: message,
+        content: sanitizedMessage,
         role: 'user',
-        mode: mode || 'evolve'
+        mode: sanitizedMode || 'evolve'
       })
 
     if (userMessageError) {
@@ -444,11 +458,11 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     const { error: aiMessageError } = await supabase
       .from('chat_messages')
       .insert({
-        session_id: sessionId,
+        session_id: sanitizedSessionId,
         user_id: userId,
         content: cleanedAiReply,
         role: 'assistant',
-        mode: mode || 'evolve'
+        mode: sanitizedMode || 'evolve'
       })
 
     if (aiMessageError) {
@@ -472,7 +486,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
       const { error: completionError } = await supabase
         .from('chat_sessions')
         .update({ is_complete: true })
-        .eq('id', sessionId)
+        .eq('id', sanitizedSessionId)
         .eq('user_id', userId)
 
       if (completionError) {
@@ -488,7 +502,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     const { error: updateError } = await supabase
       .from('chat_sessions')
       .update({ message_count: session.message_count + 1 })
-      .eq('id', sessionId)
+      .eq('id', sanitizedSessionId)
       .eq('user_id', userId)
 
     if (updateError) {
@@ -499,8 +513,8 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     return new Response(JSON.stringify({
       reply: cleanedAiReply,
-      mode: mode || 'evolve',
-      sessionId,
+      mode: sanitizedMode || 'evolve',
+      sessionId: sanitizedSessionId,
       sessionComplete,
       remainingMessages: Math.max(0, 50 - ((messageCount || 0) + 1))
     }), {
@@ -667,4 +681,21 @@ function getSystemPrompt(mode: string): string {
   }
   
   return prompts[mode] || prompts.evolve
+}
+
+function sanitizeUserInput(input: any): string {
+  if (typeof input !== 'string') return ''
+  
+  return input
+    // Remove HTML tags and scripts
+    .replace(/<[^>]*>/g, '')
+    // Remove potential XSS patterns
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .replace(/data:/gi, '')
+    // Remove SQL injection patterns
+    .replace(/['";\\]/g, '')
+    // Limit length for safety
+    .substring(0, 5000)
+    .trim()
 }
