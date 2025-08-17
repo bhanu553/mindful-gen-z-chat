@@ -439,16 +439,39 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ AI message saved')
 
-    // Update session message count
-    console.log('📊 Updating session message count...')
+    // Check if this is a session end message and mark session complete
+    const sessionEndMarkers = [
+      'see you in our next session',
+      'until our next session',
+      'take care until next time',
+      'see you next time',
+      'until we meet again',
+      'goodbye for now'
+    ]
+    
+    const isSessionEnd = sessionEndMarkers.some(marker => 
+      aiReply.toLowerCase().includes(marker.toLowerCase())
+    )
+
+    let sessionUpdateData = { message_count: session.message_count + 1 }
+    
+    if (isSessionEnd) {
+      console.log('🏁 Session end detected, marking session as complete...')
+      sessionUpdateData.is_complete = true
+    }
+
+    // Update session message count and completion status
+    console.log('📊 Updating session...')
     const { error: updateError } = await supabase
       .from('chat_sessions')
-      .update({ message_count: session.message_count + 1 })
+      .update(sessionUpdateData)
       .eq('id', sessionId)
       .eq('user_id', userId)
 
     if (updateError) {
       console.error('❌ Error updating session:', updateError)
+    } else if (isSessionEnd) {
+      console.log('✅ Session marked as complete')
     }
 
     console.log('✅ Message exchange completed successfully')
