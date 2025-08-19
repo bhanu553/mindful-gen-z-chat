@@ -374,7 +374,7 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
     }
 
     const openAIData = await openAIResponse.json()
-    const aiReply = openAIData.choices?.[0]?.message?.content
+    let aiReply = openAIData.choices?.[0]?.message?.content
 
     if (!aiReply) {
       console.error('❌ Invalid OpenAI response:', openAIData)
@@ -386,6 +386,9 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    // Clean internal instructions from AI output
+    aiReply = cleanInternalInstructions(aiReply)
 
     console.log('✅ OpenAI response received, length:', aiReply?.length)
 
@@ -476,10 +479,12 @@ async function handleSendMessage(req: Request, supabase: any, userId: string, op
 
     console.log('✅ Message exchange completed successfully')
 
+    // Return response with session completion flag
     return new Response(JSON.stringify({
       reply: aiReply,
       mode: mode || 'evolve',
       sessionId,
+      sessionComplete: isSessionEnd,
       remainingMessages: Math.max(0, 50 - ((messageCount || 0) + 1))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -645,4 +650,23 @@ function getSystemPrompt(mode: string): string {
   }
   
   return prompts[mode] || prompts.evolve
+}
+
+function cleanInternalInstructions(text: string): string {
+  // Remove internal instructions wrapped in ** ... ** that are likely system content
+  // Keep legitimate emphasis text (short phrases)
+  return text.replace(/\*\*([^*]{50,})\*\*/g, (match, content) => {
+    // If the content is very long and contains system-like language, remove it
+    if (content.includes('CRITICAL') || 
+        content.includes('IMPORTANT') || 
+        content.includes('NEVER') ||
+        content.includes('ALWAYS') ||
+        content.includes('You are') ||
+        content.includes('instructions') ||
+        content.length > 100) {
+      return ''
+    }
+    // Keep shorter emphasis text
+    return match
+  }).replace(/\s+/g, ' ').trim()
 }

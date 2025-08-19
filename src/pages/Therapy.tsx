@@ -418,8 +418,9 @@ Premium: $49/month
       console.log('🔍 Checking for session end marker in AI response:', sessionEndMarker);
       
       if (data.sessionComplete || sessionEndMarker) {
-        console.log('✅ Session complete detected! Setting sessionComplete state to true.');
+        console.log('✅ Session complete detected! Setting sessionComplete state to true immediately.');
         setSessionComplete(true);
+        setIsRestricted(true);
         
         // Show "Session Ended" message first
         const sessionEndedMessage: Message = {

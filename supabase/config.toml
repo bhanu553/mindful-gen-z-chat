@@ -1,1 +1,17 @@
 project_id = "tvjqpmxugitehucwhdbk"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[functions.session-cooldown]
+verify_jwt = false
+
+[functions.security-middleware]
+verify_jwt = false
+
+[functions.therapy-api]
+verify_jwt = false

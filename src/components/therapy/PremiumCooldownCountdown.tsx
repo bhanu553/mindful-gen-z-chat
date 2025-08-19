@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PremiumCooldownCountdownProps {
   nextEligibleDate: string;
@@ -14,6 +15,31 @@ export const PremiumCooldownCountdown: React.FC<PremiumCooldownCountdownProps> =
     seconds: number;
   }>({ minutes: 0, seconds: 0 });
 
+  const createNewSessionAfterCooldown = async () => {
+    try {
+      console.log('🕐 Cooldown complete - creating new session...');
+      
+      const { data, error } = await supabase.functions.invoke('session-cooldown', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('❌ Error creating new session:', error);
+        return;
+      }
+
+      console.log('✅ New session created after cooldown:', data);
+      
+      if (onComplete) {
+        onComplete();
+      }
+    } catch (error) {
+      console.error('❌ Error in createNewSessionAfterCooldown:', error);
+    }
+  };
+
   useEffect(() => {
     const calculateTimeRemaining = () => {
       const now = new Date().getTime();
@@ -22,9 +48,7 @@ export const PremiumCooldownCountdown: React.FC<PremiumCooldownCountdownProps> =
 
       if (difference <= 0) {
         setTimeRemaining({ minutes: 0, seconds: 0 });
-        if (onComplete) {
-          onComplete();
-        }
+        createNewSessionAfterCooldown();
         return;
       }
 
@@ -57,4 +81,4 @@ export const PremiumCooldownCountdown: React.FC<PremiumCooldownCountdownProps> =
       </div>
     </div>
   );
-}; 
+};
