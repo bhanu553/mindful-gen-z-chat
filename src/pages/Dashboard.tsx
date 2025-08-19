@@ -234,7 +234,7 @@ const Dashboard = () => {
                   onClick={() => setShowPaymentModal(true)}
                   className="bg-white text-black hover:bg-white/90 px-8 py-3 rounded-2xl font-medium transition-all duration-300"
                 >
-                  Upgrade to Premium - $49/month
+                  Pay Per Session - $5.99 each (max 8/month)
                 </Button>
               </div>
             </div>

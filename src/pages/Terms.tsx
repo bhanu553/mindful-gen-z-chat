@@ -65,18 +65,18 @@ const Terms = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">4. Subscription Terms</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                EchoMind offers both free and premium subscription tiers. Premium subscriptions are billed monthly 
-                at $19/month and provide enhanced features including advanced analytics, unlimited conversations, 
-                and premium insights.
+                EchoMind offers both free and pay-per-session tiers. Pay-per-session therapy is charged at 
+                $5.99 per session with a maximum of 8 sessions per month, providing enhanced features including 
+                advanced analytics, continuous therapeutic support, and personalized insights.
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Subscriptions automatically renew unless cancelled. You may cancel your subscription at any time 
-                through your account settings or by contacting us. Cancellation takes effect at the end of your 
-                current billing period.
+                Pay-per-session charges are processed immediately upon session completion. There are no recurring 
+                subscription fees. Users are limited to a maximum of 8 sessions per calendar month to maintain 
+                therapeutic boundaries and proper pacing.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                Refunds are provided on a case-by-case basis and at our discretion. No refunds are provided for 
-                partial months of service.
+                Refunds for individual sessions are provided on a case-by-case basis and at our discretion. 
+                Refunds must be requested within 24 hours of session completion.
               </p>
             </section>
 

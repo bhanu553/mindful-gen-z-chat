@@ -88,7 +88,7 @@ export default async function handler(req, res) {
       .gte('created_at', monthStart);
     if (monthlyError) return res.status(500).json({ error: 'Failed to check session limit' });
     if (monthlySessions && monthlySessions.length >= 8) {
-      return res.status(403).json({ error: 'Session limit reached. You can have up to 8 sessions per month as a premium user.' });
+      return res.status(403).json({ error: 'Session limit reached. You can have up to 8 sessions per month at $5.99 each.' });
     }
 
     // 1. Create a new session

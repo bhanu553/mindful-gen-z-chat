@@ -137,11 +137,11 @@ const FreePlanDetails = () => {
               <li>"This gave me breakthrough insights that 2 years of human therapy couldn't"</li>
               <li>"I finally found therapy that fits my schedule and budget"</li>
               <li>"The AI therapist understood my trauma better than any human"</li>
-              <li>"I'm getting $2,400/month therapy quality for $49"</li>
+              <li>"I'm getting $300+ therapy quality for $5.99 per session"</li>
             </ul>
             <p className="text-muted-foreground">The Choice Becomes Clear:</p>
             <ul className="space-y-2 mt-2">
-              <li>Upgrade to Premium for 8 sessions monthly ($49)</li>
+              <li>Pay per session - $5.99 each (max 8/month)</li>
               <li>Return to $300+ human therapy sessions</li>
               <li>Go without mental health support</li>
             </ul>

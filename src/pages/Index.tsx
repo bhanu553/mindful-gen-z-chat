@@ -269,17 +269,17 @@ const Index = () => {
               </div>
 
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-foreground mb-2">Premium Therapy</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Pay-Per-Session</h3>
                 <div className="text-4xl font-bold text-foreground mb-4">
-                  $49<span className="text-lg font-normal text-muted-foreground">/month</span>
+                  $5.99<span className="text-lg font-normal text-muted-foreground">/session</span>
                 </div>
-                <p className="text-muted-foreground">Complete therapeutic experience</p>
+                <p className="text-muted-foreground">Pay per session, max 8 per month</p>
               </div>
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
-                  <span className="text-foreground">8 complete therapy session per month</span>
+                  <span className="text-foreground">Up to 8 therapy sessions per month at $5.99 each</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="w-5 h-5 text-green-400 mr-3" />
@@ -311,7 +311,7 @@ const Index = () => {
                 to="/premium-plan-details"
                 className="w-full bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 block text-center"
               >
-                Upgrade to Premium
+                Start Therapy Sessions
               </Link>
             </div>
           </div>

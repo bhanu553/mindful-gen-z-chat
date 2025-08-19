@@ -33,10 +33,10 @@ const PremiumPlanDetails = () => {
             createOrder: (data, actions) => {
               return actions.order.create({
                 purchase_units: [{
-                  amount: {
-                    value: '49'
-                  },
-                  description: 'EchoMind Premium Plan - $49 monthly subscription'
+                    amount: {
+                      value: '5.99'
+                    },
+                    description: 'EchoMind Therapy Session - $5.99 per session'
                 }]
               });
             },
@@ -92,13 +92,13 @@ const PremiumPlanDetails = () => {
               <Crown className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              EchoMind Premium Plan
+              EchoMind Pay-Per-Session
             </h1>
             <div className="text-3xl font-bold text-foreground mb-4">
-              $49<span className="text-lg font-normal text-muted-foreground"> per month</span>
+              $5.99<span className="text-lg font-normal text-muted-foreground"> per session</span>
             </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              The intensive therapeutic experience that delivers breakthrough healing at millionaire-level quality
+              Pay only for the sessions you need - maximum 8 sessions per month
               <br/>
               The complete mental health transformation system for those ready to accelerate their healing journey and achieve lasting psychological change.
             </p>
@@ -111,8 +111,8 @@ const PremiumPlanDetails = () => {
               <div className="flex items-start space-x-3">
                 <Check className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">8 Deep Therapy Sessions Monthly</h3>
-                  <p className="text-muted-foreground text-sm">Twice-weekly intensive sessions - the same frequency that ultra-wealthy clients pay $3,200+ monthly for. Accelerate your healing timeline from years to months.</p>
+                  <h3 className="font-semibold text-foreground mb-1">Up to 8 Sessions Monthly at $5.99 Each</h3>
+                  <p className="text-muted-foreground text-sm">Pay-per-session model with flexible scheduling - access intensive therapy when you need it most, without monthly subscription commitments.</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
@@ -231,28 +231,28 @@ const PremiumPlanDetails = () => {
           ) : user ? (
             <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-foreground mb-2">Upgrade to Premium</h2>
-                <p className="text-muted-foreground">Unlock the full potential of AI-powered emotional wellness for just $49/month</p>
+                <h2 className="text-2xl font-bold text-foreground mb-2">Start Pay-Per-Session</h2>
+                <p className="text-muted-foreground">Pay only for what you use - $5.99 per session, maximum 8 sessions per month</p>
               </div>
               
               <div className="max-w-md mx-auto">
                 <div id="paypal-button-container" className="mb-4"></div>
                 <p className="text-center text-sm text-muted-foreground">
                   <Shield className="w-4 h-4 inline mr-1" />
-                  Secured by PayPal • Monthly subscription
+                  Secured by PayPal • Pay per session
                 </p>
               </div>
             </div>
           ) : (
             <div className="gradient-card p-8 rounded-lg border-2 border-primary/50 shadow-lg mb-8 text-center">
               <h2 className="text-2xl font-bold text-foreground mb-2">Ready to Get Started?</h2>
-              <p className="text-muted-foreground mb-6">Sign in to upgrade to Premium for $49/month or start with our Free plan</p>
+              <p className="text-muted-foreground mb-6">Sign in to start pay-per-session therapy at $5.99 each or start with our Free plan</p>
               <div className="space-y-4">
                 <Link 
                   to="/login" 
                   className="inline-flex items-center bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 group"
                 >
-                  Sign In to Upgrade
+                  Sign In to Start Sessions
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <div className="text-muted-foreground">or</div>

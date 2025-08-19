@@ -36,9 +36,9 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                 return actions.order.create({
                   purchase_units: [{
                     amount: {
-                      value: '49'
+                      value: '5.99'
                     },
-                    description: 'EchoMind Premium Subscription - $49/month'
+                    description: 'EchoMind Therapy Session - $5.99 per session'
                   }]
                 });
               },
@@ -127,7 +127,7 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
             Upgrade to Premium
           </DialogTitle>
           <p className="text-center text-muted-foreground">
-            Unlock enhanced insights and premium features for $49/month
+            Pay $5.99 per session, maximum 8 sessions per month
           </p>
         </DialogHeader>
         
