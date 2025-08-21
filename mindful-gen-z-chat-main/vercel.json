@@ -1,0 +1,32 @@
+
+{
+  "rewrites": [
+    { "source": "/api/chat", "destination": "/api/chat.js" },
+    { "source": "/api/session", "destination": "/api/session.js" },
+    { "source": "/api/onboarding", "destination": "/api/onboarding-complete.js" },
+    { "source": "/api/messages", "destination": "/api/messages.js" },
+    { "source": "/api/debug-messages", "destination": "/api/debug-messages.js" },
+    { "source": "/api/paypal-webhook", "destination": "/api/paypal-webhook.js" },
+    { "source": "/api/create-session", "destination": "/api/create-session.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
+}

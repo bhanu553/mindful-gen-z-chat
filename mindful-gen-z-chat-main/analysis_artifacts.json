@@ -1,0 +1,476 @@
+{
+  "analysis_metadata": {
+    "timestamp": "2024-12-19T10:00:00Z",
+    "codebase": "EchoMind",
+    "analysis_type": "deep_readonly_analysis",
+    "focus_areas": ["session_lifecycle", "payment_flows", "database_architecture"]
+  },
+  "files": [
+    {
+      "path": "api/chat.js",
+      "size_lines": 1211,
+      "purpose": "Main chat endpoint, handles AI responses and session completion",
+      "key_functions": [
+        {
+          "name": "isSessionComplete",
+          "start_line": 490,
+          "end_line": 610,
+          "purpose": "Detect session completion via AI response phrases",
+          "parameters": ["aiResponse", "session", "userId", "isPremium"],
+          "return_type": "boolean",
+          "side_effects": "None"
+        },
+        {
+          "name": "getOrCreateCurrentSession",
+          "start_line": 610,
+          "end_line": 650,
+          "purpose": "Get or create session for free users",
+          "parameters": ["userId"],
+          "return_type": "Session object",
+          "side_effects": "Database insert if new session needed"
+        }
+      ],
+      "critical_sections": [
+        {
+          "name": "Session Completion Detection",
+          "start_line": 490,
+          "end_line": 550,
+          "description": "Phrase-based session end detection logic"
+        },
+        {
+          "name": "Session Completion Update",
+          "start_line": 1122,
+          "end_line": 1164,
+          "description": "Database update with retry logic and verification"
+        }
+      ]
+    },
+    {
+      "path": "api/session.js",
+      "size_lines": 684,
+      "purpose": "Session management, cooldown enforcement, new session creation",
+      "key_functions": [
+        {
+          "name": "checkUserRestriction",
+          "start_line": 40,
+          "end_line": 130,
+          "purpose": "Check if user is restricted by cooldown",
+          "parameters": ["userId", "isPremium"],
+          "return_type": "RestrictionInfo object",
+          "side_effects": "None"
+        },
+        {
+          "name": "getOrCreateCurrentSession",
+          "start_line": 140,
+          "end_line": 220,
+          "purpose": "Get or create session with premium logic",
+          "parameters": ["userId"],
+          "return_type": "Session object",
+          "side_effects": "Database insert if new session needed"
+        }
+      ],
+      "critical_sections": [
+        {
+          "name": "Premium User Cooldown",
+          "start_line": 73,
+          "end_line": 102,
+          "description": "10-minute cooldown logic for premium users"
+        },
+        {
+          "name": "Free User Cooldown",
+          "start_line": 107,
+          "end_line": 130,
+          "description": "30-day cooldown logic for free users"
+        }
+      ]
+    },
+    {
+      "path": "supabase/functions/session-cooldown/index.ts",
+      "size_lines": 151,
+      "purpose": "Create new sessions after cooldown period",
+      "key_functions": [
+        {
+          "name": "serve",
+          "start_line": 15,
+          "end_line": 151,
+          "purpose": "Main handler for session cooldown",
+          "parameters": ["req"],
+          "return_type": "Response",
+          "side_effects": "Database insert, OpenAI API call"
+        }
+      ]
+    },
+    {
+      "path": "supabase/functions/therapy-api/index.ts",
+      "size_lines": 673,
+      "purpose": "Alternative therapy session handling",
+      "key_functions": [
+        {
+          "name": "handleSendMessage",
+          "start_line": 400,
+          "end_line": 500,
+          "purpose": "Process messages and detect session end",
+          "parameters": ["supabase", "userId", "sessionId", "message", "mode"],
+          "return_type": "Response",
+          "side_effects": "Database update, session completion check"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "isSessionComplete",
+      "file": "api/chat.js",
+      "start_line": 490,
+      "end_line": 610,
+      "purpose": "Detect session completion via AI response phrases",
+      "parameters": ["aiResponse", "session", "userId", "isPremium"],
+      "return_type": "boolean",
+      "side_effects": "None",
+      "calls": ["supabase.from('chat_messages').select()"],
+      "llm_calls": []
+    },
+    {
+      "name": "checkUserRestriction",
+      "file": "api/session.js",
+      "start_line": 40,
+      "end_line": 130,
+      "purpose": "Check if user is restricted by cooldown",
+      "parameters": ["userId", "isPremium"],
+      "return_type": "RestrictionInfo object",
+      "side_effects": "None",
+      "calls": ["supabase.from('chat_sessions').select()"],
+      "llm_calls": []
+    },
+    {
+      "name": "getOrCreateCurrentSession",
+      "file": "api/session.js",
+      "start_line": 140,
+      "end_line": 220,
+      "purpose": "Get or create session with premium logic",
+      "parameters": ["userId"],
+      "return_type": "Session object",
+      "side_effects": "Database insert if new session needed",
+      "calls": ["supabase.from('chat_sessions').insert()", "checkUserPremiumStatus()"],
+      "llm_calls": []
+    }
+  ],
+  "endpoints": [
+    {
+      "path": "/api/chat",
+      "method": "POST",
+      "file": "api/chat.js",
+      "purpose": "Main chat endpoint, handles AI responses and session completion",
+      "flow": [
+        "Process user message",
+        "Call OpenAI API",
+        "Save AI response",
+        "Check session completion via isSessionComplete()",
+        "Update is_complete: true if session ended",
+        "Return response with sessionComplete flag"
+      ],
+      "session_lifecycle": true,
+      "payment_related": false
+    },
+    {
+      "path": "/api/session",
+      "method": "POST",
+      "file": "api/session.js",
+      "purpose": "Session management, cooldown enforcement, new session creation",
+      "flow": [
+        "Check user restriction status",
+        "Enforce cooldown periods (10min premium, 30 days free)",
+        "Create new sessions",
+        "Generate session_first_message for premium users"
+      ],
+      "session_lifecycle": true,
+      "payment_related": false
+    },
+    {
+      "path": "/api/new-session",
+      "method": "POST",
+      "file": "api/new-session.js",
+      "purpose": "Create new therapy sessions",
+      "flow": ["Create session with is_complete: false"],
+      "session_lifecycle": true,
+      "payment_related": false
+    },
+    {
+      "path": "/api/onboarding-complete",
+      "method": "POST",
+      "file": "api/onboarding-complete.js",
+      "purpose": "Complete user onboarding and create first session",
+      "flow": ["Generate AI analysis", "Create session with session_first_message"],
+      "session_lifecycle": true,
+      "payment_related": false
+    }
+  ],
+  "db_tables": [
+    {
+      "name": "chat_sessions",
+      "columns": [
+        {"name": "id", "type": "uuid", "primary_key": true, "nullable": false},
+        {"name": "user_id", "type": "uuid", "foreign_key": "auth.users", "nullable": true},
+        {"name": "title", "type": "text", "nullable": true},
+        {"name": "current_mode", "type": "text", "nullable": true},
+        {"name": "message_count", "type": "integer", "nullable": true},
+        {"name": "is_complete", "type": "boolean", "default": "false", "nullable": true},
+        {"name": "session_first_message", "type": "text", "nullable": true},
+        {"name": "created_at", "type": "timestamp with time zone", "nullable": true},
+        {"name": "updated_at", "type": "timestamp with time zone", "nullable": true}
+      ],
+      "indexes": [
+        "idx_chat_sessions_is_complete",
+        "idx_chat_sessions_user_id_is_complete"
+      ],
+      "triggers": ["update_chat_sessions_updated_at"],
+      "session_related": true,
+      "payment_related": false
+    },
+    {
+      "name": "chat_messages",
+      "columns": [
+        {"name": "id", "type": "uuid", "primary_key": true, "nullable": false},
+        {"name": "session_id", "type": "uuid", "foreign_key": "chat_sessions", "nullable": true},
+        {"name": "user_id", "type": "uuid", "nullable": true},
+        {"name": "content", "type": "text", "nullable": false},
+        {"name": "role", "type": "text", "nullable": false},
+        {"name": "mode", "type": "text", "nullable": true},
+        {"name": "sentiment_score", "type": "numeric", "nullable": true},
+        {"name": "created_at", "type": "timestamp with time zone", "nullable": true}
+      ],
+      "indexes": [],
+      "triggers": [],
+      "session_related": true,
+      "payment_related": false
+    },
+    {
+      "name": "profiles",
+      "columns": [
+        {"name": "id", "type": "uuid", "foreign_key": "auth.users", "nullable": false},
+        {"name": "email", "type": "text", "nullable": true},
+        {"name": "full_name", "type": "text", "nullable": true},
+        {"name": "avatar_url", "type": "text", "nullable": true},
+        {"name": "is_premium", "type": "boolean", "default": "false", "nullable": true},
+        {"name": "created_at", "type": "timestamp with time zone", "nullable": false},
+        {"name": "updated_at", "type": "timestamp with time zone", "nullable": false}
+      ],
+      "indexes": [],
+      "triggers": ["update_user_onboarding_updated_at"],
+      "session_related": false,
+      "payment_related": true
+    },
+    {
+      "name": "user_onboarding",
+      "columns": [
+        {"name": "id", "type": "uuid", "primary_key": true, "nullable": false},
+        {"name": "user_id", "type": "uuid", "foreign_key": "auth.users", "nullable": false},
+        {"name": "ai_analysis", "type": "text", "nullable": true},
+        {"name": "primary_focus", "type": "text", "nullable": true},
+        {"name": "completed", "type": "boolean", "default": "false", "nullable": true},
+        {"name": "created_at", "type": "timestamp with time zone", "nullable": false},
+        {"name": "updated_at", "type": "timestamp with time zone", "nullable": false}
+      ],
+      "indexes": [],
+      "triggers": ["update_user_onboarding_updated_at"],
+      "session_related": false,
+      "payment_related": false
+    }
+  ],
+  "call_graph": {
+    "session_lifecycle": {
+      "user_message": {
+        "calls": ["POST /api/chat"],
+        "next": "openai_api_call"
+      },
+      "openai_api_call": {
+        "calls": ["OpenAI API"],
+        "next": "session_completion_check"
+      },
+      "session_completion_check": {
+        "calls": ["isSessionComplete()"],
+        "next": "database_update"
+      },
+      "database_update": {
+        "calls": ["supabase.from('chat_sessions').update()"],
+        "next": "verification"
+      },
+      "verification": {
+        "calls": ["supabase.from('chat_sessions').select()"],
+        "next": "frontend_response"
+      },
+      "frontend_response": {
+        "calls": ["UI update", "Cooldown enforcement"],
+        "next": "end"
+      }
+    },
+    "cooldown_enforcement": {
+      "session_complete": {
+        "calls": ["checkUserRestriction()"],
+        "next": "cooldown_calculation"
+      },
+      "cooldown_calculation": {
+        "calls": ["Date calculation"],
+        "next": "restriction_check"
+      },
+      "restriction_check": {
+        "calls": ["Return restriction info"],
+        "next": "end"
+      }
+    },
+    "payment_flow": {
+      "paypal_button": {
+        "calls": ["PayPal SDK"],
+        "next": "client_payment"
+      },
+      "client_payment": {
+        "calls": ["PayPal capture"],
+        "next": "console_log"
+      },
+      "console_log": {
+        "calls": ["console.log()"],
+        "next": "end"
+      }
+    }
+  },
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "HIGH",
+      "category": "payment_security",
+      "title": "Missing PayPal Webhook Handler",
+      "description": "No server-side webhook endpoint exists for PayPal payments. Payments are only captured client-side without verification.",
+      "impact": "Users can access premium features without payment verification",
+      "location": "Missing: /api/paypal-webhook",
+      "remediation": "Implement PayPal webhook handler with signature verification"
+    },
+    {
+      "id": "F002",
+      "severity": "HIGH",
+      "category": "session_management",
+      "title": "Race Condition in Session Completion",
+      "description": "Session completion updates use retry logic but lack transactional guarantees. Multiple concurrent requests could interfere.",
+      "impact": "Potential for partial updates and inconsistent session state",
+      "location": "api/chat.js:1122-1164",
+      "remediation": "Wrap session completion updates in database transactions"
+    },
+    {
+      "id": "F003",
+      "severity": "MEDIUM",
+      "category": "payment_flow",
+      "title": "Client-Side Only Payment Processing",
+      "description": "PayPal payments are processed entirely on the client side with no server verification.",
+      "impact": "Client-side payments can be manipulated",
+      "location": "src/components/ui/payment-modal.tsx:20-95",
+      "remediation": "Add server-side payment verification endpoint"
+    },
+    {
+      "id": "F004",
+      "severity": "MEDIUM",
+      "category": "session_management",
+      "title": "Cooldown Bypass Risk",
+      "description": "Cooldown is checked at session start but not during active sessions. User could start multiple sessions simultaneously.",
+      "impact": "Potential for multiple session creation during cooldown",
+      "location": "api/session.js:73-130",
+      "remediation": "Add cooldown checks during active sessions"
+    },
+    {
+      "id": "F005",
+      "severity": "LOW",
+      "category": "session_management",
+      "title": "Session State Validation Missing",
+      "description": "No validation that session state matches database state between frontend and backend.",
+      "impact": "Frontend and backend could have different session states",
+      "location": "Multiple files",
+      "remediation": "Add regular state synchronization checks"
+    }
+  ],
+  "environment_variables": {
+    "required": [
+      "SUPABASE_URL",
+      "SUPABASE_SERVICE_ROLE_KEY", 
+      "OPENAI_API_KEY",
+      "PAYPAL_CLIENT_ID",
+      "PAYPAL_SECRET"
+    ],
+    "missing": [
+      "PAYPAL_SECRET",
+      "PAYPAL_WEBHOOK_URL"
+    ],
+    "hardcoded": [
+      "PayPal Client ID in frontend components"
+    ]
+  },
+  "third_party_services": [
+    {
+      "name": "OpenAI",
+      "purpose": "AI therapy responses",
+      "integration": "API calls from backend",
+      "security": "API key authentication"
+    },
+    {
+      "name": "PayPal",
+      "purpose": "Payment processing",
+      "integration": "Client-side SDK only",
+      "security": "Missing server-side verification"
+    },
+    {
+      "name": "Supabase",
+      "purpose": "Database and authentication",
+      "integration": "Backend client and edge functions",
+      "security": "Service role key authentication"
+    }
+  ],
+  "missing_components": [
+    {
+      "name": "PayPal Webhook Handler",
+      "description": "Server-side endpoint to verify PayPal payments",
+      "priority": "HIGH",
+      "impact": "Payment verification failure"
+    },
+    {
+      "name": "Payment Verification Endpoint",
+      "description": "Server-side payment capture and verification",
+      "priority": "HIGH", 
+      "impact": "Payment bypass vulnerability"
+    },
+    {
+      "name": "Transaction Management",
+      "description": "Database transactions for critical operations",
+      "priority": "MEDIUM",
+      "impact": "Data consistency issues"
+    },
+    {
+      "name": "Session State Validation",
+      "description": "Validation between frontend and backend session state",
+      "priority": "MEDIUM",
+      "impact": "State synchronization issues"
+    }
+  ],
+  "remediation_priorities": [
+    {
+      "priority": 1,
+      "action": "Implement PayPal webhook handler",
+      "effort": "Medium",
+      "risk_reduction": "High"
+    },
+    {
+      "priority": 2,
+      "action": "Add payment verification endpoint",
+      "effort": "Medium", 
+      "risk_reduction": "High"
+    },
+    {
+      "priority": 3,
+      "action": "Add transactional session updates",
+      "effort": "Low",
+      "risk_reduction": "Medium"
+    },
+    {
+      "priority": 4,
+      "action": "Add session state validation",
+      "effort": "Low",
+      "risk_reduction": "Medium"
+    }
+  ]
+}
