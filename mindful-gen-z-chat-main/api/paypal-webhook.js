@@ -272,21 +272,16 @@ async function processPaymentAndAssignCredits(orderId, paymentId, amount, curren
     
     console.log('✅ Payment saved:', payment.id);
     
-    // Assign paid session credit
-    const { data: credit, error: creditError } = await supabase
-      .from('user_credits')
-      .insert({
-        user_id: userId,
-        payment_id: payment.id,
-        credit_type: 'paid',
-        sessions_granted: 1,
-        sessions_used: 0,
-        sessions_remaining: 1,
-        is_active: true,
-        expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year expiry
-      })
-      .select()
-      .single();
+          // Assign paid session credit - 1 session per payment
+      const { data: credit, error: creditError } = await supabase
+        .from('session_credit')
+        .insert({
+          user_id: userId,
+          payment_id: payment.id,
+          status: 'unredeemed'
+        })
+        .select()
+        .single();
     
     if (creditError) {
       console.error('❌ Failed to assign credit:', creditError);

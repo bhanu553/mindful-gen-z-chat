@@ -64,17 +64,13 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                       throw profileError;
                     }
 
-                    // Then, assign paid credits
-                    const { error: creditError } = await supabase
-                      .from('user_credits')
-                      .insert({
-                        user_id: user.id,
-                        credit_type: 'paid',
-                        sessions_granted: 1,
-                        sessions_remaining: 1,
-                        is_active: true,
-                        expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year expiry
-                      });
+                          // Then, assign paid credits - 1 session per payment
+      const { error: creditError } = await supabase
+        .from('session_credit')
+        .insert({
+          user_id: user.id,
+          status: 'unredeemed'
+        });
 
                     if (creditError) {
                       console.error('Error assigning credits:', creditError);

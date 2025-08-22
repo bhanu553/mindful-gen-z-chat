@@ -8,6 +8,8 @@
     { "source": "/api/debug-messages", "destination": "/api/debug-messages.js" },
     { "source": "/api/paypal-webhook", "destination": "/api/paypal-webhook.js" },
     { "source": "/api/create-session", "destination": "/api/create-session.js" },
+    { "source": "/api/unified-session", "destination": "/api/unified-session.js" },
+    { "source": "/api/test-unified", "destination": "/api/test-unified.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

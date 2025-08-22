@@ -70,20 +70,19 @@ function detectSessionCompletion(assistantMessage) {
  * 
  * @param {string} sessionId - The session ID to update
  * @param {string} userId - The user ID for logging
- * @param {boolean} isPremium - Whether the user is premium (affects cooldown duration)
  * @returns {Promise<{success: boolean, cooldownUntil?: string, error?: string}>}
  */
-async function updateSessionCompletion(sessionId, userId, isPremium) {
+async function updateSessionCompletion(sessionId, userId) {
   if (!sessionId || !userId) {
     return { success: false, error: 'Missing sessionId or userId' };
   }
   
   try {
-    // COOLDOWN DURATION CONFIGURATION (as per non-negotiable requirements)
-    const COOLDOWN_DURATION_MINUTES = isPremium ? 10 : 30 * 24 * 60; // 10 min for premium, 30 days for free
+    // UNIFIED COOLDOWN DURATION: 10 minutes for ALL users (as per unified EchoMind model)
+    const COOLDOWN_DURATION_MINUTES = 10; // 10 minutes for everyone
     
-    console.log(`🔍 Updating session completion for session ${sessionId}, user ${userId}, premium: ${isPremium}`);
-    console.log(`🔍 Cooldown duration: ${COOLDOWN_DURATION_MINUTES} minutes`);
+    console.log(`🔍 Updating session completion for session ${sessionId}, user ${userId}`);
+    console.log(`🔍 Unified cooldown duration: ${COOLDOWN_DURATION_MINUTES} minutes for all users`);
     
     // ATOMIC UPDATE: Use WHERE is_complete = false to ensure idempotency
     // This prevents double-completion even under concurrent requests
@@ -654,23 +653,16 @@ async function getOrCreateCurrentSession(userId) {
 }
 
 export async function POST(req) {
-  // DEBUG: Log environment variables for OpenAI API key
-  console.log("ENV OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : "undefined");
-  console.log("ENV VITE_OPENAI_API_KEY:", process.env.VITE_OPENAI_API_KEY ? process.env.VITE_OPENAI_API_KEY.substring(0, 10) : "undefined");
   try {
     const { message, userId, isFirstMessage = false, generateAnalysis = false } = await req.json();
     
-    const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
       console.error("❌ OPENAI_API_KEY is missing");
       console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('OPENAI')));
-      // DEBUG: Return env variable values in the response for troubleshooting
       return Response.json({ 
-        error: "OpenAI API key is not set.",
-        env_OPENAI_API_KEY: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : "undefined",
-        env_VITE_OPENAI_API_KEY: process.env.VITE_OPENAI_API_KEY ? process.env.VITE_OPENAI_API_KEY.substring(0, 10) : "undefined",
-        available_env_vars: Object.keys(process.env).filter(key => key.includes('OPENAI'))
+        error: "OpenAI API key is not set. Please check server configuration.",
       }, { status: 500 });
     }
     
@@ -1134,7 +1126,7 @@ Respond now as a therapist:`;
          console.log('✅ Session completion detected! Updating session completion status.');
          
          // Use the new atomic update function
-         const updateResult = await updateSessionCompletion(session.id, userId, isPremium);
+         const updateResult = await updateSessionCompletion(session.id, userId);
          
          if (updateResult.success) {
            sessionComplete = true;

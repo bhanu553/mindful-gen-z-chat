@@ -1,0 +1,35 @@
+// List of major world timezones
+const timezones = [
+  'Africa/Cairo',
+  'Africa/Nairobi',
+  'America/Anchorage',
+  'America/Buenos_Aires',
+  'America/Caracas',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Mexico_City',
+  'America/New_York',
+  'America/Sao_Paulo',
+  'Asia/Bangkok',
+  'Asia/Dhaka',
+  'Asia/Dubai',
+  'Asia/Karachi',
+  'Asia/Kolkata',
+  'Asia/Shanghai',
+  'Asia/Tokyo',
+  'Asia/Yangon',
+  'Atlantic/Cape_Verde',
+  'Australia/Adelaide',
+  'Australia/Sydney',
+  'Europe/Athens',
+  'Europe/Berlin',
+  'Europe/London',
+  'Europe/Moscow',
+  'Pacific/Auckland',
+  'Pacific/Fiji',
+  'Pacific/Guadalcanal',
+  'Pacific/Honolulu',
+  'Pacific/Kiritimati'
+];
+
+export default timezones; 

@@ -1,0 +1,1192 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 262.1 83.3% 57.8%;
+
+    --radius: 0.5rem;
+
+    /* Therapy Mode Colors */
+    --therapy-reflect: 263 100% 69%;
+    --therapy-recover: 199 65% 65%;
+    --therapy-rebuild: 147 44% 58%;
+    --therapy-evolve: 48 95% 59%;
+
+    /* Onboarding Colors - Soft Blue & Lavender Palette */
+    --lavender: 266 47% 87%;
+    --lavender-light: 270 20% 95%;
+    --blue-soft: 213 40% 92%;
+    --blue-calm: 213 70% 85%;
+  }
+
+  * {
+    @apply border-border;
+    /* Removed universal transition to prevent shakiness */
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    /* Enhanced smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    scroll-behavior: smooth;
+    /* Enhanced body smoothness */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Prevent layout shifts */
+    overflow-x: hidden;
+  }
+
+  /* Removed universal transitions to prevent shakiness */
+  button, a, input, textarea, select {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed hover effects to prevent shakiness */
+  button:hover, a:hover {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed focus effects to prevent shakiness */
+  button:focus, a:focus, input:focus, textarea:focus, select:focus {
+    outline: none;
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Custom scrollbars for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    /* Removed transition to prevent shakiness */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Light mode scrollbar adjustments */
+  .light ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  /* Enhanced page transitions - removed transform to prevent shakiness */
+  .page-transition {
+    animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Enhanced loading animations */
+  .loading-pulse {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Removed card hover effects to prevent shakiness */
+  .card-hover {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .card-hover:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Removed button smooth effects to prevent shakiness */
+  .btn-smooth {
+    /* Removed transition to prevent shakiness */
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-smooth:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-smooth:active {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed input smooth effects to prevent shakiness */
+  .input-smooth {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .input-smooth:focus {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Removed nav smooth effects to prevent shakiness */
+  .nav-smooth {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .nav-smooth:hover {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed modal smooth effects to prevent shakiness */
+  .modal-smooth {
+    animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Removed text smooth effects to prevent shakiness */
+  .text-smooth {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed background smooth effects to prevent shakiness */
+  .bg-smooth {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed glass smooth effects to prevent shakiness */
+  .glass-smooth {
+    /* Removed transition to prevent shakiness */
+    backdrop-filter: blur(10px);
+  }
+
+  .glass-smooth:hover {
+    backdrop-filter: blur(15px);
+  }
+}
+
+@layer utilities {
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(222.2 84% 4.9%) 0%, hsl(215 27.9% 16.9%) 100%);
+  }
+  
+  .gradient-card {
+    background: linear-gradient(135deg, hsl(224 71.4% 4.1%) 0%, hsl(215 27.9% 16.9%) 100%);
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Removed transition to prevent shakiness */
+  }
+
+  .premium-glass {
+    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    /* Removed transition to prevent shakiness */
+  }
+
+  .premium-glass:hover {
+    backdrop-filter: blur(25px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+  
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(262.1 83.3% 57.8%) 0%, hsl(210 40% 98%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* Enhanced text rendering for crisp display */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1;
+    font-kerning: normal;
+  }
+  
+  /* Mobile-specific text gradient fix */
+  @media (max-width: 768px) {
+    .text-gradient {
+      background: linear-gradient(135deg, #a855f7 0%, #f3f4f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      /* Force gradient rendering on mobile */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      /* Ensure proper gradient display */
+      will-change: auto;
+      /* Remove any 3D effects */
+      text-shadow: none;
+      filter: none;
+      /* Enhanced mobile rendering */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+  }
+  
+  /* Dynamic gradient classes for different backgrounds */
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #a855f7 0%, #f3f4f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .text-gradient-cyan {
+    background: linear-gradient(135deg, #06b6d4 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .text-gradient-green {
+    background: linear-gradient(135deg, #10b981 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .text-gradient-pink {
+    background: linear-gradient(135deg, #ec4899 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Mobile-specific dynamic gradient fixes */
+  @media (max-width: 768px) {
+    .text-gradient-purple,
+    .text-gradient-cyan,
+    .text-gradient-orange,
+    .text-gradient-green,
+    .text-gradient-pink {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      will-change: auto;
+      text-shadow: none !important;
+      filter: none !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+  }
+
+  .handwriting {
+    font-family: 'Kalam', cursive;
+  }
+
+  .backdrop-blur-xl {
+    backdrop-filter: blur(20px);
+  }
+
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scrollable-container {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    /* Enhanced smooth scrolling */
+    overscroll-behavior: smooth;
+  }
+
+  .scrollable-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollable-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollable-container::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .scrollable-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Enhanced mobile scrollbars */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thumb-white\/20::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    .scrollable-container,
+    .scrollbar-thin {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    /* Mobile UI/UX Enhancements */
+    
+    /* 1. Color & Image Vibrance */
+    .min-h-screen,
+    .relative,
+    .absolute {
+      filter: brightness(1.05) contrast(1.08);
+    }
+    
+    /* Ensure high-quality background images on mobile */
+    [style*="background-image"] {
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    
+    /* 2. Text Rendering & Sharpness */
+    body,
+    .text-white {
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Mobile gradient text fix - ensure proper rendering */
+    .text-gradient {
+      background: linear-gradient(135deg, #a855f7 0%, #f3f4f6 100%) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+      /* Force hardware acceleration for gradient rendering */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      /* Remove any 3D effects that might interfere */
+      text-shadow: none !important;
+      filter: none !important;
+      /* Ensure proper gradient display */
+      will-change: auto;
+      /* Enhanced mobile rendering */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    
+    /* 3. Enhanced Dropdown Scrolling for Mobile */
+    [data-radix-popper-content-wrapper] {
+      max-width: calc(100vw - 2rem) !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    [role="listbox"] {
+      max-width: calc(100vw - 2rem) !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ensure dropdown items are fully visible */
+    [data-radix-select-content] {
+      max-width: calc(100vw - 2rem) !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Mobile dropdown item styling */
+    [data-radix-select-item] {
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    
+    /* 4. Text Rendering & Sharpness */
+    body,
+    .text-white,
+    .text-foreground,
+    .text-muted-foreground,
+    h1, h2, h3, h4, h5, h6,
+    p, span, div {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      line-height: 1.5;
+    }
+    
+    /* Enhanced text contrast for mobile */
+    .text-white {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .text-white\/70,
+    .text-white\/80,
+    .text-white\/90 {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* 5. Enhanced Dropdown Scrolling for Mobile */
+    /* Specific styles for SelectContent to ensure proper scrolling */
+    [data-radix-select-content] {
+      max-width: calc(100vw - 2rem) !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    }
+    
+    [data-radix-select-content]::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    
+    [data-radix-select-content]::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    [data-radix-select-content]::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+    }
+    
+    [data-radix-select-content]::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Ensure dropdown items are fully visible and scrollable */
+    [data-radix-select-item] {
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+      min-width: max-content;
+      padding-right: 1rem;
+    }
+    
+    /* Specific class for mobile dropdown scrolling */
+    .mobile-dropdown-scroll {
+      max-width: calc(100vw - 2rem) !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    }
+    
+    .mobile-dropdown-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    
+    .mobile-dropdown-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .mobile-dropdown-scroll::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+    }
+    
+    .mobile-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    /* 6. Contrast & Readability */
+    /* Add subtle gradient overlays behind text on images */
+    .premium-glass,
+    .glass-effect {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* Enhanced gradient overlays for better text readability */
+    .bg-gradient-to-br,
+    .bg-gradient-to-b,
+    .bg-gradient-to-r {
+      opacity: 0.9;
+    }
+    
+    /* 4. Element Sizing & Spacing */
+    /* Scale down paddings and margins proportionally */
+    .p-4 {
+      padding: 0.875rem;
+    }
+    
+    .p-6 {
+      padding: 1.25rem;
+    }
+    
+    .p-8 {
+      padding: 1.5rem;
+    }
+    
+    .p-10 {
+      padding: 1.75rem;
+    }
+    
+    .p-12 {
+      padding: 2rem;
+    }
+    
+    .px-4 {
+      padding-left: 0.875rem;
+      padding-right: 0.875rem;
+    }
+    
+    .px-6 {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+    
+    .px-8 {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+    
+    .py-4 {
+      padding-top: 0.875rem;
+      padding-bottom: 0.875rem;
+    }
+    
+    .py-6 {
+      padding-top: 1.25rem;
+      padding-bottom: 1.25rem;
+    }
+    
+    .py-8 {
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
+    }
+    
+    .py-12 {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+    
+    .mb-4 {
+      margin-bottom: 0.875rem;
+    }
+    
+    .mb-6 {
+      margin-bottom: 1.25rem;
+    }
+    
+    .mb-8 {
+      margin-bottom: 1.5rem;
+    }
+    
+    .mb-12 {
+      margin-bottom: 2rem;
+    }
+    
+    .mt-4 {
+      margin-top: 0.875rem;
+    }
+    
+    .mt-6 {
+      margin-top: 1.25rem;
+    }
+    
+    .mt-8 {
+      margin-top: 1.5rem;
+    }
+    
+    .space-y-4 > * + * {
+      margin-top: 0.875rem;
+    }
+    
+    .space-y-6 > * + * {
+      margin-top: 1.25rem;
+    }
+    
+    .space-y-8 > * + * {
+      margin-top: 1.5rem;
+    }
+    
+    /* 5. Touch-friendly button and link sizes */
+    button,
+    .btn,
+    [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    
+    /* Enhanced button styling for mobile */
+    .bg-gradient-to-r,
+    .bg-gradient-to-br {
+      background-size: 200% 200%;
+      background-position: center;
+    }
+    
+    /* 6. Enhanced mobile navigation */
+    nav {
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* 7. Improved mobile chat interface */
+    .rounded-2xl,
+    .rounded-3xl {
+      border-radius: 1rem;
+    }
+    
+    /* Enhanced message bubbles for mobile */
+    .backdrop-blur-sm {
+      backdrop-filter: blur(15px);
+    }
+    
+    /* 8. Better mobile form elements */
+    input,
+    textarea,
+    select {
+      min-height: 44px;
+      font-size: 0.875rem;
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+    }
+    
+    /* 9. Enhanced mobile scrolling */
+    .overflow-y-auto,
+    .scrollable-container {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      overscroll-behavior: contain;
+    }
+    
+    /* 10. Improved mobile shadows and depth */
+    .shadow-lg,
+    .shadow-xl,
+    .shadow-2xl {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* 11. Better mobile typography scaling */
+    .text-xl {
+      font-size: 1.125rem;
+      line-height: 1.4;
+    }
+    
+    .text-2xl {
+      font-size: 1.25rem;
+      line-height: 1.3;
+    }
+    
+    .text-3xl {
+      font-size: 1.5rem;
+      line-height: 1.2;
+    }
+    
+    .text-4xl {
+      font-size: 1.75rem;
+      line-height: 1.1;
+    }
+    
+    .text-5xl {
+      font-size: 2rem;
+      line-height: 1.1;
+    }
+    
+    .text-6xl {
+      font-size: 2.25rem;
+      line-height: 1.1;
+    }
+    
+    /* 12. Enhanced mobile glass effects */
+    .premium-glass {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .glass-effect {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    
+    /* 13. Improved mobile loading states */
+    .animate-pulse {
+      animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    /* 14. Better mobile focus states */
+    button:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: 2px solid rgba(255, 255, 255, 0.5);
+      outline-offset: 2px;
+    }
+    
+    /* 15. Enhanced mobile transitions */
+    .transition-all,
+    .transition-colors,
+    .transition-transform {
+      transition-duration: 200ms;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* 16. Better mobile spacing for content */
+    .max-w-2xl {
+      max-width: calc(100vw - 2rem);
+    }
+    
+    .max-w-4xl {
+      max-width: calc(100vw - 1rem);
+    }
+    
+    .max-w-5xl {
+      max-width: calc(100vw - 0.5rem);
+    }
+    
+    .max-w-6xl {
+      max-width: calc(100vw - 0.25rem);
+    }
+    
+    /* 17. Improved mobile grid layouts */
+    .grid {
+      gap: 0.75rem;
+    }
+    
+    .grid-cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-cols-3 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-cols-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* 18. Enhanced mobile flex layouts */
+    .flex {
+      gap: 0.75rem;
+    }
+    
+    /* 19. Better mobile border radius */
+    .rounded-lg {
+      border-radius: 0.75rem;
+    }
+    
+    .rounded-xl {
+      border-radius: 1rem;
+    }
+    
+    /* 20. Improved mobile z-index management */
+    .z-10 {
+      z-index: 10;
+    }
+    
+    .z-20 {
+      z-index: 20;
+    }
+    
+    .z-30 {
+      z-index: 30;
+    }
+    
+    .z-40 {
+      z-index: 40;
+    }
+    
+    .z-50 {
+      z-index: 50;
+    }
+  }
+
+  .therapy-bg-reflect {
+    background-image: url('/lovable-uploads/a3872cd3-caf3-42ac-99bb-15e21499e310.png');
+    background-size: cover;
+    background-position: center;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .therapy-bg-recover {
+    background-image: url('/lovable-uploads/4e0d3477-805c-4e57-b52c-82fe4a8d1c4f.png');
+    background-size: cover;
+    background-position: center;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .therapy-bg-rebuild {
+    background-image: url('/lovable-uploads/07533b71-b782-4088-844e-83d3b08837e7.png');
+    background-size: cover;
+    background-position: center;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .therapy-bg-evolve {
+    background-image: url('/lovable-uploads/63bfd61c-32c7-4ddb-aa9a-6c5a6d885cc6.png');
+    background-size: cover;
+    background-position: center;
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed onboarding form transitions to prevent shakiness */
+  .onboarding-form label {
+    color: white !important;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .onboarding-form input,
+  .onboarding-form textarea,
+  .onboarding-form [data-radix-select-trigger] {
+    background-color: rgb(55 65 81) !important;
+    border-color: rgb(75 85 99) !important;
+    color: white !important;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .onboarding-form input::placeholder,
+  .onboarding-form textarea::placeholder {
+    color: rgb(156 163 175) !important;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .onboarding-form .text-muted-foreground {
+    color: rgb(156 163 175) !important;
+  }
+
+  .onboarding-form [data-radix-checkbox-root] {
+    border-color: rgb(75 85 99) !important;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .onboarding-form input:disabled {
+    background-color: rgb(31 41 55) !important;
+    color: rgb(156 163 175) !important;
+  }
+
+  /* Removed onboarding form smoothness to prevent shakiness */
+  .onboarding-form {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .onboarding-form * {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .onboarding-form input,
+  .onboarding-form textarea,
+  .onboarding-form [data-radix-select-trigger] {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .onboarding-form input:focus,
+  .onboarding-form textarea:focus,
+  .onboarding-form [data-radix-select-trigger]:focus {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Removed section transitions to prevent shakiness */
+  .onboarding-section {
+    /* Removed animation to prevent shakiness */
+  }
+
+  /* Removed button hover effects to prevent shakiness */
+  .onboarding-form button {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .onboarding-form button:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Removed progress step transitions to prevent shakiness */
+  .progress-step {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .progress-step.active {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Optimized background image loading - removed transform and transition to prevent shakiness */
+  .onboarding-bg {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* Enhanced therapy question highlighting */
+  .therapy-question-modern {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Enhanced loading states */
+  .loading-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .loading-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: currentColor;
+    animation: loadingDot 1.4s infinite ease-in-out;
+  }
+
+  .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+  .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+  @keyframes loadingDot {
+    0%, 80%, 100% {
+      opacity: 0.5;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+
+  /* Enhanced toast notifications */
+  .toast-smooth {
+    animation: toastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes toastSlideIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Enhanced form validation feedback */
+  .form-error {
+    animation: errorShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  }
+
+  @keyframes errorShake {
+    0%, 100% { }
+    10%, 30%, 50%, 70%, 90% { }
+    20%, 40%, 60%, 80% { }
+  }
+
+  /* Enhanced success feedback */
+  .form-success {
+    animation: successPulse 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes successPulse {
+    0% { }
+    50% { }
+    100% { }
+  }
+
+  /* Removed navigation smoothness to prevent shakiness */
+  .nav-item-smooth {
+    /* Removed transition to prevent shakiness */
+    position: relative;
+  }
+
+  .nav-item-smooth::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: currentColor;
+    /* Removed transition to prevent shakiness */
+  }
+
+  .nav-item-smooth:hover::after {
+    width: 100%;
+  }
+
+  /* Removed card interactive effects to prevent shakiness */
+  .card-interactive {
+    /* Removed transition to prevent shakiness */
+    cursor: pointer;
+  }
+
+  .card-interactive:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Removed button interactive effects to prevent shakiness */
+  .btn-interactive {
+    /* Removed transition to prevent shakiness */
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-interactive::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    /* Removed transition to prevent shakiness */
+  }
+
+  .btn-interactive:hover::before {
+    left: 100%;
+  }
+
+  .btn-interactive:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-interactive:active {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed input enhanced effects to prevent shakiness */
+  .input-enhanced {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .input-enhanced:focus {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Removed modal enhanced effects to prevent shakiness */
+  .modal-enhanced {
+    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Removed page transition enhanced effects to prevent shakiness */
+  .page-transition-enhanced {
+    animation: pageFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Removed hover smooth effects to prevent shakiness */
+  .hover-smooth {
+    /* Removed transition to prevent shakiness */
+  }
+
+  .hover-smooth:hover {
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed focus smooth effects to prevent shakiness */
+  .focus-smooth:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed disabled smooth effects to prevent shakiness */
+  .disabled-smooth {
+    opacity: 0.6;
+    cursor: not-allowed;
+    /* Removed transition to prevent shakiness */
+  }
+
+  /* Removed active smooth effects to prevent shakiness */
+  .active-smooth {
+    /* Removed transition to prevent shakiness */
+  }
+}

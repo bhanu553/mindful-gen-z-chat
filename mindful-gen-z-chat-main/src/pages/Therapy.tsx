@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { PremiumCooldownCountdown } from '@/components/therapy/PremiumCooldownCountdown';
+import { UnifiedCooldownCountdown } from '@/components/therapy/UnifiedCooldownCountdown';
 
 /*
  * THERAPY COMPONENT - PERSISTENT CHAT HISTORY & INTERNAL MARKER CLEANING
@@ -120,8 +120,7 @@ const Therapy = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user, isPremium } = useAuth();
 
-  // Get your OpenAI API key from the environment variable. Put VITE_OPENAI_API_KEY=sk-... in a .env file in the project root (do NOT commit the .env file).
-  const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+  // OpenAI API key is handled server-side for security
 
   // In scrollToBottom, ensure smooth behavior is set
   const scrollToBottom = () => {
@@ -230,9 +229,9 @@ You've completed your free therapy session. To continue your healing journey, yo
 ${data.restrictionInfo.nextEligibleDate ? `Available on ${new Date(data.restrictionInfo.nextEligibleDate).toLocaleDateString()}` : 'Date calculation in progress...'}
 
 **Ready to continue your healing?**
-Premium: $49/month
-• 8 sessions (vs 1 free)
-• 3 - 4 days spacing for optimal progress
+Premium: $5.99/session
+• 8 sessions per month
+• 10-minute spacing for optimal progress
 • Session continuity that builds on your breakthrough
 • Personalized homework and skill development
 
@@ -357,9 +356,9 @@ You've completed your free therapy session. To continue your healing journey, yo
 Available on ${new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toLocaleDateString()}
 
 **Ready to continue your healing?**
-Premium: $49/month
-• 8 sessions (vs 1 free)
-• 3-4 days spacing for optimal progress
+Premium: $5.99/session
+• 8 sessions per month
+• 10-minute spacing for optimal progress
 • Session continuity that builds on your breakthrough
 • Personalized homework and skill development
 
@@ -567,9 +566,9 @@ You've completed your free therapy session. To continue your healing journey, yo
 Available on ${new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toLocaleDateString()}
 
 **Ready to continue your healing?**
-Premium: $49/month
-• 8 sessions (vs 1 free)
-• 3-4 days spacing for optimal progress
+Premium: $5.99/session
+• 8 sessions per month
+• 10-minute spacing for optimal progress
 • Session continuity that builds on your breakthrough
 • Personalized homework and skill development
 
@@ -640,8 +639,8 @@ Premium: $49/month
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      // Call the new enhanced session creation endpoint
-      const response = await fetch('/api/create-session', {
+      // Call the unified session creation endpoint
+      const response = await fetch('/api/unified-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -762,7 +761,7 @@ Premium: $49/month
                           <div className="mt-4 p-4 bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-xl border border-purple-400/50 shadow-lg">
                             <div className="text-center">
                               <p className="text-sm text-white/90 mb-3 font-medium">⏰ Next session available in:</p>
-                              <PremiumCooldownCountdown 
+                              <UnifiedCooldownCountdown 
                                 nextEligibleDate={restrictionInfo.nextEligibleDate}
                                 onComplete={() => {
                                   // Refresh the session when countdown completes
@@ -771,6 +770,7 @@ Premium: $49/month
                                   setRestrictionInfo(null);
                                   fetchSessionAndMessages();
                                 }}
+                                hasCredit={restrictionInfo?.hasCredit || false}
                               />
                               <p className="text-xs text-white/70 mt-2 italic">
                                 This brief pause helps integrate your insights

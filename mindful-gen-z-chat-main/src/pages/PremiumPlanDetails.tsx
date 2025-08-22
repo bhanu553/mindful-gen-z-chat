@@ -4,6 +4,7 @@ import { ArrowRight, Check, Crown, Sparkles, Brain, TrendingUp, Shield, Heart } 
 import { Link, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const PremiumPlanDetails = () => {
   const paypalRef = useRef<HTMLDivElement>(null);
@@ -11,9 +12,39 @@ const PremiumPlanDetails = () => {
   const navigate = useNavigate();
 
   const markUserAsPremium = async () => {
-    // This function would connect to Supabase to mark user as premium
-    console.log('User marked as premium subscriber');
-    // Add your Supabase logic here
+    try {
+      // Update user's premium status and assign credits in Supabase
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          is_premium: true,
+          payment_status: 'paid'
+        })
+        .eq('id', user?.id);
+
+      if (profileError) {
+        console.error('Error updating premium status:', profileError);
+        throw profileError;
+      }
+
+      // Then, assign paid credits - 1 session per payment
+      const { error: creditError } = await supabase
+        .from('session_credit')
+        .insert({
+          user_id: user?.id,
+          status: 'unredeemed'
+        });
+
+      if (creditError) {
+        console.error('Error assigning credits:', creditError);
+        throw creditError;
+      }
+
+      console.log('✅ User upgraded to premium with 8 session credits');
+    } catch (error) {
+      console.error('❌ Error upgrading user:', error);
+      throw error;
+    }
   };
 
   useEffect(() => {
