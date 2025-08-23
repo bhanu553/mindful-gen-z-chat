@@ -691,17 +691,41 @@ async function getOrCreateCurrentSession(userId) {
 function filterInternalSteps(analysis) {
   if (!analysis) return '';
   
-  // Remove any text wrapped in ** ** (internal steps)
-  const filteredAnalysis = analysis.replace(/\*\*[^*]*\*\*/g, '');
+  console.log('🔍 Starting internal steps filtering for Phase 1 analysis');
+  console.log('🔍 Original analysis length:', analysis.length);
+  
+  // Remove any text wrapped in ** ** (internal steps) - ENHANCED PATTERN
+  let filteredAnalysis = analysis;
+  
+  // Pattern 1: Remove **internal text** (most common)
+  filteredAnalysis = filteredAnalysis.replace(/\*\*[^*]*\*\*/g, '');
+  
+  // Pattern 2: Remove [internal text] (alternative format)
+  filteredAnalysis = filteredAnalysis.replace(/\[[^\]]*\]/g, '');
+  
+  // Pattern 3: Remove {{internal text}} (template variables)
+  filteredAnalysis = filteredAnalysis.replace(/\{\{[^}]*\}\}/g, '');
+  
+  // Pattern 4: Remove internal instructions like "Do this:" or "Note:"
+  filteredAnalysis = filteredAnalysis.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
+  
+  // Pattern 5: Remove lines that are purely internal instructions
+  filteredAnalysis = filteredAnalysis.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE)[:：]?\s*[^\n]*$/gmi, '');
   
   // Clean up any double spaces or empty lines that might result
   const cleanedAnalysis = filteredAnalysis
     .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove excessive empty lines
-    .replace(/^\s+|\s+$/g, ''); // Trim whitespace
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // Double pass for stubborn cases
+    .replace(/^\s+|\s+$/g, '') // Trim whitespace
+    .replace(/^\n+|\n+$/g, ''); // Remove leading/trailing newlines
   
-  console.log('🔍 Filtered internal steps from onboarding analysis');
-  console.log('🔍 Original length:', analysis.length);
-  console.log('🔍 Filtered length:', cleanedAnalysis.length);
+  console.log('🔍 Filtered analysis length:', cleanedAnalysis.length);
+  console.log('🔍 Characters removed:', analysis.length - cleanedAnalysis.length);
+  
+  // Final validation - ensure no internal markers remain
+  if (cleanedAnalysis.includes('**') || cleanedAnalysis.includes('[[') || cleanedAnalysis.includes('{{')) {
+    console.warn('⚠️ Internal markers may still be present after filtering');
+  }
   
   return cleanedAnalysis;
 }
@@ -712,6 +736,21 @@ export async function POST(req) {
   console.log("ENV VITE_OPENAI_API_KEY:", process.env.VITE_OPENAI_API_KEY ? process.env.VITE_OPENAI_API_KEY.substring(0, 10) : "undefined");
   try {
     const { message, userId, isFirstMessage = false, generateAnalysis = false } = await req.json();
+    
+    // 🔒 UNIFIED USER VALIDATION - CRITICAL SECURITY CHECK
+    if (!userId) {
+      console.error("❌ No userId provided - blocking request");
+      return Response.json({ error: "User ID required" }, { status: 400 });
+    }
+    
+    // Validate userId format (should be UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      console.error("❌ Invalid userId format:", userId);
+      return Response.json({ error: "Invalid user ID format" }, { status: 400 });
+    }
+    
+    console.log(`🔒 Unified user validation passed for user: ${userId}`);
     
     const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
     
@@ -736,10 +775,27 @@ export async function POST(req) {
       return Response.json({ error: "No message provided." }, { status: 400 });
     }
 
-    // --- SESSION MANAGEMENT FOR ALL USERS ---
+    // --- UNIFIED SESSION MANAGEMENT WITH PAYMENT VALIDATION ---
     let session = null;
     if (userId) {
       console.log(`🔍 Managing session for user: ${userId}`);
+      
+      // First, check if user exists and is authenticated
+      const { data: userProfile, error: userError } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('id', userId)
+        .single();
+      
+      if (userError || !userProfile) {
+        console.error('❌ User not found or not authenticated:', userId);
+        return Response.json({ 
+          error: "User not authenticated" 
+        }, { status: 401 });
+      }
+      
+      console.log(`✅ User authenticated: ${userProfile.email}`);
+      
       session = await getOrCreateCurrentSession(userId);
       console.log(`🔍 Session details:`, {
         id: session?.id,
@@ -771,10 +827,41 @@ export async function POST(req) {
       // If session is null, it means user needs to go through the session gate
       if (!session) {
         console.log('🚫 User needs to go through session gate for payment/credit check');
+        
+        // Check if user has any unredeemed credits
+        const { data: credits, error: creditError } = await supabase
+          .from('session_credits')
+          .select('id, status, created_at')
+          .eq('user_id', userId)
+          .eq('status', 'unredeemed')
+          .order('created_at', { ascending: true });
+        
+        if (creditError) {
+          console.error('❌ Error checking user credits:', creditError);
+          return Response.json({ 
+            error: "Payment verification failed", 
+            sessionComplete: true,
+            needsPayment: true
+          }, { status: 500 });
+        }
+        
+        if (!credits || credits.length === 0) {
+          console.log('🚫 No unredeemed credits found - payment required');
+          return Response.json({ 
+            error: "Payment required ($5.99) to start next session", 
+            sessionComplete: true,
+            needsPayment: true,
+            paymentAmount: 5.99
+          }, { status: 403 });
+        }
+        
+        // User has credits but session is null - this shouldn't happen
+        // Redirect them to session gate for proper handling
+        console.log('⚠️ User has credits but no session - redirecting to session gate');
         return Response.json({ 
-          error: "Payment required", 
+          error: "Session gate redirect required", 
           sessionComplete: true,
-          needsPayment: true
+          redirectToGate: true
         }, { status: 403 });
       }
     }
@@ -928,7 +1015,7 @@ export async function POST(req) {
           .replace(/\{\{Insert prior AI-analyzed emotional breakdown here\}\}/g, 'User is seeking therapeutic guidance and support') +
         `\n\nIMPORTANT: Phase 2 (triage) has ALREADY been completed. Internally selected therapist: "${selectedTherapist}".\n` +
         `Begin at Phase 3 persona activation as ${personaName} and proceed through Phase 4 structured session work. Do NOT output labels, role names, or meta-commentary. Continue therapy naturally.` +
-        '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You MUST follow the therapy prompt structure exactly. REQUIREMENTS: (1) Explicitly reference the user\'s last message content with a short reflective quote (5–12 words) in quotes; (2) Ask one targeted, open-ended therapeutic question; (3) Keep the tone aligned with the selected persona and Phase 4 structure.' }
+        '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You MUST follow the therapy prompt structure exactly. REQUIREMENTS: (1) Explicitly reference the user\'s last message content with a short reflective quote (5–12 words) in quotes; (2) Ask one targeted, open-ended therapeutic question; (3) Keep the tone aligned with the selected persona and Phase 4 structure.';
       console.log('🔧 Subsequent message - Using Phase 2-6 prompt with completed triage. Selected label/persona:', selectedTherapist, '/', personaName);
     }
     console.log('📝 System prompt sent to OpenAI:', systemPrompt.substring(0, 500));

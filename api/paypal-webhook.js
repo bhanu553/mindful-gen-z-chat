@@ -28,7 +28,7 @@ export async function POST(req) {
     
     console.log('💰 Payment details:', { paymentId, amount, currency });
     
-    // Extract user ID from custom_id or description
+    // 🔒 UNIFIED USER VALIDATION - Extract and validate user ID
     let userId = null;
     if (payment.custom_id) {
       userId = payment.custom_id;
@@ -44,6 +44,27 @@ export async function POST(req) {
       console.error('❌ No user ID found in payment data');
       return Response.json({ error: "No user ID found" }, { status: 400 });
     }
+    
+    // Validate userId format (should be UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      console.error('❌ Invalid user ID format in payment:', userId);
+      return Response.json({ error: "Invalid user ID format" }, { status: 400 });
+    }
+    
+    // Verify user exists and is authenticated
+    const { data: userProfile, error: userError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('id', userId)
+      .single();
+    
+    if (userError || !userProfile) {
+      console.error('❌ User not found or not authenticated:', userId);
+      return Response.json({ error: "User not authenticated" }, { status: 401 });
+    }
+    
+    console.log(`✅ User authenticated: ${userProfile.email}`);
     
     // Validate payment amount (should be $5.99)
     if (amount !== '5.99' || currency !== 'USD') {
@@ -94,12 +115,16 @@ export async function POST(req) {
     console.log('✅ Session credit created:', newCredit.id);
     
     // Check if user can start a session immediately (cooldown finished)
-    const { data: eligibility, error: eligibilityError } = await supabase.rpc('can_user_start_session', {
-      user_uuid: userId
-    });
+    const { data: completedSessions, error: sessionError } = await supabase
+      .from('chat_sessions')
+      .select('id, is_complete, cooldown_until')
+      .eq('user_id', userId)
+      .eq('is_complete', true)
+      .order('updated_at', { ascending: false })
+      .limit(1);
     
-    if (eligibilityError) {
-      console.error('❌ Error checking session eligibility:', eligibilityError);
+    if (sessionError) {
+      console.error('❌ Error checking session status:', sessionError);
       // Credit was created successfully, so we'll return success
       return Response.json({ 
         message: "Payment received. Session credit created successfully.",
@@ -108,9 +133,40 @@ export async function POST(req) {
       });
     }
     
-    const result = eligibility[0];
+    let canStartSession = false;
+    let cooldownRemaining = null;
     
-    if (result.can_start) {
+    if (completedSessions && completedSessions.length > 0) {
+      const latestSession = completedSessions[0];
+      
+      if (latestSession.cooldown_until) {
+        const now = new Date();
+        const cooldownUntil = new Date(latestSession.cooldown_until);
+        
+        if (now >= cooldownUntil) {
+          // Cooldown finished - user can start session immediately
+          canStartSession = true;
+          console.log('✅ Cooldown finished - user can start session immediately');
+        } else {
+          // Cooldown still active
+          const remainingMs = cooldownUntil.getTime() - now.getTime();
+          const minutes = Math.floor(remainingMs / (1000 * 60));
+          const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+          cooldownRemaining = { minutes, seconds };
+          console.log('⏰ Cooldown still active:', cooldownRemaining);
+        }
+      } else {
+        // No cooldown set - user can start session immediately
+        canStartSession = true;
+        console.log('✅ No cooldown set - user can start session immediately');
+      }
+    } else {
+      // No completed sessions - user can start session immediately
+      canStartSession = true;
+      console.log('✅ No completed sessions - user can start session immediately');
+    }
+    
+    if (canStartSession) {
       // User can start session immediately - redeem credit and create session
       console.log('✅ User can start session immediately - auto-starting');
       
@@ -183,23 +239,19 @@ export async function POST(req) {
       
     } else {
       // User cannot start session yet (cooldown active)
-      console.log('⏰ User cannot start session yet - cooldown active or other restriction');
+      console.log('⏰ User cannot start session yet - cooldown active');
       
       let message = "Payment received. Session credit created successfully.";
       
-      if (result.reason === 'Cooldown active') {
-        const cooldownMs = result.cooldown_remaining;
-        const minutes = Math.floor(cooldownMs / (1000 * 60));
-        const seconds = Math.floor((cooldownMs % (1000 * 60)) / 1000);
-        message = `Payment received. We'll start your next session automatically when the cooldown ends (${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}).`;
+      if (cooldownRemaining) {
+        message = `Payment received. We'll start your next session automatically when the cooldown ends (${cooldownRemaining.minutes.toString().padStart(2, '0')}:${cooldownRemaining.seconds.toString().padStart(2, '0')}).`;
       }
       
       return Response.json({ 
         message,
         creditId: newCredit.id,
         canStartSession: false,
-        reason: result.reason,
-        cooldownRemaining: result.cooldown_remaining
+        cooldownRemaining
       });
     }
     
