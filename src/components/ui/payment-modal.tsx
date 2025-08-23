@@ -38,7 +38,8 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                     amount: {
                       value: '5.99'
                     },
-                    description: 'EchoMind Therapy Session - $5.99 per session'
+                    description: `EchoMind Therapy Session - $5.99 per session - user:${user?.id}`,
+                    custom_id: user?.id || ''
                   }]
                 });
               },
@@ -48,26 +49,12 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
                   const details = await actions.order.capture();
                   console.log('PayPal payment completed:', details);
 
-                  // Update user's premium status in Supabase
-                  if (user) {
-                    const { error } = await supabase
-                      .from('profiles')
-                      .update({ is_premium: true })
-                      .eq('id', user.id);
-
-                    if (error) {
-                      console.error('Error updating premium status:', error);
-                      throw error;
-                    }
-                  }
-
                   toast({
-                    title: "You've been upgraded to Premium! 🎉",
-                    description: "Your premium features have been activated!",
+                    title: "Payment successful! 🎉",
+                    description: "Your session credit has been created. You can start your next session when the cooldown ends.",
                   });
                   onOpenChange(false);
-                  // Refresh the page to update premium status
-                  window.location.reload();
+                  // Close modal and let the cooldown component handle the next steps
                 } catch (error) {
                   console.error('Payment processing error:', error);
                   toast({
@@ -124,10 +111,10 @@ const PaymentModal = ({ open, onOpenChange }: PaymentModalProps) => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">
-            Upgrade to Premium
+            Start Next Session
           </DialogTitle>
           <p className="text-center text-muted-foreground">
-            Pay $5.99 per session, maximum 8 sessions per month
+            Pay $5.99 per session to continue your therapy
           </p>
         </DialogHeader>
         

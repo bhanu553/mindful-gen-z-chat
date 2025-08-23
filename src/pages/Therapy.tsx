@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { PremiumCooldownCountdown } from '@/components/therapy/PremiumCooldownCountdown';
+import { UnifiedCooldownCountdown } from '@/components/therapy/UnifiedCooldownCountdown';
 
 interface Message {
   id: string;
@@ -58,7 +58,7 @@ const Therapy = () => {
   }, [messages]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const { user, isPremium } = useAuth();
+  const { user } = useAuth();
 
   // Get your OpenAI API key from the environment variable. Put VITE_OPENAI_API_KEY=sk-... in a .env file in the project root (do NOT commit the .env file).
   const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -151,35 +151,17 @@ const Therapy = () => {
         setRestrictionInfo(data.restrictionInfo);
         setSessionComplete(true);
         
-        // Add restriction message as a chat message - different for premium vs free users
-        let restrictionText = '';
-        if (data.restrictionInfo.isPremium) {
-          restrictionText = `⏰ **Session Cooldown - Integration Time**
+        // Unified model: 10-minute cooldown for all users
+        const restrictionText = `⏰ **Session Cooldown - Integration Time**
 
 Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
 
-**Next session available in:** ${data.restrictionInfo.minutesRemaining} minutes
+**Next session available in:** ${data.restrictionInfo.minutesRemaining || 10} minutes
+**Next session cost:** $5.99 per session
 
-*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*`;
-        } else {
-          restrictionText = `⏰ **Your Free Trial is Over**
+*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*
 
-You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.
-
-**Next Free Session Available:** ${data.restrictionInfo.daysRemaining} days
-${data.restrictionInfo.nextEligibleDate ? `Available on ${new Date(data.restrictionInfo.nextEligibleDate).toLocaleDateString()}` : 'Date calculation in progress...'}
-
-**Ready to continue your healing?**
-Premium: $49/month
-• 8 sessions (vs 1 free)
-• 3 - 4 days spacing for optimal progress
-• Session continuity that builds on your breakthrough
-• Personalized homework and skill development
-
-*Therapy isn't a one-session miracle. Real change happens with consistent work.*
-
-**Don't wait ${data.restrictionInfo.daysRemaining} days and lose momentum.**`;
-        }
+You can pay now and your session will start automatically when the cooldown ends.`;
         
         const restrictionMessage: Message = {
           id: 'restriction-message',
@@ -210,65 +192,30 @@ Premium: $49/month
         console.log('✅ Session complete detected! Setting sessionComplete state to true.');
         setSessionComplete(true);
         
-        // Immediately show session completion message based on user type
-        if (isPremium) {
-          // Premium user session completion message
-          const sessionEndMessage: Message = {
-            id: 'premium-session-end',
-            text: `⏰ **Session Complete - Integration Time**
+        // Unified model: 10-minute cooldown for all users
+        const sessionEndMessage: Message = {
+          id: 'session-end',
+          text: `⏰ **Session Complete - Integration Time**
 
 Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
 
 **Next session available in:** 10 minutes
+**Next session cost:** $5.99 per session
 
-*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*`,
-            isUser: false,
-            timestamp: new Date()
-          };
-          
-          setMessages(prev => [...prev, sessionEndMessage]);
-          setIsRestricted(true);
-          setRestrictionInfo({
-            isRestricted: true,
-            isPremium: true,
-            minutesRemaining: 10,
-            nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
-          });
-          
-        } else {
-          // Free user session completion message
-          const sessionEndMessage: Message = {
-            id: 'free-session-end',
-            text: `⏰ **Your Free Trial is Over**
+*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*
 
-You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.
-
-**Next Free Session Available:** 30 days
-Available on ${new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toLocaleDateString()}
-
-**Ready to continue your healing?**
-Premium: $49/month
-• 8 sessions (vs 1 free)
-• 3-4 days spacing for optimal progress
-• Session continuity that builds on your breakthrough
-• Personalized homework and skill development
-
-*Therapy isn't a one-session miracle. Real change happens with consistent work.*
-
-**Don't wait 30 days and lose momentum.**`,
-            isUser: false,
-            timestamp: new Date()
-          };
-          
-          setMessages(prev => [...prev, sessionEndMessage]);
-          setIsRestricted(true);
-          setRestrictionInfo({
-            isRestricted: true,
-            isPremium: false,
-            daysRemaining: 30,
-            nextEligibleDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString()
-          });
-        }
+You can pay now and your session will start automatically when the cooldown ends.`,
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, sessionEndMessage]);
+        setIsRestricted(true);
+        setRestrictionInfo({
+          isRestricted: true,
+          minutesRemaining: 10,
+          nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+        });
       } else {
         console.log('❌ Session complete NOT detected from backend.');
       }
@@ -435,62 +382,28 @@ Premium: $49/month
         
         // Then add cooldown/restriction message after a brief delay
         setTimeout(() => {
-          let cooldownMessage: Message;
-          
-          if (isPremium) {
-            // Premium user session completion message
-            cooldownMessage = {
-              id: 'premium-session-end',
-              text: `⏰ **Integration Time**
+          // Unified model: 10-minute cooldown for all users
+          const cooldownMessage: Message = {
+            id: 'session-end',
+            text: `⏰ **Session Complete - 10-Minute Cooldown Active**
 
-Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
+You've completed your therapy session. To maintain therapeutic effectiveness and prevent session overlap, there's a 10-minute cooldown period.
 
 **Next session available in:** 10 minutes
+**Next session cost:** $5.99 per session
 
-*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*`,
-              isUser: false,
-              timestamp: new Date()
-            };
-            
-            setRestrictionInfo({
-              isRestricted: true,
-              isPremium: true,
-              minutesRemaining: 10,
-              nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
-            });
-            
-          } else {
-            // Free user session completion message
-            cooldownMessage = {
-              id: 'free-session-end',
-              text: `⏰ **Your Free Trial is Over**
+*This spacing ensures each session builds on the previous one without emotional overwhelm.*
 
-You've completed your free therapy session. To continue your healing journey, you'll need to wait for your next free session or upgrade to premium.
-
-**Next Free Session Available:** 30 days
-Available on ${new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toLocaleDateString()}
-
-**Ready to continue your healing?**
-Premium: $49/month
-• 8 sessions (vs 1 free)
-• 3-4 days spacing for optimal progress
-• Session continuity that builds on your breakthrough
-• Personalized homework and skill development
-
-*Therapy isn't a one-session miracle. Real change happens with consistent work.*
-
-**Don't wait 30 days and lose momentum.**`,
-              isUser: false,
-              timestamp: new Date()
-            };
-            
-            setRestrictionInfo({
-              isRestricted: true,
-              isPremium: false,
-              daysRemaining: 30,
-              nextEligibleDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString()
-            });
-          }
+You can pay now and your session will start automatically when the cooldown ends.`,
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          setRestrictionInfo({
+            isRestricted: true,
+            minutesRemaining: 10,
+            nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+          });
           
           setMessages(prev => [...prev, cooldownMessage]);
           setIsRestricted(true);

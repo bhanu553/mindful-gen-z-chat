@@ -483,9 +483,9 @@ function getMonthStart() {
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 }
 
-// Utility: Detect session completion
-async function isSessionComplete(aiResponse, session, userId, isPremium = false) {
-  console.log(`🔍 Checking session completion for user ${userId} (Premium: ${isPremium})`);
+// Utility: Detect session completion (unified model)
+async function isSessionComplete(aiResponse, session, userId) {
+  console.log(`🔍 Checking session completion for user ${userId}`);
   console.log(`🔍 AI Response preview: ${aiResponse.substring(0, 200)}...`);
   console.log(`🔍 Full AI Response length: ${aiResponse.length}`);
   
@@ -561,7 +561,7 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
     return false;
   }
   
-  // CRITICAL: ALL users (both free and premium) need minimum message requirements
+  // CRITICAL: ALL users need minimum message requirements
   // This prevents premature session endings
   if (session && userId) {
     console.log('🔍 Checking minimum message requirements for session completion...');
@@ -609,7 +609,7 @@ async function isSessionComplete(aiResponse, session, userId, isPremium = false)
 async function getOrCreateCurrentSession(userId) {
   console.log(`🔍 Getting or creating session for user: ${userId}`);
   
-  // 1. Check for an active session (removed monthly filter to ensure all sessions are considered)
+  // 1. Check for an active session
   const { data: sessions, error } = await supabase
     .from('chat_sessions')
     .select('*')
@@ -620,26 +620,50 @@ async function getOrCreateCurrentSession(userId) {
   console.log(`🔍 Found ${sessions?.length || 0} sessions for user`);
   
   if (sessions && sessions.length > 0) {
-    // If session is not complete, return it
+    // If session is not complete, return it for continuation
     const active = sessions.find(s => !s.is_complete);
     if (active) {
       console.log(`✅ Found active session: ${active.id}`);
       return active;
     }
-    // If all sessions are complete, return the most recent (to block further use)
-    console.log(`✅ All sessions complete, returning most recent: ${sessions[0].id}`);
-    return sessions[0];
+    
+    // If all sessions are complete, check cooldown and payment requirements
+    const mostRecentSession = sessions[0];
+    console.log(`🔍 Most recent session completed: ${mostRecentSession.id}`);
+    
+    // Check if user is still in cooldown
+    if (mostRecentSession.cooldown_until) {
+      const now = new Date();
+      const cooldownUntil = new Date(mostRecentSession.cooldown_until);
+      
+      if (now < cooldownUntil) {
+        console.log('🚫 User still in cooldown - cannot create new session yet');
+        return mostRecentSession; // Return to trigger cooldown logic
+      }
+    }
+    
+    // Cooldown has passed, but we need to check if user has a paid credit
+    // This will be handled by the session gate - return null to indicate restriction
+    console.log('✅ Cooldown passed, but need to check payment credit via session gate');
+    return null;
   }
   
-  // 2. No session: create one
-  console.log('✅ No sessions found, creating new session');
+  // 2. No sessions exist - check if user can start (first-time user)
+  // For first-time users, we'll allow them to start without payment
+  console.log('✅ No sessions found, allowing first session');
   const { data: newSession, error: createError } = await supabase
     .from('chat_sessions')
-    .insert({ user_id: userId, is_complete: false, created_at: new Date().toISOString() })
+    .insert({ 
+      user_id: userId, 
+      is_complete: false, 
+      created_at: new Date().toISOString(),
+      title: 'New Therapy Session',
+      current_mode: 'evolve'
+    })
     .select()
     .single();
   if (createError) throw createError;
-  console.log(`✅ Created new session: ${newSession.id}`);
+  console.log(`✅ Created first session: ${newSession.id}`);
   return newSession;
 }
 
@@ -675,7 +699,6 @@ export async function POST(req) {
 
     // --- SESSION MANAGEMENT FOR ALL USERS ---
     let session = null;
-    let isPremium = false;
     if (userId) {
       console.log(`🔍 Managing session for user: ${userId}`);
       session = await getOrCreateCurrentSession(userId);
@@ -683,30 +706,37 @@ export async function POST(req) {
         id: session?.id,
         is_complete: session?.is_complete,
         created_at: session?.created_at,
-        updated_at: session?.updated_at
+        updated_at: session?.updated_at,
+        cooldown_until: session?.cooldown_until
       });
       
-      // Check if user is premium
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('is_premium, email')
-        .eq('id', userId)
-        .single();
-      
-      isPremium = profile?.is_premium || profile?.email === 'ucchishth31@gmail.com' || false;
-      console.log(`🔍 User premium status: ${isPremium} (email: ${profile?.email})`);
-      
-      // Only block if session is complete AND user is not premium
-      if (session.is_complete && !isPremium) {
-        console.log('🚫 Free user with completed session - blocking access');
-        // Session is already complete for this month (free users only)
-        return Response.json({ error: "Session complete", sessionComplete: true }, { status: 403 });
+      // Check if session is complete and user is in cooldown
+      if (session?.is_complete && session?.cooldown_until) {
+        const now = new Date();
+        const cooldownUntil = new Date(session.cooldown_until);
+        
+        if (now < cooldownUntil) {
+          console.log('🚫 User in cooldown - blocking access');
+          const remainingMs = cooldownUntil.getTime() - now.getTime();
+          const minutes = Math.floor(remainingMs / (1000 * 60));
+          const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+          
+          return Response.json({ 
+            error: "Session in cooldown", 
+            sessionComplete: true,
+            cooldownRemaining: { minutes, seconds }
+          }, { status: 403 });
+        }
       }
       
-      // For premium users, reset session completion status
-      if (session.is_complete && isPremium) {
-        console.log('✅ Premium user - allowing continuation despite session completion');
-        session.is_complete = false;
+      // If session is null, it means user needs to go through the session gate
+      if (!session) {
+        console.log('🚫 User needs to go through session gate for payment/credit check');
+        return Response.json({ 
+          error: "Payment required", 
+          sessionComplete: true,
+          needsPayment: true
+        }, { status: 403 });
       }
     }
 
@@ -1115,7 +1145,7 @@ Respond now as a therapist:`;
      console.log(`🔍 Full AI response for session completion analysis:`, aiReply);
      
      try {
-       const isComplete = await isSessionComplete(aiReply, session, userId, isPremium);
+       const isComplete = await isSessionComplete(aiReply, session, userId);
        console.log(`🔍 isSessionComplete returned: ${isComplete}`);
        
        if (isComplete) {
@@ -1129,14 +1159,18 @@ Respond now as a therapist:`;
          
          while (!updateSuccess && retryCount < maxRetries) {
            try {
-             const { data: updateResult, error: updateError } = await supabase
-               .from('chat_sessions')
-               .update({ 
-                 is_complete: true,
-                 updated_at: new Date().toISOString()
-               })
-               .eq('id', session.id)
-               .select();
+                      // Set cooldown_until to 10 minutes from now
+         const cooldownUntil = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
+         
+         const { data: updateResult, error: updateError } = await supabase
+           .from('chat_sessions')
+           .update({ 
+             is_complete: true,
+             updated_at: new Date().toISOString(),
+             cooldown_until: cooldownUntil
+           })
+           .eq('id', session.id)
+           .select();
              
              if (updateError) {
                console.error(`❌ Error updating session completion status (attempt ${retryCount + 1}):`, updateError);
