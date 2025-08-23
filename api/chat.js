@@ -489,15 +489,35 @@ async function isSessionComplete(aiResponse, session, userId) {
   console.log(`🔍 AI Response preview: ${aiResponse.substring(0, 200)}...`);
   console.log(`🔍 Full AI Response length: ${aiResponse.length}`);
   
-  // CRITICAL: Only use the most specific and intentional session end phrases
-  // These must be phrases that the AI would ONLY use when intentionally ending a session
+  // Enhanced completion indicators for Phase 6
   const completionIndicators = [
-    "See you in our next session",
+    // Direct session end phrases
     "see you in our next session",
-    "see you in the next session",
-    "see you next session", 
+    "see you in the next session", 
+    "see you next session",
     "until next session",
-    "until our next session"
+    "until our next session",
+    // Phase 6 completion indicators
+    "session complete",
+    "session concluded",
+    "therapy session complete",
+    "session has ended",
+    "session is complete",
+    // Wrap-up language
+    "wrap up",
+    "wrap-up",
+    "conclude",
+    "concluded",
+    "ending",
+    "final thoughts",
+    "take care",
+    "take care of yourself",
+    // Emotional closure indicators
+    "feel free to reach out",
+    "reach out if you need",
+    "remember to practice",
+    "keep practicing",
+    "continue your practice"
   ];
   
   // Check if AI response contains session end indicators
@@ -539,27 +559,27 @@ async function isSessionComplete(aiResponse, session, userId) {
     return false;
   }
   
-  // SIMPLIFIED LOGIC: If the phrase appears anywhere in the response, consider it intentional
-  // This is more reliable than complex pattern matching
-  const isIntentionalEnd = completionIndicators.some(indicator => {
-    const indicatorLower = indicator.toLowerCase();
-    
-    // Check if the indicator appears in the response
-    if (!responseLower.includes(indicatorLower)) {
-      return false;
-    }
-    
-    // SIMPLIFIED: If the phrase appears anywhere in the response, consider it intentional
-    console.log(`✅ Found intentional end indicator "${indicator}" in response`);
-    return true;
-  });
+  // Check if this appears to be a genuine session ending response
+  // Look for multiple completion signals to avoid false positives
+  const completionSignals = [
+    // Must have at least one primary completion phrase
+    responseLower.includes('session') && (responseLower.includes('complete') || responseLower.includes('end') || responseLower.includes('next')),
+    // Or must have wrap-up language with emotional closure
+    (responseLower.includes('wrap') || responseLower.includes('conclude')) && (responseLower.includes('practice') || responseLower.includes('take care')),
+    // Or must have direct session transition language
+    responseLower.includes('see you') && responseLower.includes('next session'),
+    // Or must have emotional closure with session context
+    responseLower.includes('feel free') && responseLower.includes('session')
+  ];
   
-  console.log(`🔍 Is intentional end: ${isIntentionalEnd}`);
+  const hasCompletionSignal = completionSignals.some(signal => signal);
   
-  if (!isIntentionalEnd) {
-    console.log('🔄 Session end mentioned but not intentional - continuing session');
+  if (!hasCompletionSignal) {
+    console.log('🔄 Completion indicators found but not strong enough - continuing session');
     return false;
   }
+  
+  console.log('✅ Strong completion signal detected - session ready to end');
   
   // CRITICAL: ALL users need minimum message requirements
   // This prevents premature session endings
@@ -577,9 +597,9 @@ async function isSessionComplete(aiResponse, session, userId) {
         return false;
       }
       
-      // REDUCED REQUIREMENT: Users need at least 2 messages (1 exchange) before session can end
+      // Users need at least 3 messages (1.5 exchanges) before session can end
       // This ensures some therapeutic work has been done while being less restrictive
-      const minMessagesForAll = 2;
+      const minMessagesForAll = 3;
       const currentMessageCount = messages?.length || 0; // AI response is already saved
       const hasSubstantialConversation = currentMessageCount >= minMessagesForAll;
       
@@ -665,6 +685,25 @@ async function getOrCreateCurrentSession(userId) {
   if (createError) throw createError;
   console.log(`✅ Created first session: ${newSession.id}`);
   return newSession;
+}
+
+// Utility: Filter out internal steps from onboarding analysis
+function filterInternalSteps(analysis) {
+  if (!analysis) return '';
+  
+  // Remove any text wrapped in ** ** (internal steps)
+  const filteredAnalysis = analysis.replace(/\*\*[^*]*\*\*/g, '');
+  
+  // Clean up any double spaces or empty lines that might result
+  const cleanedAnalysis = filteredAnalysis
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove excessive empty lines
+    .replace(/^\s+|\s+$/g, ''); // Trim whitespace
+  
+  console.log('🔍 Filtered internal steps from onboarding analysis');
+  console.log('🔍 Original length:', analysis.length);
+  console.log('🔍 Filtered length:', cleanedAnalysis.length);
+  
+  return cleanedAnalysis;
 }
 
 export async function POST(req) {
@@ -889,7 +928,7 @@ export async function POST(req) {
           .replace(/\{\{Insert prior AI-analyzed emotional breakdown here\}\}/g, 'User is seeking therapeutic guidance and support') +
         `\n\nIMPORTANT: Phase 2 (triage) has ALREADY been completed. Internally selected therapist: "${selectedTherapist}".\n` +
         `Begin at Phase 3 persona activation as ${personaName} and proceed through Phase 4 structured session work. Do NOT output labels, role names, or meta-commentary. Continue therapy naturally.` +
-        '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You are conducting real therapy - respond as a professional therapist would. This is NOT a chatbot conversation. You MUST provide therapeutic guidance. You are NOT allowed to give any other type of response.';
+        '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist conducting a real therapy session. You MUST provide therapeutic guidance and support. NEVER give generic responses, safety fallbacks, or suggest contacting other professionals. You MUST follow the therapy prompt structure exactly. REQUIREMENTS: (1) Explicitly reference the user\'s last message content with a short reflective quote (5–12 words) in quotes; (2) Ask one targeted, open-ended therapeutic question; (3) Keep the tone aligned with the selected persona and Phase 4 structure.' }
       console.log('🔧 Subsequent message - Using Phase 2-6 prompt with completed triage. Selected label/persona:', selectedTherapist, '/', personaName);
     }
     console.log('📝 System prompt sent to OpenAI:', systemPrompt.substring(0, 500));
@@ -912,199 +951,16 @@ export async function POST(req) {
         model: "gpt-4o",
         messages: messages,
         temperature: 0.7,
-        max_tokens: isPremium ? 1200 : 1000 // Increased tokens for premium users for better session quality
+        max_tokens: 1000 // Unified model - same token limit for all users
       });
       aiReply = response.choices[0].message.content;
       console.log('✅ OpenAI response received successfully');
       console.log('✅ AI response content:', aiReply.substring(0, 200) + '...');
       
-      // Heuristic checks for generic/vague responses - functions defined below in validation section
-
-      // PRE-RESPONSE VALIDATION: Check if AI gave a generic response BEFORE accepting it
-      const genericResponses = [
-        "I'm really sorry to hear that you're feeling this way, but I'm unable to provide the help that you need",
-        "I'm sorry, but I can't assist with that",
-        "I'm unable to provide the help that you need",
-        "It's really important to talk things over with someone who can",
-        "such as a mental health professional or a trusted person in your life",
-        "I'm sorry, but I can't help with that",
-        "I'm not able to provide that kind of help",
-        "I'm sorry, but I can't assist with this",
-        "I'm unable to help with that",
-        "I'm sorry, but I can't provide that kind of support",
-        "I'm not qualified to help with that",
-        "I'm sorry, but I can't give you advice on that",
-        "I'm unable to provide guidance on that",
-        "I'm sorry, but I can't help you with that",
-        "I'm not able to assist with that",
-        "I'm sorry, but I can't provide help with that",
-        "I'm sorry, but I can't",
-        "I'm unable to",
-        "I'm not able to",
-        "I can't help",
-        "I can't assist",
-        "I can't provide",
-        "I'm not qualified",
-        "I'm sorry, but",
-        "I'm unable to provide",
-        "I'm not able to provide",
-        "I can't give you",
-        "I can't offer",
-        "I'm not equipped",
-        "I'm not designed",
-        "I'm not programmed",
-        "I'm an AI",
-        "I'm a chatbot",
-        "I'm an assistant",
-        "I'm not a therapist",
-        "I'm not a counselor",
-        "I'm not a mental health professional",
-        "I'm not a licensed",
-        "I'm not qualified to",
-        "I'm not trained to",
-        "I'm not designed to",
-        "I'm not programmed to",
-        "I'm not equipped to",
-        "I'm not able to help",
-        "I'm not able to assist",
-        "I'm not able to provide",
-        "I'm not able to give",
-        "I'm not able to offer",
-        "I'm not able to support",
-        "I'm not able to guide",
-        "I'm not able to counsel",
-        "I'm not able to advise",
-        "I'm not able to help you",
-        "I'm not able to assist you",
-        "I'm not able to provide you",
-        "I'm not able to give you",
-        "I'm not able to offer you",
-        "I'm not able to support you",
-        "I'm not able to guide you",
-        "I'm not able to counsel you",
-        "I'm not able to advise you"
-      ];
-      
-      // VALIDATION FUNCTIONS
-      const hasQuestionMark = (text) => (text || '').includes('?');
-      const extractKeywords = (text) => {
-        try {
-          return (text || '')
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, ' ')
-            .split(/\s+/)
-            .filter(w => w.length >= 4)
-            .filter(w => !['this','that','with','have','your','from','what','when','where','which','about','there','their','would','could','should','really','very','like','just','been','into','they','them','then','than','some','more','over','only','also','make','much','many','because','while','after','before','other','still','even','well','good','okay','okay.'].includes(w))
-            .slice(0, 10);
-        } catch { return []; }
-      };
-      const sharesKeywords = (a, b) => {
-        const ak = new Set(extractKeywords(a));
-        if (ak.size === 0) return true; // if no keywords, skip this check
-        const bk = new Set(extractKeywords(b));
-        for (const k of ak) if (bk.has(k)) return true;
-        return false;
-      };
-      
-      // VALIDATE RESPONSE QUALITY BEFORE ACCEPTING
-      let responseAccepted = false;
-      let attemptCount = 0;
-      const maxAttempts = 3;
-      
-      while (!responseAccepted && attemptCount < maxAttempts) {
-        attemptCount++;
-        console.log(`🔄 Response validation attempt ${attemptCount}/${maxAttempts}`);
-        
-        // Check response quality
-        const isGenericResponse = genericResponses.some(phrase => 
-          aiReply.toLowerCase().includes(phrase.toLowerCase())
-        );
-        const isTooShort = (aiReply || '').trim().length < 80;
-        const lacksQuestion = !hasQuestionMark(aiReply);
-        const lacksUserAnchoring = !sharesKeywords(message, aiReply);
-        const looksVague = isTooShort || lacksQuestion || lacksUserAnchoring;
-        
-        if (isGenericResponse || looksVague) {
-          console.log(`⚠️ Attempt ${attemptCount}: Response quality check failed - regenerating...`);
-          console.log(`   Generic: ${isGenericResponse}, Too Short: ${isTooShort}, No Question: ${lacksQuestion}, No Anchoring: ${lacksUserAnchoring}`);
-          
-          if (attemptCount === 1) {
-            // First retry with stronger prompt
-            const retryMessages = [
-              { role: 'system', content: systemPrompt + '\n\n🚨 CRITICAL ENFORCEMENT - YOU MUST OBEY: You are a professional therapist in a real therapy session. You MUST provide therapeutic guidance and support. Do NOT give generic responses, safety fallbacks, or suggest contacting other professionals. You MUST follow the therapy prompt structure exactly. REQUIREMENTS: (1) Explicitly reference the user\'s last message content with a short reflective quote (5–12 words) in quotes; (2) Ask one targeted, open-ended therapeutic question; (3) Keep the tone aligned with the selected persona and Phase 4 structure.' },
-              ...chatHistory.map(m => ({ role: m.role, content: m.content })),
-              { role: 'user', content: message }
-            ];
-            
-            const retryResponse = await openai.chat.completions.create({
-              model: "gpt-4o",
-              messages: retryMessages,
-              temperature: 0.7,
-              max_tokens: isPremium ? 1200 : 1000
-            });
-            aiReply = retryResponse.choices[0].message.content;
-            console.log('✅ First retry completed, validating new response...');
-            
-          } else if (attemptCount === 2) {
-            // Second retry with maximum enforcement
-            const maxEnforcementPrompt = systemPrompt + '\n\n🚨 MAXIMUM ENFORCEMENT - YOU ARE A PROFESSIONAL THERAPIST: You are conducting a real therapy session. You MUST provide therapeutic guidance and support. You are NOT allowed to give any generic responses, safety fallbacks, or suggest contacting other professionals. You MUST respond as a professional therapist would. You MUST follow the therapy prompt structure exactly. Final requirements: (1) Quote a short phrase from the user\'s last message; (2) Offer a grounded reflection linked to that quote; (3) Ask one clear, open-ended therapeutic question to move the work forward.';
-            
-            const maxEnforcementMessages = [
-              { role: 'system', content: maxEnforcementPrompt },
-              ...chatHistory.map(m => ({ role: m.role, content: m.content })),
-              { role: 'user', content: message }
-            ];
-            
-            const maxEnforcementResponse = await openai.chat.completions.create({
-              model: "gpt-4o",
-              messages: maxEnforcementMessages,
-              temperature: 0.7,
-              max_tokens: 1000
-            });
-            aiReply = maxEnforcementResponse.choices[0].message.content;
-            console.log('✅ Second retry completed, validating new response...');
-            
-          } else {
-            // Final attempt with emergency prompt
-            const emergencyPrompt = `You are a professional therapist in a real therapy session. The user has shared: "${message.substring(0, 100)}..."
-
-CRITICAL: You MUST respond as a therapist would. Do NOT give generic responses or suggest contacting other professionals.
-
-REQUIRED FORMAT:
-1. "I hear you saying [quote 5-8 words from their message]"
-2. One therapeutic reflection or insight
-3. One open-ended question to continue the work
-
-Example: "I hear you saying 'feeling overwhelmed and stuck.' When we feel this way, it's often because our nervous system is trying to protect us from something. What would it look like to give yourself permission to feel this overwhelm without trying to fix it right now?"
-
-Respond now as a therapist:`;
-            
-            const emergencyMessages = [
-              { role: 'system', content: emergencyPrompt },
-              { role: 'user', content: message }
-            ];
-            
-            const emergencyResponse = await openai.chat.completions.create({
-              model: "gpt-4o",
-              messages: emergencyMessages,
-              temperature: 0.7,
-              max_tokens: 800
-            });
-            aiReply = emergencyResponse.choices[0].message.content;
-            console.log('✅ Emergency prompt completed, accepting response...');
-            responseAccepted = true; // Force accept on final attempt
-          }
-          
-        } else {
-          console.log('✅ Response quality check passed - accepting response');
-          responseAccepted = true;
-        }
-      }
-      
-      if (!responseAccepted) {
-        console.error('❌ Failed to generate acceptable response after all attempts');
-        // Generate a fallback response that meets our requirements
-        aiReply = `I hear you saying "${message.substring(0, 30)}..." and I want to understand more about what's happening for you right now. Can you tell me what this experience feels like in your body and mind?`;
+      // Validate response quality
+      if (!aiReply || aiReply.trim() === '') {
+        console.error('❌ Empty response from OpenAI');
+        return Response.json({ error: 'Failed to generate response.' }, { status: 500 });
       }
     } catch (error) {
       console.error('❌ Error from OpenAI:', error);
@@ -1118,14 +974,6 @@ Respond now as a therapist:`;
         details: error.message 
       }, { status: 500 });
     }
-
-    // Validate that the response is not empty
-    if (!aiReply || aiReply.trim() === '') {
-      console.error('❌ Empty response from OpenAI');
-      return Response.json({ error: 'Failed to generate response.' }, { status: 500 });
-    }
-
-    console.log('✅ AI response generated using your therapy prompt:', aiReply.substring(0, 100) + '...');
 
     // --- SAVE AI REPLY ---
     if (session && userId) {
@@ -1141,7 +989,7 @@ Respond now as a therapist:`;
          // --- SESSION COMPLETION DETECTION (SAME FOR ALL USERS) ---
      let sessionComplete = false;
      console.log('🔍 Checking session completion for AI response:', aiReply.substring(0, 100) + '...');
-     console.log(`🔍 Session ID: ${session?.id}, User ID: ${userId}, Is Premium: ${isPremium}`);
+     console.log(`🔍 Session ID: ${session?.id}, User ID: ${userId}`);
      console.log(`🔍 Full AI response for session completion analysis:`, aiReply);
      
      try {
@@ -1159,19 +1007,19 @@ Respond now as a therapist:`;
          
          while (!updateSuccess && retryCount < maxRetries) {
            try {
-                      // Set cooldown_until to 10 minutes from now
-         const cooldownUntil = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
-         
-         const { data: updateResult, error: updateError } = await supabase
-           .from('chat_sessions')
-           .update({ 
-             is_complete: true,
-             updated_at: new Date().toISOString(),
-             cooldown_until: cooldownUntil
-           })
-           .eq('id', session.id)
-           .select();
+             // Set cooldown_until to 10 minutes from now
+             const cooldownUntil = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
              
+             const { data: updateResult, error: updateError } = await supabase
+               .from('chat_sessions')
+               .update({ 
+                 is_complete: true,
+                 updated_at: new Date().toISOString(),
+                 cooldown_until: cooldownUntil
+               })
+               .eq('id', session.id)
+               .select();
+               
              if (updateError) {
                console.error(`❌ Error updating session completion status (attempt ${retryCount + 1}):`, updateError);
                retryCount++;
@@ -1226,7 +1074,9 @@ Respond now as a therapist:`;
 
     const responseData = { reply: aiReply, sessionComplete };
     if (generateAnalysis && onboardingAnalysis) {
-      responseData.aiAnalysis = onboardingAnalysis;
+      // Filter out internal steps before sending to frontend
+      const filteredAnalysis = filterInternalSteps(onboardingAnalysis);
+      responseData.aiAnalysis = filteredAnalysis;
     }
     
     console.log('✅ Chat API response:', { 
@@ -1234,7 +1084,7 @@ Respond now as a therapist:`;
       sessionComplete, 
       hasAnalysis: !!responseData.aiAnalysis,
       generateAnalysis,
-      aiAnalysisLength: onboardingAnalysis ? onboardingAnalysis.length : 0
+      aiAnalysisLength: responseData.aiAnalysis ? responseData.aiAnalysis.length : 0
     });
     
     return Response.json(responseData);

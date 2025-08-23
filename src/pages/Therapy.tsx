@@ -429,30 +429,42 @@ You can pay now and your session will start automatically when the cooldown ends
     }
   };
 
-  // Add a function to start a new session for premium users
+  // Add a function to start a new session using the session gate
   const handleStartNewSession = async () => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      // Call backend to create a new session and get the first AI message (with summary)
-      const response = await fetch('/api/new-session', {
+      // Call the session gate to check eligibility and create session
+      const response = await fetch('/api/session-gate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user?.id })
       });
-      if (!response.ok) throw new Error('Failed to start new session.');
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to start new session.');
+      }
+      
       const data = await response.json();
-      // Clear chat and set first AI message
-      setMessages([
-        {
-          id: Date.now().toString(),
-          text: data.firstMessage,
-          isUser: false,
-          timestamp: new Date()
-        }
-      ]);
-      setSessionComplete(false);
-      setInputText('');
+      
+      if (data.canStart) {
+        // Clear chat and set first AI message
+        setMessages([
+          {
+            id: Date.now().toString(),
+            text: data.firstMessage,
+            isUser: false,
+            timestamp: new Date()
+          }
+        ]);
+        setSessionComplete(false);
+        setIsRestricted(false);
+        setInputText('');
+        toast.success(data.message || 'Session started successfully!');
+      } else {
+        throw new Error(data.message || 'Cannot start session at this time.');
+      }
     } catch (error: any) {
       setErrorMessage(error.message || 'Failed to start new session.');
       toast.error(error.message || 'Failed to start new session.');
