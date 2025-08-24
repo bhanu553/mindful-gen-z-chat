@@ -2,49 +2,41 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, CreditCard, Lock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Clock, CreditCard, Lock, CheckCircle, AlertCircle, Play, Sparkles } from 'lucide-react';
 
-interface UnifiedCooldownCountdownProps {
-  cooldownRemaining: {
-    minutes: number;
-    seconds: number;
-  };
-  hasCredit: boolean;
-  onComplete?: () => void;
-  onPaymentComplete?: () => void;
+interface EnhancedCooldownCountdownProps {
+  cooldownEndTime: string; // ISO string from backend
+  onSessionUnlock: (sessionData: any) => void;
+  onError: (error: string) => void;
 }
 
-export const UnifiedCooldownCountdown = ({
-  cooldownRemaining,
-  hasCredit,
-  onComplete,
-  onPaymentComplete
-}: UnifiedCooldownCountdownProps) => {
-  const [timeRemaining, setTimeRemaining] = useState(cooldownRemaining);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
+export const EnhancedCooldownCountdown = ({
+  cooldownEndTime,
+  onSessionUnlock,
+  onError
+}: EnhancedCooldownCountdownProps) => {
+  const [timeRemaining, setTimeRemaining] = useState({ minutes: 10, seconds: 0 });
+  const [isCooldownActive, setIsCooldownActive] = useState(true);
   const [showPayPal, setShowPayPal] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
+  const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const paypalButtonRef = useRef<HTMLDivElement>(null);
 
-  // Calculate cooldown end time from remaining time
-  const cooldownEndTime = new Date(Date.now() + (timeRemaining.minutes * 60 * 1000) + (timeRemaining.seconds * 1000));
-
+  // Calculate remaining time from backend cooldown end time
   useEffect(() => {
     const calculateTimeRemaining = () => {
       const now = new Date().getTime();
-      const endTime = cooldownEndTime.getTime();
+      const endTime = new Date(cooldownEndTime).getTime();
       const difference = endTime - now;
 
       if (difference <= 0) {
         setTimeRemaining({ minutes: 0, seconds: 0 });
-        if (hasCredit) {
-          // Auto-start session when cooldown ends and user has credit
-          startNewSession();
-        } else {
-          // Show PayPal prompt when cooldown ends
-          setShowPayPal(true);
+        setIsCooldownActive(false);
+        setShowPayPal(true);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
         }
         return;
       }
@@ -66,11 +58,11 @@ export const UnifiedCooldownCountdown = ({
         clearInterval(intervalRef.current);
       }
     };
-  }, [cooldownEndTime, hasCredit]);
+  }, [cooldownEndTime]);
 
   // Initialize PayPal when component mounts
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.paypal && paypalButtonRef.current) {
+    if (typeof window !== 'undefined' && window.paypal && paypalButtonRef.current && showPayPal) {
       window.paypal.Buttons({
         style: {
           shape: 'pill',
@@ -99,6 +91,7 @@ export const UnifiedCooldownCountdown = ({
             return orderData.orderID;
           } catch (error) {
             console.error('Error creating PayPal order:', error);
+            onError('Failed to create payment order. Please try again.');
             throw error;
           }
         },
@@ -121,37 +114,36 @@ export const UnifiedCooldownCountdown = ({
             }
             
             setPaymentStatus('completed');
-            setShowPayPal(false);
             
-            // Wait a moment then start new session
+            // Wait a moment then unlock session
             setTimeout(() => {
-              if (onPaymentComplete) {
-                onPaymentComplete();
-              }
+              unlockSession();
             }, 1500);
             
           } catch (error) {
             console.error('Error capturing PayPal payment:', error);
             setPaymentStatus('failed');
+            onError('Payment failed. Please try again.');
           }
         },
         onError: (err: any) => {
           console.error('PayPal error:', err);
           setPaymentStatus('failed');
+          onError('Payment error occurred. Please try again.');
         },
         onCancel: () => {
           setPaymentStatus('pending');
         }
       }).render(paypalButtonRef.current);
     }
-  }, [user?.id, onPaymentComplete]);
+  }, [user?.id, showPayPal, onError]);
 
-  const startNewSession = async () => {
+  const unlockSession = async () => {
     if (!user) return;
     
     setIsProcessing(true);
     try {
-      console.log('🕐 Cooldown complete - starting new session...');
+      console.log('🔓 Unlocking session after payment...');
       
       const response = await fetch('/api/session-gate', {
         method: 'POST',
@@ -164,15 +156,15 @@ export const UnifiedCooldownCountdown = ({
       const data = await response.json();
 
       if (response.ok && data.canStart) {
-        console.log('✅ New session started:', data);
-        if (onComplete) {
-          onComplete();
-        }
+        console.log('✅ Session unlocked successfully:', data);
+        onSessionUnlock(data);
       } else {
-        console.error('❌ Failed to start session:', data);
+        console.error('❌ Failed to unlock session:', data);
+        onError(data.message || 'Failed to unlock session. Please try again.');
       }
     } catch (error) {
-      console.error('❌ Error starting new session:', error);
+      console.error('❌ Error unlocking session:', error);
+      onError('Failed to unlock session. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -182,14 +174,10 @@ export const UnifiedCooldownCountdown = ({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const handlePayNow = () => {
-    setShowPayPal(true);
-  };
-
   // Show PayPal payment prompt after cooldown ends
   if (showPayPal) {
     return (
-      <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-blue-900/20 to-purple-900/20 border-blue-500/30">
+      <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-blue-900/20 to-purple-900/20 border-blue-500/30 shadow-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
             <CreditCard className="w-8 h-8 text-blue-400" />
@@ -225,7 +213,7 @@ export const UnifiedCooldownCountdown = ({
                 <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
               <div className="text-green-400 font-semibold">Payment Successful!</div>
-              <div className="text-sm text-green-300/70">Starting your new session...</div>
+              <div className="text-sm text-green-300/70">Unlocking your session...</div>
             </div>
           )}
           
@@ -251,68 +239,52 @@ export const UnifiedCooldownCountdown = ({
 
   // Show cooldown countdown
   return (
-    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-500/30">
+    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-500/30 shadow-2xl">
       <CardHeader className="text-center">
-        <div className="mx-auto w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mb-4">
+        <div className="mx-auto w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mb-4 relative">
           <Clock className="w-8 h-8 text-orange-400" />
+          {/* Pulsing animation */}
+          <div className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping" />
         </div>
         <CardTitle className="text-orange-400 text-xl">⏳ Session Cooldown</CardTitle>
         <CardDescription className="text-orange-300/80">
-          {hasCredit 
-            ? "Payment received. Waiting for cooldown to end."
-            : "Your next session will unlock in:"
-          }
+          Your next session will unlock in:
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center space-y-6">
         {/* Live Countdown Timer */}
         <div className="relative">
-          <div className="text-5xl font-mono font-bold text-center text-white mb-2">
+          <div className="text-6xl font-mono font-bold text-center text-white mb-4">
             {formatTime(timeRemaining.minutes, timeRemaining.seconds)}
           </div>
           
           {/* Progress Bar */}
-          <div className="w-full bg-orange-500/20 rounded-full h-2">
+          <div className="w-full bg-orange-500/20 rounded-full h-3">
             <div 
-              className="bg-gradient-to-r from-orange-400 to-red-400 h-2 rounded-full transition-all duration-1000 ease-out"
+              className="bg-gradient-to-r from-orange-400 to-red-400 h-3 rounded-full transition-all duration-1000 ease-out"
               style={{
-                width: `${((timeRemaining.minutes * 60 + timeRemaining.seconds) / (cooldownRemaining.minutes * 60 + cooldownRemaining.seconds)) * 100}%`
+                width: `${((timeRemaining.minutes * 60 + timeRemaining.seconds) / (10 * 60)) * 100}%`
               }}
             />
           </div>
-          
-          {/* Pulsing Animation */}
-          <div className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping" />
         </div>
         
         <div className="text-sm text-orange-300/70 leading-relaxed">
-          {hasCredit 
-            ? "Your session will start automatically when the cooldown ends."
-            : "This brief pause helps your insights settle and ensures optimal therapeutic effectiveness."
-          }
+          This brief pause helps your insights settle and ensures optimal therapeutic effectiveness.
         </div>
         
-        {!hasCredit && (
-          <div className="space-y-3">
-            <div className="text-xs text-orange-300/50">
-              You can pay now; your session will start automatically when the cooldown ends.
-            </div>
-            <Button 
-              onClick={handlePayNow}
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0"
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Pay $5.99 Now
-            </Button>
+        <div className="space-y-3">
+          <div className="text-xs text-orange-300/50">
+            You can pay now; your session will start automatically when the cooldown ends.
           </div>
-        )}
-        
-        {hasCredit && (
-          <div className="flex items-center justify-center space-x-2 text-green-400">
-            <CheckCircle className="w-4 h-4" />
-            <span className="text-sm">Payment received</span>
-          </div>
-        )}
+          <Button 
+            onClick={() => setShowPayPal(true)}
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            Pay $5.99 Now
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

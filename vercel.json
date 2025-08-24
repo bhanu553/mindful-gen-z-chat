@@ -5,6 +5,8 @@
     { "source": "/api/session", "destination": "/api/session.js" },
     { "source": "/api/onboarding", "destination": "/api/onboarding-complete.js" },
     { "source": "/api/new-session", "destination": "/api/new-session.js" },
+    { "source": "/api/create-paypal-order", "destination": "/api/create-paypal-order.js" },
+    { "source": "/api/capture-paypal-order", "destination": "/api/capture-paypal-order.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

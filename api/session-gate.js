@@ -191,6 +191,25 @@ export async function POST(req) {
       
       console.log('✅ New session created successfully:', newSession.id);
       
+      // Get session summary from previous session for continuity
+      let sessionSummary = '';
+      try {
+        const { data: previousSession, error: summaryError } = await supabase
+          .from('chat_sessions')
+          .select('session_summary')
+          .eq('user_id', userId)
+          .eq('is_complete', true)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (!summaryError && previousSession?.session_summary) {
+          sessionSummary = previousSession.session_summary;
+        }
+      } catch (error) {
+        console.error('❌ Error fetching session summary:', error);
+      }
+      
       // Return success with session info
       return Response.json({
         canStart: true,
@@ -198,7 +217,8 @@ export async function POST(req) {
         firstMessage: "🌟 **Welcome to Your New Therapy Session**\n\nI'm here to support you on your healing journey. What would you like to work on today?",
         message: "Starting your next session...",
         creditRedeemed: creditToRedeem.id,
-        remainingCredits: credits.length - 1
+        remainingCredits: credits.length - 1,
+        sessionSummary: sessionSummary
       });
       
     } catch (transactionError) {

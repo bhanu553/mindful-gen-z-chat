@@ -642,8 +642,7 @@ function filterInternalSteps(analysis) {
 
 export async function POST(req) {
   // DEBUG: Log environment variables for OpenAI API key
-  console.log("ENV OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : "undefined");
-  console.log("ENV VITE_OPENAI_API_KEY:", process.env.VITE_OPENAI_API_KEY ? process.env.VITE_OPENAI_API_KEY.substring(0, 10) : "undefined");
+        console.log("ENV OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : "undefined");
   try {
     const { message, userId, isFirstMessage = false, generateAnalysis = false } = await req.json();
     
@@ -662,7 +661,7 @@ export async function POST(req) {
     
     console.log(`🔒 Unified user validation passed for user: ${userId}`);
     
-    const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
       console.error("❌ OPENAI_API_KEY is missing");
@@ -671,7 +670,6 @@ export async function POST(req) {
       return Response.json({ 
         error: "OpenAI API key is not set.",
         env_OPENAI_API_KEY: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : "undefined",
-        env_VITE_OPENAI_API_KEY: process.env.VITE_OPENAI_API_KEY ? process.env.VITE_OPENAI_API_KEY.substring(0, 10) : "undefined",
         available_env_vars: Object.keys(process.env).filter(key => key.includes('OPENAI'))
       }, { status: 500 });
     }
@@ -1001,13 +999,42 @@ export async function POST(req) {
            // Set cooldown_until to 10 minutes from now
            const cooldownUntil = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
            
+           // Generate session summary before marking complete
+           let sessionSummary = '';
+           try {
+             const summaryPrompt = `You are a professional therapist. Summarize this therapy session in 2-3 sentences, focusing on the key themes, insights, and progress made. This summary will be used to provide continuity in future sessions.
+
+Session messages:
+${chatHistory.map(m => `${m.role === 'user' ? 'User' : 'Therapist'}: ${m.content}`).join('\n')}
+
+Provide a brief, therapeutic summary that captures the essence of this session:`;
+             
+             const summaryResponse = await openai.chat.completions.create({
+               model: "gpt-4o",
+               messages: [
+                 { role: 'system', content: summaryPrompt },
+                 { role: 'user', content: 'Summarize this therapy session.' }
+               ],
+               temperature: 0.3,
+               max_tokens: 150
+             });
+             
+             sessionSummary = filterInternalSteps(summaryResponse.choices[0].message.content);
+             console.log('📋 Generated session summary:', sessionSummary);
+           } catch (summaryError) {
+             console.error('❌ Error generating session summary:', summaryError);
+             sessionSummary = 'Session completed with therapeutic progress.';
+           }
+           
            const { data: updateResult, error: updateError } = await supabase
              .from('chat_sessions')
              .update({ 
                is_complete: true,
                ended_at: new Date().toISOString(),
                updated_at: new Date().toISOString(),
-               cooldown_until: cooldownUntil
+               cooldown_until: cooldownUntil,
+               cooldown_started_at: new Date().toISOString(),
+               session_summary: sessionSummary
              })
              .eq('id', session.id)
              .select();

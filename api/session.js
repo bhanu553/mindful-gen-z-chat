@@ -359,7 +359,7 @@ export async function POST(req) {
         let firstMessage = '';
         if (previousMessages.length > 0) {
           // Generate summary using OpenAI
-          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY });
+          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
           
           // Group messages by session for better context
           const messagesBySession = {};
@@ -584,7 +584,7 @@ Always end each session with:
 - You MUST provide therapeutic guidance and support - this is a real therapy session`;
 
           try {
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY });
+            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
             
             const firstMessageResponse = await openai.chat.completions.create({
               model: "gpt-4o",

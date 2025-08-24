@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { UnifiedCooldownCountdown } from '@/components/therapy/UnifiedCooldownCountdown';
+import { EnhancedCooldownCountdown } from '@/components/therapy/EnhancedCooldownCountdown';
 
 interface Message {
   id: string;
@@ -44,6 +44,7 @@ const Therapy = () => {
   const [isRestricted, setIsRestricted] = useState(false);
   const [restrictionInfo, setRestrictionInfo] = useState<any>(null);
   const [countdownCompleted, setCountdownCompleted] = useState(false);
+  const [sessionSummary, setSessionSummary] = useState<string>('');
   const navigate = useNavigate();
   
   // Debug sessionComplete state changes
@@ -60,8 +61,7 @@ const Therapy = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
 
-  // Get your OpenAI API key from the environment variable. Put VITE_OPENAI_API_KEY=sk-... in a .env file in the project root (do NOT commit the .env file).
-  const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+  // OpenAI API calls are handled by the backend - no client-side API keys needed
 
   // In scrollToBottom, ensure smooth behavior is set
   const scrollToBottom = () => {
@@ -446,10 +446,13 @@ You can pay now and your session will start automatically when the cooldown ends
             timestamp: new Date()
           };
           
+          const cooldownEndTime = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
+          
           setRestrictionInfo({
-            isRestricted: true,
-            minutesRemaining: 10,
-            nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+            type: 'cooldown',
+            message: 'Session complete - 10-minute cooldown active',
+            cooldownRemaining: { minutes: 10, seconds: 0 },
+            cooldownEndsAt: cooldownEndTime
           });
           
           setMessages(prev => [...prev, cooldownMessage]);
@@ -476,6 +479,53 @@ You can pay now and your session will start automatically when the cooldown ends
     }
   };
 
+  // Handle session unlock after payment completion
+  const handleSessionUnlock = (sessionData: any) => {
+    console.log('🔓 Session unlocked with data:', sessionData);
+    
+    // Clear cooldown state
+    setSessionComplete(false);
+    setIsRestricted(false);
+    setRestrictionInfo(null);
+    
+    // Show session summary if available
+    if (sessionData.sessionSummary) {
+      setSessionSummary(sessionData.sessionSummary);
+      const summaryMessage: Message = {
+        id: 'session-summary',
+        text: `✅ **Your New Session Has Started!**
+
+Here's a quick summary of your last session:
+
+${sessionData.sessionSummary}
+
+I'm here to continue supporting you on your healing journey. What would you like to work on today?`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages([summaryMessage]);
+    } else {
+      // Show welcome message for new session
+      const welcomeMessage: Message = {
+        id: 'new-session-welcome',
+        text: sessionData.firstMessage || "🌟 **Welcome to Your New Therapy Session**\n\nI'm here to support you on your healing journey. What would you like to work on today?",
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+    }
+    
+    // Reset initialization state
+    setHasInitialized(false);
+    setForceUpdate(prev => prev + 1);
+  };
+
+  // Handle errors from cooldown component
+  const handleCooldownError = (error: string) => {
+    console.error('❌ Cooldown error:', error);
+    toast.error(error);
+  };
+
   // Add a function to start a new session using the session gate
   const handleStartNewSession = async () => {
     setIsLoading(true);
@@ -497,14 +547,26 @@ You can pay now and your session will start automatically when the cooldown ends
       
       if (data.canStart) {
         // Clear chat and set first AI message
-        setMessages([
+        const messages = [
           {
             id: Date.now().toString(),
             text: data.firstMessage,
             isUser: false,
             timestamp: new Date()
           }
-        ]);
+        ];
+        
+        // Add session summary if available
+        if (data.sessionSummary) {
+          messages.unshift({
+            id: (Date.now() - 1).toString(),
+            text: `✅ **Your new session has started. Here's a quick summary of your last session:**\n\n${data.sessionSummary}`,
+            isUser: false,
+            timestamp: new Date()
+          });
+        }
+        
+        setMessages(messages);
         setSessionComplete(false);
         setIsRestricted(false);
         setInputText('');
@@ -658,19 +720,24 @@ You can pay now and your session will start automatically when the cooldown ends
              </div>
            )}
            
-                       {/* Session Cooldown Display */}
+           {/* Cooldown Blocked Input */}
+           {sessionComplete && (
+             <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+               <div className="text-center text-white/60">
+                 <Lock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                 <p className="text-sm">Chat input is locked during cooldown</p>
+               </div>
+             </div>
+           )}
+           
+                       {/* Enhanced Session Cooldown Display */}
         {sessionComplete && (
           <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
             <div className="flex justify-center">
-              <UnifiedCooldownCountdown
-                cooldownRemaining={restrictionInfo?.cooldownRemaining || { minutes: 10, seconds: 0 }}
-                hasCredit={restrictionInfo?.type === 'payment' ? false : true}
-                onComplete={() => {
-                  setSessionComplete(false);
-                  setMessages([]);
-                  setHasInitialized(false);
-                  setForceUpdate(prev => prev + 1);
-                }}
+              <EnhancedCooldownCountdown
+                cooldownEndTime={restrictionInfo?.cooldownEndsAt || new Date(Date.now() + (10 * 60 * 1000)).toISOString()}
+                onSessionUnlock={handleSessionUnlock}
+                onError={handleCooldownError}
               />
             </div>
           </div>

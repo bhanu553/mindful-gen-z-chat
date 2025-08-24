@@ -73,7 +73,7 @@ export default async function handler(req, res) {
   try {
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ error: 'Missing userId' });
-    const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'OpenAI API key missing' });
     const openai = new OpenAI({ apiKey });
 

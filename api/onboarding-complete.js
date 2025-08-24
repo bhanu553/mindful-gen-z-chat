@@ -154,7 +154,7 @@ End your response with just the one exploratory question and wait.`;
     const safeUserMessage = 'Based on my intake form above, please provide my first therapy session welcome message following the Phase 1 structure exactly.';
     console.log('📝 User message for onboarding-complete:', safeUserMessage);
     // Generate ai_analysis
-    const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return res.status(500).json({ success: false, error: 'OpenAI API key missing' });
     const openai = new OpenAI({ apiKey });
     const analysisResponse = await openai.chat.completions.create({
