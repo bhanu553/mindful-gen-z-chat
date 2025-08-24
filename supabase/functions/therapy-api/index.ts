@@ -653,20 +653,29 @@ function getSystemPrompt(mode: string): string {
 }
 
 function cleanInternalInstructions(text: string): string {
-  // Remove internal instructions wrapped in ** ... ** that are likely system content
-  // Keep legitimate emphasis text (short phrases)
-  return text.replace(/\*\*([^*]{50,})\*\*/g, (match, content) => {
-    // If the content is very long and contains system-like language, remove it
-    if (content.includes('CRITICAL') || 
-        content.includes('IMPORTANT') || 
-        content.includes('NEVER') ||
-        content.includes('ALWAYS') ||
-        content.includes('You are') ||
-        content.includes('instructions') ||
-        content.length > 100) {
-      return ''
-    }
-    // Keep shorter emphasis text
-    return match
-  }).replace(/\s+/g, ' ').trim()
+  if (!text) return '';
+  
+  let filteredText = text;
+  
+  // 🔒 CRITICAL: Remove ALL internal instructions wrapped in ** **
+  filteredText = filteredText.replace(/\*\*[^*]*\*\*/g, '');
+  
+  // Remove system markers in [ ] brackets
+  filteredText = filteredText.replace(/\[[^\]]*\]/g, '');
+  
+  // Remove template markers in {{ }} brackets
+  filteredText = filteredText.replace(/\{\{[^}]*\}\}/g, '');
+  
+  // Remove instruction lines that start with Note:, Do:, Important:, etc.
+  filteredText = filteredText.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
+  
+  // Remove internal/system instruction lines
+  filteredText = filteredText.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE)[:：]?\s*[^\n]*$/gmi, '');
+  
+  // Clean up excessive whitespace
+  filteredText = filteredText.replace(/\n\s*\n\s*\n/g, '\n\n').replace(/^\s+|\s+$/g, '');
+  
+  console.log('🔒 Internal instructions filtered from AI response');
+  
+  return filteredText.trim();
 }

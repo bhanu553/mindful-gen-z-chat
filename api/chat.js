@@ -1159,7 +1159,10 @@ export async function POST(req) {
        sessionComplete = false;
      }
 
-    const responseData = { reply: aiReply, sessionComplete };
+    // 🔒 CRITICAL: Filter ALL AI responses to remove internal instructions
+    const filteredReply = filterInternalSteps(aiReply);
+    
+    const responseData = { reply: filteredReply, sessionComplete };
     if (generateAnalysis && onboardingAnalysis) {
       // Filter out internal steps before sending to frontend
       const filteredAnalysis = filterInternalSteps(onboardingAnalysis);

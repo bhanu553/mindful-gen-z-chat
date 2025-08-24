@@ -130,7 +130,26 @@ export default async function handler(req, res) {
         temperature: 0.5,
         max_tokens: 400
       });
-      summary = summaryResponse.choices[0].message.content.trim();
+      // 🔒 CRITICAL: Filter out internal instructions from summary
+      const filterInternalSteps = (content) => {
+        if (!content) return '';
+        let filtered = content;
+        // Remove **internal text**
+        filtered = filtered.replace(/\*\*[^*]*\*\*/g, '');
+        // Remove [internal text]
+        filtered = filtered.replace(/\[[^\]]*\]/g, '');
+        // Remove {{internal text}}
+        filtered = filtered.replace(/\{\{[^}]*\}\}/g, '');
+        // Remove instruction lines
+        filtered = filtered.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
+        // Remove internal/system lines
+        filtered = filtered.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE)[:：]?\s*[^\n]*$/gmi, '');
+        // Clean up whitespace
+        filtered = filtered.replace(/\n\s*\n\s*\n/g, '\n\n').replace(/^\s+|\s+$/g, '');
+        return filtered.trim();
+      };
+      
+      summary = filterInternalSteps(summaryResponse.choices[0].message.content);
     }
 
     // 4. Check if user is premium
@@ -162,9 +181,28 @@ export default async function handler(req, res) {
         temperature: 0.7,
         max_tokens: 800
       });
-      firstMessage = aiResponse.choices[0].message.content.trim();
+      // 🔒 CRITICAL: Filter out internal instructions before saving to database
+      const filterInternalSteps = (message) => {
+        if (!message) return '';
+        let filtered = message;
+        // Remove **internal text**
+        filtered = filtered.replace(/\*\*[^*]*\*\*/g, '');
+        // Remove [internal text]
+        filtered = filtered.replace(/\[[^\]]*\]/g, '');
+        // Remove {{internal text}}
+        filtered = filtered.replace(/\{\{[^}]*\}\}/g, '');
+        // Remove instruction lines
+        filtered = filtered.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
+        // Remove internal/system lines
+        filtered = filtered.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE)[:：]?\s*[^\n]*$/gmi, '');
+        // Clean up whitespace
+        filtered = filtered.replace(/\n\s*\n\s*\n/g, '\n\n').replace(/^\s+|\s+$/g, '');
+        return filtered.trim();
+      };
       
-      // 6. Save the first message to chat_messages table for premium users
+      firstMessage = filterInternalSteps(aiResponse.choices[0].message.content) || 'Welcome to your new therapy session. How are you feeling today?';
+      
+      // 6. Save the filtered first message to chat_messages table for premium users
       await supabase.from('chat_messages').insert({
         session_id: newSession.id,
         user_id: userId,
@@ -191,9 +229,11 @@ export default async function handler(req, res) {
         temperature: 0.7,
         max_tokens: 800
       });
-      firstMessage = aiResponse.choices[0].message.content.trim();
       
-      // 6. Save the first message to chat_messages table for free users (same as premium)
+      // 🔒 CRITICAL: Filter out internal instructions before saving to database
+      firstMessage = filterInternalSteps(aiResponse.choices[0].message.content) || 'Welcome to your new therapy session. How are you feeling today?';
+      
+      // 6. Save the filtered first message to chat_messages table for free users (same as premium)
       await supabase.from('chat_messages').insert({
         session_id: newSession.id,
         user_id: userId,

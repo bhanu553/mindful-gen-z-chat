@@ -167,7 +167,27 @@ End your response with just the one exploratory question and wait.`;
       max_tokens: 800,
     });
     const aiAnalysisRaw = analysisResponse.choices[0].message.content;
-    const aiAnalysis = aiAnalysisRaw && aiAnalysisRaw.trim() !== '' ? aiAnalysisRaw : 'Welcome to your first therapy session. Let\'s begin.';
+    
+    // 🔒 CRITICAL: Filter out internal instructions before saving to database
+    const filterInternalSteps = (analysis) => {
+      if (!analysis) return '';
+      let filtered = analysis;
+      // Remove **internal text**
+      filtered = filtered.replace(/\*\*[^*]*\*\*/g, '');
+      // Remove [internal text]
+      filtered = filtered.replace(/\[[^\]]*\]/g, '');
+      // Remove {{internal text}}
+      filtered = filtered.replace(/\{\{[^}]*\}\}/g, '');
+      // Remove instruction lines
+      filtered = filtered.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
+      // Remove internal/system lines
+      filtered = filtered.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE)[:：]?\s*[^\n]*$/gmi, '');
+      // Clean up whitespace
+      filtered = filtered.replace(/\n\s*\n\s*\n/g, '\n\n').replace(/^\s+|\s+$/g, '');
+      return filtered.trim();
+    };
+    
+    const aiAnalysis = filterInternalSteps(aiAnalysisRaw) || 'Welcome to your first therapy session. Let\'s begin.';
     // Save ai_analysis to onboarding table
     await supabase
       .from('user_onboarding')

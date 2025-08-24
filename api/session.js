@@ -413,7 +413,26 @@ Be thorough and detailed - this summary will be used to create a seamless contin
               max_tokens: 1200 // Increased from 600 to 1200 for more comprehensive summary
             });
             
-            const summary = summaryResponse.choices[0].message.content.trim();
+            // 🔒 CRITICAL: Filter out internal instructions from summary
+            const filterInternalSteps = (content) => {
+              if (!content) return '';
+              let filtered = content;
+              // Remove **internal text**
+              filtered = filtered.replace(/\*\*[^*]*\*\*/g, '');
+              // Remove [internal text]
+              filtered = filtered.replace(/\[[^\]]*\]/g, '');
+              // Remove {{internal text}}
+              filtered = filtered.replace(/\{\{[^}]*\}\}/g, '');
+              // Remove instruction lines
+              filtered = filtered.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
+              // Remove internal/system lines
+              filtered = filtered.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE)[:：]?\s*[^\n]*$/gmi, '');
+              // Clean up whitespace
+              filtered = filtered.replace(/\n\s*\n\s*\n/g, '\n\n').replace(/^\s+|\s+$/g, '');
+              return filtered.trim();
+            };
+            
+            const summary = filterInternalSteps(summaryResponse.choices[0].message.content);
             console.log('📋 Generated cumulative summary:', summary.substring(0, 200) + '...');
             
             // Generate first message for new session using Phase 2-6 therapy prompt
@@ -577,7 +596,7 @@ Always end each session with:
               max_tokens: 800
             });
             
-            firstMessage = firstMessageResponse.choices[0].message.content.trim();
+            firstMessage = filterInternalSteps(firstMessageResponse.choices[0].message.content);
           } catch (error) {
             console.error('❌ Error generating first message:', error);
             firstMessage = 'Welcome to your therapy session! I\'m here to support you on your healing journey. How are you feeling today?';
@@ -629,8 +648,27 @@ Always end each session with:
       .limit(1)
       .single();
     
-    let allMessages = messages || [];
-    let aiAnalysisToUse = onboarding && onboarding.ai_analysis ? onboarding.ai_analysis : 'Welcome to your first therapy session. Let\'s begin.';
+            // 🔒 CRITICAL: Filter out internal instructions from onboarding analysis
+        const filterInternalSteps = (analysis) => {
+          if (!analysis) return '';
+          let filtered = analysis;
+          // Remove **internal text**
+          filtered = filtered.replace(/\*\*[^*]*\*\*/g, '');
+          // Remove [internal text]
+          filtered = filtered.replace(/\[[^\]]*\]/g, '');
+          // Remove {{internal text}}
+          filtered = filtered.replace(/\{\{[^}]*\}\}/g, '');
+          // Remove instruction lines
+          filtered = filtered.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
+          // Remove internal/system lines
+          filtered = filtered.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE)[:：]?\s*[^\n]*$/gmi, '');
+          // Clean up whitespace
+          filtered = filtered.replace(/\n\s*\n\s*\n/g, '\n\n').replace(/^\s+|\s+$/g, '');
+          return filtered.trim();
+        };
+        
+        let allMessages = messages || [];
+        let aiAnalysisToUse = onboarding && onboarding.ai_analysis ? filterInternalSteps(onboarding.ai_analysis) : 'Welcome to your first therapy session. Let\'s begin.';
     
     // Only prepend if there are no assistant messages yet
     const hasAssistantMessage = allMessages.some(m => m.role === 'assistant');

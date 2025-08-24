@@ -5,7 +5,7 @@
  * Tests all critical backend functionality for session handling, cooldowns, and payments
  */
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -359,8 +359,11 @@ async function main() {
 }
 
 // Only run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+} else {
+  // Also run if this is the main module
   main().catch(console.error);
 }
 
-module.exports = { BackendLogicTester };
+export { BackendLogicTester };
