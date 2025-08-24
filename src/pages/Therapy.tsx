@@ -76,8 +76,9 @@ const Therapy = () => {
   useEffect(() => {
     if (user && !hasInitialized && messages.length === 0) {
       setHasInitialized(true);
-      // Don't trigger first message - it should come from session loading
-      console.log("🎯 Therapy page initialized, waiting for session messages");
+      // Check session gate to determine current state
+      checkSessionGate();
+      console.log("🎯 Therapy page initialized, checking session gate");
     }
   }, [user, hasInitialized, messages.length]);
 
@@ -98,12 +99,58 @@ const Therapy = () => {
   useEffect(() => {
     if (countdownCompleted) {
       setCountdownCompleted(false);
-      // Refresh the session after a short delay to ensure the backend has updated
-      setTimeout(() => {
-        fetchSessionAndMessages();
-      }, 1000);
+      // Check session gate to see if we can start a new session
+      checkSessionGate();
     }
   }, [countdownCompleted]);
+
+  // Check session gate before allowing new sessions
+  const checkSessionGate = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch('/api/session-gate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.canStart) {
+        // User can start new session
+        console.log('✅ Session gate passed - can start new session');
+        setSessionComplete(false);
+        setMessages([]);
+        setHasInitialized(false);
+        setForceUpdate(prev => prev + 1);
+      } else {
+        // User cannot start new session (cooldown or payment required)
+        console.log('❌ Session gate blocked:', data.reason);
+        if (data.reason === 'Cooldown active') {
+          // Still in cooldown
+          setSessionComplete(true);
+          setRestrictionInfo({
+            type: 'cooldown',
+            message: data.message,
+            cooldownRemaining: data.cooldownRemaining,
+            cooldownEndsAt: data.cooldownEndsAt
+          });
+        } else if (data.reason === 'Payment required') {
+          // Payment required
+          setRestrictionInfo({
+            type: 'payment',
+            message: data.message,
+            paymentAmount: data.paymentAmount
+          });
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error checking session gate:', error);
+    }
+  };
 
   // Fetch or create session and load messages on initial mount only
   useEffect(() => {
@@ -142,10 +189,9 @@ const Therapy = () => {
       if (data.restrictionInfo && data.restrictionInfo.isRestricted) {
         console.log('🚫 User is restricted - showing restriction message only');
         console.log('🔍 Restriction details:', {
-          isPremium: data.restrictionInfo.isPremium,
-          daysRemaining: data.restrictionInfo.daysRemaining,
+          type: data.restrictionInfo.type || 'cooldown',
           minutesRemaining: data.restrictionInfo.minutesRemaining,
-          nextEligibleDate: data.restrictionInfo.nextEligibleDate
+          cooldownEndsAt: data.restrictionInfo.cooldownEndsAt
         });
         setIsRestricted(true);
         setRestrictionInfo(data.restrictionInfo);
@@ -176,7 +222,7 @@ You can pay now and your session will start automatically when the cooldown ends
       
       // Handle users with firstMessage (both premium and free)
       if (data.firstMessage) {
-        console.log(`✅ ${data.isPremium ? 'Premium' : 'Free'} user - displaying first message from session_first_message`);
+        console.log(`✅ User - displaying first message from session_first_message`);
         const firstMessage: Message = {
           id: 'session-first-message',
           text: data.firstMessage,
@@ -212,9 +258,10 @@ You can pay now and your session will start automatically when the cooldown ends
         setMessages(prev => [...prev, sessionEndMessage]);
         setIsRestricted(true);
         setRestrictionInfo({
-          isRestricted: true,
-          minutesRemaining: 10,
-          nextEligibleDate: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+          type: 'cooldown',
+          message: 'Session complete - 10-minute cooldown active',
+          cooldownRemaining: { minutes: 10, seconds: 0 },
+          cooldownEndsAt: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
         });
       } else {
         console.log('❌ Session complete NOT detected from backend.');
@@ -544,27 +591,7 @@ You can pay now and your session will start automatically when the cooldown ends
                           {message.isUser ? message.text : highlightTherapyQuestion(message.text)}
                         </p>
                         
-                        {/* Add countdown for premium users with restriction */}
-                        {!message.isUser && (message.id === 'restriction-message' || message.id === 'premium-cooldown-message' || message.id === 'premium-session-end') && isPremium && restrictionInfo?.nextEligibleDate && (
-                          <div className="mt-4 p-4 bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-xl border border-purple-400/50 shadow-lg">
-                            <div className="text-center">
-                              <p className="text-sm text-white/90 mb-3 font-medium">⏰ Next session available in:</p>
-                              <PremiumCooldownCountdown 
-                                nextEligibleDate={restrictionInfo.nextEligibleDate}
-                                onComplete={() => {
-                                  // Refresh the session when countdown completes
-                                  setCountdownCompleted(true);
-                                  setIsRestricted(false);
-                                  setRestrictionInfo(null);
-                                  fetchSessionAndMessages();
-                                }}
-                              />
-                              <p className="text-xs text-white/70 mt-2 italic">
-                                This brief pause helps integrate your insights
-                              </p>
-                            </div>
-                          </div>
-                        )}
+
                         
                         <p className="text-xs text-white/50 mt-2">
                           {formatTimestamp(message.timestamp)}
@@ -631,47 +658,23 @@ You can pay now and your session will start automatically when the cooldown ends
              </div>
            )}
            
-                       {/* Continue My Journey Button for Free Users When Session Complete */}
-            {sessionComplete && !isRestricted && !isPremium && (
-              <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-                <div className="relative">
-                  <Button
-                    onClick={() => navigate('/premium-plan-details')}
-                    className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white font-bold rounded-xl px-6 md:px-8 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg min-h-[44px] mx-auto block"
-                  >
-                    Continue My Journey
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            {/* Continue My Journey Button for Restricted Free Users */}
-            {isRestricted && !isPremium && (
-              <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-                <div className="relative">
-                  <Button
-                    onClick={() => navigate('/premium-plan-details')}
-                    className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white font-bold rounded-xl px-6 md:px-8 py-3 transition-all duration-200 shadow-lg text-sm md:text-base lg:text-lg min-h-[44px] mx-auto block"
-                  >
-                    Continue My Journey
-                  </Button>
-                </div>
-              </div>
-            )}
-          
-          {/* Continue My Journey Button for Premium Users */}
-          {sessionComplete && !isRestricted && isPremium && (
-            <div className="p-3 md:p-4 lg:p-6 border-t border-white/10">
-              <div className="flex justify-center">
-                <Button
-                  onClick={() => navigate('/dashboard')}
-                  className="premium-glass border border-white/20 text-white font-bold rounded-xl px-4 md:px-6 py-3 transition-all duration-200 shadow-lg text-sm md:text-base hover:bg-white/10 min-h-[44px]"
-                >
-                  Continue My Journey
-                </Button>
-              </div>
+                       {/* Session Cooldown Display */}
+        {sessionComplete && (
+          <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+            <div className="flex justify-center">
+              <UnifiedCooldownCountdown
+                cooldownRemaining={restrictionInfo?.cooldownRemaining || { minutes: 10, seconds: 0 }}
+                hasCredit={restrictionInfo?.type === 'payment' ? false : true}
+                onComplete={() => {
+                  setSessionComplete(false);
+                  setMessages([]);
+                  setHasInitialized(false);
+                  setForceUpdate(prev => prev + 1);
+                }}
+              />
             </div>
-          )}
+          </div>
+        )}
           
           
           

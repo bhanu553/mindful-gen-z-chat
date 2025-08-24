@@ -486,143 +486,60 @@ function getMonthStart() {
 // Utility: Detect session completion (unified model)
 async function isSessionComplete(aiResponse, session, userId) {
   console.log(`🔍 Checking session completion for user ${userId}`);
-  console.log(`🔍 AI Response preview: ${aiResponse.substring(0, 200)}...`);
-  console.log(`🔍 Full AI Response length: ${aiResponse.length}`);
   
-  // Enhanced completion indicators for Phase 6
-  const completionIndicators = [
-    // Direct session end phrases
-    "see you in our next session",
-    "see you in the next session", 
-    "see you next session",
-    "until next session",
-    "until our next session",
-    // Phase 6 completion indicators
-    "session complete",
-    "session concluded",
-    "therapy session complete",
-    "session has ended",
-    "session is complete",
-    // Wrap-up language
-    "wrap up",
-    "wrap-up",
-    "conclude",
-    "concluded",
-    "ending",
-    "final thoughts",
-    "take care",
-    "take care of yourself",
-    // Emotional closure indicators
-    "feel free to reach out",
-    "reach out if you need",
-    "remember to practice",
-    "keep practicing",
-    "continue your practice"
+  if (!aiResponse || !session || !userId) {
+    console.log('❌ Missing required parameters for session completion check');
+    return false;
+  }
+  
+  // SIMPLIFIED: Check for clear session ending phrases only
+  const completionPhrases = [
+    'see you in our next session',
+    'see you in the next session',
+    'see you next session',
+    'session complete',
+    'therapy session complete',
+    'session concluded',
+    'wrap up our session',
+    'conclude our session'
   ];
   
-  // Check if AI response contains session end indicators
   const responseLower = aiResponse.toLowerCase();
-  const hasEndIndicator = completionIndicators.some(indicator => 
-    responseLower.includes(indicator.toLowerCase())
+  const hasCompletionPhrase = completionPhrases.some(phrase => 
+    responseLower.includes(phrase)
   );
   
-  console.log(`🔍 Has end indicator: ${hasEndIndicator}`);
-  if (hasEndIndicator) {
-    const foundIndicators = completionIndicators.filter(indicator => 
-      responseLower.includes(indicator.toLowerCase())
-    );
-    console.log(`🔍 Found end indicators: ${foundIndicators.join(', ')}`);
-  } else {
-    // If no exact match, check for partial matches or similar phrases
-    const partialMatches = [
-      "see you",
-      "next session",
-      "until next",
-      "session end",
-      "conclude",
-      "wrap up"
-    ];
-    
-    const hasPartialMatch = partialMatches.some(phrase => 
-      responseLower.includes(phrase.toLowerCase())
-    );
-    
-    if (hasPartialMatch) {
-      console.log(`🔍 Found partial matches: ${partialMatches.filter(phrase => 
-        responseLower.includes(phrase.toLowerCase())
-      ).join(', ')}`);
-    }
-  }
-  
-  if (!hasEndIndicator) {
-    console.log('❌ No session end indicators found - session not complete');
+  if (!hasCompletionPhrase) {
+    console.log('❌ No clear session completion phrase detected');
     return false;
   }
   
-  // Check if this appears to be a genuine session ending response
-  // Look for multiple completion signals to avoid false positives
-  const completionSignals = [
-    // Must have at least one primary completion phrase
-    responseLower.includes('session') && (responseLower.includes('complete') || responseLower.includes('end') || responseLower.includes('next')),
-    // Or must have wrap-up language with emotional closure
-    (responseLower.includes('wrap') || responseLower.includes('conclude')) && (responseLower.includes('practice') || responseLower.includes('take care')),
-    // Or must have direct session transition language
-    responseLower.includes('see you') && responseLower.includes('next session'),
-    // Or must have emotional closure with session context
-    responseLower.includes('feel free') && responseLower.includes('session')
-  ];
-  
-  const hasCompletionSignal = completionSignals.some(signal => signal);
-  
-  if (!hasCompletionSignal) {
-    console.log('🔄 Completion indicators found but not strong enough - continuing session');
-    return false;
-  }
-  
-  console.log('✅ Strong completion signal detected - session ready to end');
-  
-  // CRITICAL: ALL users need minimum message requirements
-  // This prevents premature session endings
-  if (session && userId) {
-    console.log('🔍 Checking minimum message requirements for session completion...');
-    try {
-      const { data: messages, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('session_id', session.id)
-        .order('created_at', { ascending: true });
-      
-      if (error) {
-        console.error('❌ Error fetching messages for session completion check:', error);
-        return false;
-      }
-      
-      // Users need at least 3 messages (1.5 exchanges) before session can end
-      // This ensures some therapeutic work has been done while being less restrictive
-      const minMessagesForAll = 3;
-      const currentMessageCount = messages?.length || 0; // AI response is already saved
-      const hasSubstantialConversation = currentMessageCount >= minMessagesForAll;
-      
-      console.log(`🔍 Message count: ${currentMessageCount} (need at least ${minMessagesForAll})`);
-      console.log(`🔍 Has substantial conversation: ${hasSubstantialConversation}`);
-      console.log(`🔍 Messages in session:`, messages?.map(m => ({ role: m.role, preview: m.content.substring(0, 50) })));
-      
-      if (!hasSubstantialConversation) {
-        console.log(`🔄 Session not ready to end - only ${currentMessageCount} messages, need at least ${minMessagesForAll}`);
-        return false;
-      }
-      
-      console.log(`✅ Session ready to end - substantial conversation completed (${currentMessageCount} messages)`);
-      return true;
-    } catch (error) {
-      console.error('❌ Error in session completion check:', error);
+  // Verify minimum conversation length (at least 4 messages = 2 exchanges)
+  try {
+    const { data: messages, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('session_id', session.id)
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      console.error('❌ Error fetching messages for completion check:', error);
       return false;
     }
+    
+    const messageCount = messages?.length || 0;
+    if (messageCount < 4) {
+      console.log(`🔄 Session too short (${messageCount} messages) - need at least 4`);
+      return false;
+    }
+    
+    console.log(`✅ Session completion confirmed: ${messageCount} messages, clear ending phrase`);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Error in completion check:', error);
+    return false;
   }
-  
-  // If no session or userId, be extra conservative
-  console.log('⚠️ No session or userId provided - being conservative, not marking as complete');
-  return false;
 }
 
 // Utility: Get or create current session for free user
@@ -691,43 +608,36 @@ async function getOrCreateCurrentSession(userId) {
 function filterInternalSteps(analysis) {
   if (!analysis) return '';
   
-  console.log('🔍 Starting internal steps filtering for Phase 1 analysis');
-  console.log('🔍 Original analysis length:', analysis.length);
+  let filteredText = analysis;
   
-  // Remove any text wrapped in ** ** (internal steps) - ENHANCED PATTERN
-  let filteredAnalysis = analysis;
+  // 🔒 CRITICAL: Remove ALL internal instructions wrapped in ** **
+  filteredText = filteredText.replace(/\*\*[^*]*\*\*/g, '');
   
-  // Pattern 1: Remove **internal text** (most common)
-  filteredAnalysis = filteredAnalysis.replace(/\*\*[^*]*\*\*/g, '');
+  // Remove system markers in [ ] brackets
+  filteredText = filteredText.replace(/\[[^\]]*\]/g, '');
   
-  // Pattern 2: Remove [internal text] (alternative format)
-  filteredAnalysis = filteredAnalysis.replace(/\[[^\]]*\]/g, '');
+  // Remove template markers in {{ }} brackets
+  filteredText = filteredText.replace(/\{\{[^}]*\}\}/g, '');
   
-  // Pattern 3: Remove {{internal text}} (template variables)
-  filteredAnalysis = filteredAnalysis.replace(/\{\{[^}]*\}\}/g, '');
+  // Remove instruction lines that start with Note:, Do:, Important:, etc.
+  filteredText = filteredText.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
   
-  // Pattern 4: Remove internal instructions like "Do this:" or "Note:"
-  filteredAnalysis = filteredAnalysis.replace(/(?:^|\n)(?:Note|Do|Remember|Important|⚠️|🚨|🔹|🧠|⚖|🚨)[:：]\s*[^\n]*/gi, '');
+  // Remove internal/system instruction lines
+  filteredText = filteredText.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE|DEBUG|INTERNAL)[:：]?\s*[^\n]*$/gmi, '');
   
-  // Pattern 5: Remove lines that are purely internal instructions
-  filteredAnalysis = filteredAnalysis.replace(/^(?:[-\s]*)?(?:Internal|System|Backend|Admin|Debug|TODO|FIXME|NOTE)[:：]?\s*[^\n]*$/gmi, '');
+  // Remove any remaining debug or internal markers
+  filteredText = filteredText.replace(/(?:DEBUG|INTERNAL|SYSTEM|BACKEND|ADMIN|DEV|TEST)[:：]?\s*[^\n]*/gi, '');
   
-  // Clean up any double spaces or empty lines that might result
-  const cleanedAnalysis = filteredAnalysis
-    .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove excessive empty lines
-    .replace(/\n\s*\n\s*\n/g, '\n\n') // Double pass for stubborn cases
-    .replace(/^\s+|\s+$/g, '') // Trim whitespace
-    .replace(/^\n+|\n+$/g, ''); // Remove leading/trailing newlines
+  // Remove any lines that contain only technical terms
+  filteredText = filteredText.replace(/^(?:[-\s]*)?(?:API|Endpoint|Function|Method|Variable|Parameter|Response|Request|Status|Code|Error|Log|Console)[:：]?\s*[^\n]*$/gmi, '');
   
-  console.log('🔍 Filtered analysis length:', cleanedAnalysis.length);
-  console.log('🔍 Characters removed:', analysis.length - cleanedAnalysis.length);
+  // Clean up excessive whitespace and empty lines
+  filteredText = filteredText.replace(/\n\s*\n\s*\n/g, '\n\n').replace(/^\s+|\s+$/g, '');
   
-  // Final validation - ensure no internal markers remain
-  if (cleanedAnalysis.includes('**') || cleanedAnalysis.includes('[[') || cleanedAnalysis.includes('{{')) {
-    console.warn('⚠️ Internal markers may still be present after filtering');
-  }
+  // Remove any remaining technical artifacts
+  filteredText = filteredText.replace(/\b(?:TODO|FIXME|HACK|XXX|BUG|NOTE|WARNING|ERROR|CRITICAL|SECURITY)\b:?\s*[^\n]*/gi, '');
   
-  return cleanedAnalysis;
+  return filteredText.trim();
 }
 
 export async function POST(req) {
@@ -1085,73 +995,55 @@ export async function POST(req) {
        
        if (isComplete) {
          console.log('✅ Session completion detected! Marking session as complete.');
-         console.log(`🔍 Updating session ${session.id} with is_complete: true`);
+         console.log(`🔍 Updating session ${session.id} with is_complete: true and cooldown`);
          
-         // Add retry logic for session completion update
-         let updateSuccess = false;
-         let retryCount = 0;
-         const maxRetries = 3;
-         
-         while (!updateSuccess && retryCount < maxRetries) {
-           try {
-             // Set cooldown_until to 10 minutes from now
-             const cooldownUntil = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
+         try {
+           // Set cooldown_until to 10 minutes from now
+           const cooldownUntil = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
+           
+           const { data: updateResult, error: updateError } = await supabase
+             .from('chat_sessions')
+             .update({ 
+               is_complete: true,
+               ended_at: new Date().toISOString(),
+               updated_at: new Date().toISOString(),
+               cooldown_until: cooldownUntil
+             })
+             .eq('id', session.id)
+             .select();
              
-             const { data: updateResult, error: updateError } = await supabase
+           if (updateError) {
+             console.error('❌ Error updating session completion status:', updateError);
+             sessionComplete = false;
+           } else {
+             console.log('✅ Session successfully marked as complete with cooldown:', updateResult);
+             sessionComplete = true;
+             
+             // Verify the update was actually committed
+             const { data: verifyResult, error: verifyError } = await supabase
                .from('chat_sessions')
-               .update({ 
-                 is_complete: true,
-                 updated_at: new Date().toISOString(),
-                 cooldown_until: cooldownUntil
-               })
+               .select('is_complete, cooldown_until, ended_at')
                .eq('id', session.id)
-               .select();
-               
-             if (updateError) {
-               console.error(`❌ Error updating session completion status (attempt ${retryCount + 1}):`, updateError);
-               retryCount++;
-               if (retryCount < maxRetries) {
-                 console.log(`🔄 Retrying session completion update in 1 second...`);
-                 await new Promise(resolve => setTimeout(resolve, 1000));
-               }
+               .single();
+             
+             if (verifyError) {
+               console.error('❌ Error verifying session completion update:', verifyError);
+               sessionComplete = false;
+             } else if (verifyResult?.is_complete && verifyResult?.cooldown_until) {
+               console.log('✅ Session completion update verified in database');
+               console.log(`⏰ Cooldown set until: ${verifyResult.cooldown_until}`);
              } else {
-               console.log('✅ Session successfully marked as complete:', updateResult);
-               sessionComplete = true;
-               updateSuccess = true;
-               
-               // Verify the update was actually committed
-               const { data: verifyResult, error: verifyError } = await supabase
-                 .from('chat_sessions')
-                 .select('is_complete, updated_at')
-                 .eq('id', session.id)
-                 .single();
-               
-               if (verifyError) {
-                 console.error('❌ Error verifying session completion update:', verifyError);
-               } else if (verifyResult?.is_complete) {
-                 console.log('✅ Session completion update verified in database');
-               } else {
-                 console.error('❌ Session completion update verification failed - is_complete is still false');
-                 sessionComplete = false;
-               }
-             }
-           } catch (retryError) {
-             console.error(`❌ Exception during session completion update (attempt ${retryCount + 1}):`, retryError);
-             retryCount++;
-             if (retryCount < maxRetries) {
-               console.log(`🔄 Retrying session completion update in 1 second...`);
-               await new Promise(resolve => setTimeout(resolve, 1000));
+               console.error('❌ Session completion update verification failed');
+               sessionComplete = false;
              }
            }
-         }
-         
-         if (!updateSuccess) {
-           console.error('❌ Failed to update session completion status after all retries');
+         } catch (error) {
+           console.error('❌ Exception during session completion update:', error);
            sessionComplete = false;
          }
        } else {
          console.log('❌ Session completion NOT detected for this response.');
-         console.log('🔍 Full AI response for debugging:', aiReply);
+         sessionComplete = false;
        }
      } catch (error) {
        console.error('❌ Error checking session completion:', error);
