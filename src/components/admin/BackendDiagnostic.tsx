@@ -31,7 +31,7 @@ const BackendDiagnostic = () => {
     
     try {
       console.log('🔍 Running diagnostic via /api/diagnostic...');
-      const response = await fetch('/api/diagnostic');
+      const response = await fetch('/api/diagnostic?action=diagnostic');
       if (!response.ok) {
         throw new Error(`Diagnostic failed: ${response.status} ${response.statusText}`);
       }

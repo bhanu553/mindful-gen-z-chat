@@ -23,7 +23,7 @@ export const useBackendHealth = () => {
     
     try {
       console.log('🏥 Fetching health check from /api/health...');
-      const response = await fetch('/api/health');
+      const response = await fetch('/api/health?action=health');
       
       if (!response.ok) {
         throw new Error(`Health check failed: ${response.status} ${response.statusText}`);

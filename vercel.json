@@ -7,6 +7,9 @@
     { "source": "/api/new-session", "destination": "/api/new-session.js" },
     { "source": "/api/create-paypal-order", "destination": "/api/create-paypal-order.js" },
     { "source": "/api/capture-paypal-order", "destination": "/api/capture-paypal-order.js" },
+    { "source": "/api/health", "destination": "/api/health-diagnostic.js" },
+    { "source": "/api/diagnostic", "destination": "/api/health-diagnostic.js" },
+    { "source": "/api/version", "destination": "/api/health-diagnostic.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
