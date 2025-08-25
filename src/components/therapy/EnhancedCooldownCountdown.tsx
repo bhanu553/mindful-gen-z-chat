@@ -240,28 +240,28 @@ export const EnhancedCooldownCountdown = ({
   // Show cooldown countdown
   return (
     <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-500/30 shadow-2xl">
-      <CardHeader className="text-center">
-        <div className="mx-auto w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mb-4 relative">
-          <Clock className="w-8 h-8 text-orange-400" />
+      <CardHeader className="text-center pb-4">
+        <div className="mx-auto w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mb-3 relative">
+          <Clock className="w-6 h-6 text-orange-400" />
           {/* Pulsing animation */}
           <div className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping" />
         </div>
-        <CardTitle className="text-orange-400 text-xl">⏳ Session Cooldown</CardTitle>
-        <CardDescription className="text-orange-300/80">
+        <CardTitle className="text-orange-400 text-lg">⏳ Session Cooldown</CardTitle>
+        <CardDescription className="text-orange-300/80 text-sm">
           Your next session will unlock in:
         </CardDescription>
       </CardHeader>
-      <CardContent className="text-center space-y-6">
-        {/* Live Countdown Timer */}
+      <CardContent className="text-center space-y-4">
+        {/* Live Countdown Timer - More Compact */}
         <div className="relative">
-          <div className="text-6xl font-mono font-bold text-center text-white mb-4">
+          <div className="text-4xl font-mono font-bold text-center text-white mb-3">
             {formatTime(timeRemaining.minutes, timeRemaining.seconds)}
           </div>
           
           {/* Progress Bar */}
-          <div className="w-full bg-orange-500/20 rounded-full h-3">
+          <div className="w-full bg-orange-500/20 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-orange-400 to-red-400 h-3 rounded-full transition-all duration-1000 ease-out"
+              className="bg-gradient-to-r from-orange-400 to-red-400 h-2 rounded-full transition-all duration-1000 ease-out"
               style={{
                 width: `${((timeRemaining.minutes * 60 + timeRemaining.seconds) / (10 * 60)) * 100}%`
               }}
@@ -278,7 +278,7 @@ export const EnhancedCooldownCountdown = ({
             You can pay now; your session will start automatically when the cooldown ends.
           </div>
           <Button 
-            onClick={() => setShowPayPal(true)}
+            onClick={() => window.location.href = '/premium'}
             className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <CreditCard className="w-4 h-4 mr-2" />

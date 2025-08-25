@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Lock } from 'lucide-react';
+import { Send, Lock, Clock, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -45,6 +45,7 @@ const Therapy = () => {
   const [restrictionInfo, setRestrictionInfo] = useState<any>(null);
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [sessionSummary, setSessionSummary] = useState<string>('');
+  const [countdownTime, setCountdownTime] = useState({ minutes: 10, seconds: 0 });
   const navigate = useNavigate();
   
   // Debug sessionComplete state changes
@@ -57,6 +58,71 @@ const Therapy = () => {
     console.log('🔄 messages state changed, current length:', messages.length);
     console.log('🔄 last message:', messages[messages.length - 1]);
   }, [messages]);
+  
+  // Real-time countdown timer
+  useEffect(() => {
+    if (!sessionComplete || !restrictionInfo?.cooldownEndsAt) return;
+    
+    // Store cooldown end time in localStorage for persistence
+    localStorage.setItem('cooldownEndTime', restrictionInfo.cooldownEndsAt);
+    
+    const calculateTimeRemaining = () => {
+      const now = new Date().getTime();
+      const endTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
+      const difference = endTime - now;
+      
+      if (difference <= 0) {
+        setCountdownTime({ minutes: 0, seconds: 0 });
+        localStorage.removeItem('cooldownEndTime');
+        // Check if we can start a new session
+        checkSessionGate();
+        return;
+      }
+      
+      const minutes = Math.floor((difference / (1000 * 60)) % 60);
+      const seconds = Math.floor((difference / (1000)) % 60);
+      
+      setCountdownTime({ minutes, seconds });
+    };
+    
+    // Calculate immediately
+    calculateTimeRemaining();
+    
+    // Update every second
+    const interval = setInterval(calculateTimeRemaining, 1000);
+    
+    return () => clearInterval(interval);
+  }, [sessionComplete, restrictionInfo?.cooldownEndsAt]);
+  
+  // Restore countdown from localStorage on page load
+  useEffect(() => {
+    const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
+    if (savedCooldownEndTime && !sessionComplete) {
+      const now = new Date().getTime();
+      const endTime = new Date(savedCooldownEndTime).getTime();
+      const difference = endTime - now;
+      
+      if (difference > 0) {
+        // Cooldown is still active, restore the state
+        setSessionComplete(true);
+        setIsRestricted(true);
+        setRestrictionInfo({
+          type: 'cooldown',
+          message: 'Session complete - cooldown active',
+          cooldownRemaining: { minutes: 0, seconds: 0 },
+          cooldownEndsAt: savedCooldownEndTime
+        });
+        
+        // Calculate initial countdown time
+        const minutes = Math.floor((difference / (1000 * 60)) % 60);
+        const seconds = Math.floor((difference / (1000)) % 60);
+        setCountdownTime({ minutes, seconds });
+      } else {
+        // Cooldown has expired, clean up
+        localStorage.removeItem('cooldownEndTime');
+      }
+    }
+  }, []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
@@ -483,10 +549,11 @@ You can pay now and your session will start automatically when the cooldown ends
   const handleSessionUnlock = (sessionData: any) => {
     console.log('🔓 Session unlocked with data:', sessionData);
     
-    // Clear cooldown state
+    // Clear cooldown state and localStorage
     setSessionComplete(false);
     setIsRestricted(false);
     setRestrictionInfo(null);
+    localStorage.removeItem('cooldownEndTime');
     
     // Show session summary if available
     if (sessionData.sessionSummary) {
@@ -723,9 +790,26 @@ I'm here to continue supporting you on your healing journey. What would you like
            {/* Cooldown Blocked Input */}
            {sessionComplete && (
              <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-               <div className="text-center text-white/60">
-                 <Lock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                 <p className="text-sm">Chat input is locked during cooldown</p>
+               <div className="text-center text-white/80 bg-orange-900/20 rounded-2xl p-6 border border-orange-500/30">
+                 <Lock className="w-8 h-8 mx-auto mb-3 opacity-70" />
+                 <p className="text-base font-medium mb-2">Your cooldown is active. Please wait or complete payment to unlock your next session.</p>
+                 
+                 {/* Compact Countdown Timer */}
+                 <div className="inline-flex items-center justify-center bg-orange-900/30 rounded-xl px-4 py-2 mb-4">
+                   <Clock className="w-4 h-4 text-orange-400 mr-2" />
+                   <span className="text-orange-300 font-mono font-semibold">
+                     {countdownTime.minutes.toString().padStart(2, '0')}:{countdownTime.seconds.toString().padStart(2, '0')}
+                   </span>
+                 </div>
+                 
+                 {/* Payment Button */}
+                 <Button 
+                   onClick={() => window.location.href = '/premium'}
+                   className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                 >
+                   <CreditCard className="w-4 h-4 mr-2" />
+                   Complete Payment
+                 </Button>
                </div>
              </div>
            )}
