@@ -1031,112 +1031,56 @@ Provide a brief, therapeutic summary that captures the essence of this session:`
              sessionSummary = 'Session completed with therapeutic progress.';
            }
            
-           // CRITICAL FIX: Update session with exact completion timestamps
-           console.log(`🔧 Attempting to update session ${session.id} with completion data:`);
-           console.log(`   - is_complete: true`);
-           console.log(`   - ended_at: ${completionTime.toISOString()}`);
-           console.log(`   - cooldown_until: ${cooldownUntil}`);
-           console.log(`   - cooldown_started_at: ${completionTime.toISOString()}`);
-           
-           // First, try to update with all fields
-           let updateData = { 
-             is_complete: true,
-             updated_at: completionTime.toISOString(),
-             session_summary: sessionSummary
-           };
-           
-           // Add timestamp fields only if they exist (graceful fallback)
-           try {
-             // Check if columns exist by attempting a simple query
-             const { data: columnCheck, error: columnError } = await supabase
-               .from('chat_sessions')
-               .select('ended_at, cooldown_until, cooldown_started_at')
-               .eq('id', session.id)
-               .limit(1);
+                       // CRITICAL FIX: Use the new database function for reliable session completion
+            console.log(`🔧 Using database function to update session ${session.id} completion`);
+            
+            // Use the new update_session_completion function
+            const { data: functionResult, error: functionError } = await supabase
+              .rpc('update_session_completion', {
+                session_id: session.id,
+                completion_time: completionTime.toISOString()
+              });
+            
+            if (functionError) {
+              console.error('❌ Database function failed:', functionError);
+              
+              // Fallback to direct update
+              console.log('🔄 Attempting fallback direct update...');
+                             const { data: updateResult, error: updateError } = await supabase
+                 .from('chat_sessions')
+                 .update({ 
+                   is_complete: true,
+                   ended_at: completionTime.toISOString(),
+                   cooldown_until: cooldownUntil,
+                   cooldown_started_at: completionTime.toISOString(),
+                   session_summary: sessionSummary
+                 })
+                .eq('id', session.id)
+                .select();
+              
+              if (updateError) {
+                console.error('❌ Fallback update also failed:', updateError);
+                sessionComplete = false;
+              } else {
+                console.log('✅ Fallback update successful:', updateResult);
+                sessionComplete = true;
+              }
+            } else {
+              console.log('✅ Database function successful:', functionResult);
+              sessionComplete = true;
+            }
              
-             if (!columnError) {
-               // Columns exist, add them to update
-               updateData.ended_at = completionTime.toISOString();
-               updateData.cooldown_until = cooldownUntil;
-               updateData.cooldown_started_at = completionTime.toISOString();
-               console.log('✅ All timestamp columns exist, including them in update');
-             } else {
-               console.log('⚠️ Some timestamp columns may not exist, updating without them');
-             }
-           } catch (checkError) {
-             console.log('⚠️ Could not check columns, updating without timestamp fields');
-           }
-           
-           const { data: updateResult, error: updateError } = await supabase
-             .from('chat_sessions')
-             .update(updateData)
-             .eq('id', session.id)
-             .select();
-             
-           if (updateError) {
-             console.error('❌ Error updating session completion status:', updateError);
-             console.log('🔄 Attempting fallback update using debug function...');
-             
-             // Try fallback update using the debug function
-             try {
-               const { data: debugResult, error: debugError } = await supabase
-                 .rpc('debug_session_completion', {
-                   session_id: session.id,
-                   completion_time: completionTime.toISOString(),
-                   cooldown_until: cooldownUntil
-                 });
-               
-               if (debugError) {
-                 console.error('❌ Fallback update also failed:', debugError);
-                 sessionComplete = false;
-               } else {
-                 console.log('✅ Fallback update successful:', debugResult);
-                 sessionComplete = true;
-                 
-                 // Set cooldown info for frontend
-                 cooldownInfo = {
-                   status: 'cooldown',
-                   cooldownEndTime: cooldownUntil,
-                   timeRemaining: { minutes: 10, seconds: 0 },
-                   message: 'Session complete - 10-minute cooldown active'
-                 };
-               }
-             } catch (fallbackError) {
-               console.error('❌ Exception during fallback update:', fallbackError);
-               sessionComplete = false;
-             }
-           } else {
-             console.log('✅ Session successfully marked as complete with cooldown:', updateResult);
-             sessionComplete = true;
-             
-             // CRITICAL FIX: Set cooldown info for frontend
-             cooldownInfo = {
-               status: 'cooldown',
-               cooldownEndTime: cooldownUntil,
-               timeRemaining: { minutes: 10, seconds: 0 },
-               message: 'Session complete - 10-minute cooldown active'
-             };
-             
-             // Verify the update was actually committed
-             const { data: verifyResult, error: verifyError } = await supabase
-               .from('chat_sessions')
-               .select('is_complete, cooldown_until, ended_at, cooldown_started_at')
-               .eq('id', session.id)
-               .single();
-             
-             if (verifyError) {
-               console.error('❌ Error verifying session completion update:', verifyError);
-               sessionComplete = false;
-             } else if (verifyResult?.is_complete && verifyResult?.cooldown_until && verifyResult?.ended_at) {
-               console.log('✅ Session completion update verified in database');
-               console.log(`⏰ Session ended at: ${verifyResult.ended_at}`);
-               console.log(`⏰ Cooldown started at: ${verifyResult.cooldown_started_at}`);
-               console.log(`⏰ Cooldown until: ${verifyResult.cooldown_until}`);
-             } else {
-               console.error('❌ Session completion update verification failed');
-               sessionComplete = false;
-             }
-           }
+                       // Set cooldown info for frontend if session completion was successful
+            if (sessionComplete) {
+              cooldownInfo = {
+                status: 'cooldown',
+                cooldownEndTime: cooldownUntil,
+                timeRemaining: { minutes: 10, seconds: 0 },
+                message: 'Session complete - 10-minute cooldown active'
+              };
+              
+              console.log('✅ Session completion successful, cooldown info set for frontend');
+            }
          } catch (error) {
            console.error('❌ Exception during session completion update:', error);
            sessionComplete = false;

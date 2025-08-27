@@ -61,7 +61,16 @@ const Therapy = () => {
   
      // Real-time countdown timer
    useEffect(() => {
-     if (!sessionComplete || !restrictionInfo?.cooldownEndsAt) return;
+     console.log('⏰ Countdown timer useEffect triggered');
+     console.log('⏰ sessionComplete:', sessionComplete);
+     console.log('⏰ restrictionInfo?.cooldownEndsAt:', restrictionInfo?.cooldownEndsAt);
+     
+     if (!sessionComplete || !restrictionInfo?.cooldownEndsAt) {
+       console.log('⏰ Countdown timer not started - missing required conditions');
+       return;
+     }
+     
+     console.log('⏰ Starting live countdown timer');
      
      // Store cooldown end time in localStorage for persistence
      localStorage.setItem('cooldownEndTime', restrictionInfo.cooldownEndsAt);
@@ -71,7 +80,16 @@ const Therapy = () => {
        const endTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
        const difference = endTime - now;
        
+       console.log('⏰ Countdown calculation:', {
+         now: new Date(now).toISOString(),
+         endTime: new Date(endTime).toISOString(),
+         difference: difference,
+         minutes: Math.floor((difference / (1000 * 60)) % 60),
+         seconds: Math.floor((difference / (1000)) % 60)
+       });
+       
        if (difference <= 0) {
+         console.log('⏰ Countdown completed - setting to 00:00');
          setCountdownTime({ minutes: 0, seconds: 0 });
          localStorage.removeItem('cooldownEndTime');
          // Auto-start new session when countdown completes
@@ -83,6 +101,7 @@ const Therapy = () => {
        const minutes = Math.floor((difference / (1000 * 60)) % 60);
        const seconds = Math.floor((difference / (1000)) % 60);
        
+       console.log(`⏰ Setting countdown to: ${minutes}:${seconds.toString().padStart(2, '0')}`);
        setCountdownTime({ minutes, seconds });
      };
      
@@ -92,7 +111,12 @@ const Therapy = () => {
      // Update every second
      const interval = setInterval(calculateTimeRemaining, 1000);
      
-     return () => clearInterval(interval);
+     console.log('⏰ Countdown timer interval set up');
+     
+     return () => {
+       console.log('⏰ Cleaning up countdown timer interval');
+       clearInterval(interval);
+     };
    }, [sessionComplete, restrictionInfo?.cooldownEndsAt]);
   
   // Restore countdown from localStorage on page load
@@ -534,8 +558,15 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
                setCountdownTime({ minutes: 0, seconds: 0 });
              }
              
+             // CRITICAL: Set restrictionInfo BEFORE the countdown timer useEffect runs
+             setRestrictionInfo({
+               type: 'cooldown',
+               message: data.cooldownInfo.message,
+               cooldownRemaining: data.cooldownInfo.timeRemaining,
+               cooldownEndsAt: data.cooldownInfo.cooldownEndTime
+             });
+             
              setMessages(prev => [...prev, cooldownMessage]);
-             setIsRestricted(true);
            }, 2000); // 2 second delay to show session ended message first
         } else {
           // Fallback: Use default cooldown logic
@@ -570,15 +601,16 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
             
             const cooldownEndTime = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
             
-                         setRestrictionInfo({
-               type: 'cooldown',
-               message: 'Session complete - 10-minute cooldown active',
-               cooldownRemaining: { minutes: 10, seconds: 0 },
-               cooldownEndsAt: cooldownEndTime
-             });
-             
-             // Initialize countdown timer immediately for fallback case
-             setCountdownTime({ minutes: 10, seconds: 0 });
+            // CRITICAL: Set restrictionInfo for fallback case
+            setRestrictionInfo({
+              type: 'cooldown',
+              message: 'Session complete - 10-minute cooldown active',
+              cooldownRemaining: { minutes: 10, seconds: 0 },
+              cooldownEndsAt: cooldownEndTime
+            });
+            
+            // Initialize countdown timer immediately for fallback case
+            setCountdownTime({ minutes: 10, seconds: 0 });
             
             setMessages(prev => [...prev, cooldownMessage]);
             setIsRestricted(true);
@@ -764,28 +796,35 @@ I'm here to continue supporting you on your healing journey. What would you like
                  </div>
                </div>
              ) : (
-               <div className="space-y-4 md:space-y-6 flex flex-col items-center">
-                 {messages.map((message) => (
-                   <div key={message.id} className={`flex w-full ${message.isUser ? 'justify-end' : 'justify-center'}`}>
-                     <div className={`max-w-[90%] md:max-w-[85%] lg:max-w-2xl ${message.isUser ? 'order-2' : 'order-1'}`}>
-                       <div
-                         className={`p-3 md:p-4 lg:p-5 rounded-2xl backdrop-blur-sm ${
-                           message.isUser
-                             ? 'bg-white/15 border border-white/20 text-white ml-2 md:ml-4'
-                             : 'bg-black/20 border border-white/10 text-white/95 mr-2 md:mr-4'
-                         }`}
-                       >
-                         <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                           {message.isUser ? message.text : highlightTherapyQuestion(message.text)}
-                         </p>
-                         
-                         <p className="text-xs text-white/50 mt-2">
-                           {formatTimestamp(message.timestamp)}
-                         </p>
-                       </div>
-                     </div>
-                   </div>
-                 ))}
+                               <div className="space-y-4 md:space-y-6">
+                  {messages.map((message) => {
+                    // Check if this is a cooldown/restriction message that should be centered
+                    const isCooldownMessage = message.id === 'session-end' || 
+                                            message.id === 'restriction-message' || 
+                                            message.id === 'session-ended-notification';
+                    
+                    return (
+                      <div key={message.id} className={`flex w-full ${isCooldownMessage ? 'justify-center' : (message.isUser ? 'justify-end' : 'justify-start')}`}>
+                        <div className={`max-w-[90%] md:max-w-[85%] lg:max-w-2xl ${message.isUser ? 'order-2' : 'order-1'}`}>
+                          <div
+                            className={`p-3 md:p-4 lg:p-5 rounded-2xl backdrop-blur-sm ${
+                              message.isUser
+                                ? 'bg-white/15 border border-white/20 text-white ml-2 md:ml-4'
+                                : 'bg-black/20 border border-white/10 text-white/95 mr-2 md:mr-4'
+                            }`}
+                          >
+                            <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+                              {message.isUser ? message.text : highlightTherapyQuestion(message.text)}
+                            </p>
+                            
+                            <p className="text-xs text-white/50 mt-2">
+                              {formatTimestamp(message.timestamp)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 
                 {isLoading && (
                   <div className="flex justify-start">
