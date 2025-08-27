@@ -983,6 +983,7 @@ export async function POST(req) {
     }
          // --- SESSION COMPLETION DETECTION (SAME FOR ALL USERS) ---
      let sessionComplete = false;
+     let cooldownInfo = null;
      console.log('🔍 Checking session completion for AI response:', aiReply.substring(0, 100) + '...');
      console.log(`🔍 Session ID: ${session?.id}, User ID: ${userId}`);
      console.log(`🔍 Full AI response for session completion analysis:`, aiReply);
@@ -996,8 +997,12 @@ export async function POST(req) {
          console.log(`🔍 Updating session ${session.id} with is_complete: true and cooldown`);
          
          try {
-           // Set cooldown_until to 10 minutes from now
-           const cooldownUntil = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
+           // CRITICAL FIX: Set exact timestamps at the moment of completion
+           const completionTime = new Date();
+           const cooldownUntil = new Date(completionTime.getTime() + (10 * 60 * 1000)).toISOString();
+           
+           console.log(`⏰ Session completed at: ${completionTime.toISOString()}`);
+           console.log(`⏰ Cooldown until: ${cooldownUntil}`);
            
            // Generate session summary before marking complete
            let sessionSummary = '';
@@ -1026,14 +1031,15 @@ Provide a brief, therapeutic summary that captures the essence of this session:`
              sessionSummary = 'Session completed with therapeutic progress.';
            }
            
+           // CRITICAL FIX: Update session with exact completion timestamps
            const { data: updateResult, error: updateError } = await supabase
              .from('chat_sessions')
              .update({ 
                is_complete: true,
-               ended_at: new Date().toISOString(),
-               updated_at: new Date().toISOString(),
+               ended_at: completionTime.toISOString(),
+               updated_at: completionTime.toISOString(),
                cooldown_until: cooldownUntil,
-               cooldown_started_at: new Date().toISOString(),
+               cooldown_started_at: completionTime.toISOString(),
                session_summary: sessionSummary
              })
              .eq('id', session.id)
@@ -1046,19 +1052,29 @@ Provide a brief, therapeutic summary that captures the essence of this session:`
              console.log('✅ Session successfully marked as complete with cooldown:', updateResult);
              sessionComplete = true;
              
+             // CRITICAL FIX: Set cooldown info for frontend
+             cooldownInfo = {
+               status: 'cooldown',
+               cooldownEndTime: cooldownUntil,
+               timeRemaining: { minutes: 10, seconds: 0 },
+               message: 'Session complete - 10-minute cooldown active'
+             };
+             
              // Verify the update was actually committed
              const { data: verifyResult, error: verifyError } = await supabase
                .from('chat_sessions')
-               .select('is_complete, cooldown_until, ended_at')
+               .select('is_complete, cooldown_until, ended_at, cooldown_started_at')
                .eq('id', session.id)
                .single();
              
              if (verifyError) {
                console.error('❌ Error verifying session completion update:', verifyError);
                sessionComplete = false;
-             } else if (verifyResult?.is_complete && verifyResult?.cooldown_until) {
+             } else if (verifyResult?.is_complete && verifyResult?.cooldown_until && verifyResult?.ended_at) {
                console.log('✅ Session completion update verified in database');
-               console.log(`⏰ Cooldown set until: ${verifyResult.cooldown_until}`);
+               console.log(`⏰ Session ended at: ${verifyResult.ended_at}`);
+               console.log(`⏰ Cooldown started at: ${verifyResult.cooldown_started_at}`);
+               console.log(`⏰ Cooldown until: ${verifyResult.cooldown_until}`);
              } else {
                console.error('❌ Session completion update verification failed');
                sessionComplete = false;
@@ -1082,8 +1098,14 @@ Provide a brief, therapeutic summary that captures the essence of this session:`
     const filteredReply = filterInternalSteps(aiReply);
     
     const responseData = { reply: filteredReply, sessionComplete };
+    
+    // CRITICAL FIX: Include cooldown info in response if session is complete
+    if (sessionComplete && cooldownInfo) {
+      responseData.cooldownInfo = cooldownInfo;
+    }
+    
     if (generateAnalysis && onboardingAnalysis) {
-      // Filter out internal steps before sending to frontend
+      // Filter out internal instructions before sending to frontend
       const filteredAnalysis = filterInternalSteps(onboardingAnalysis);
       responseData.aiAnalysis = filteredAnalysis;
     }
@@ -1091,6 +1113,8 @@ Provide a brief, therapeutic summary that captures the essence of this session:`
     console.log('✅ Chat API response:', { 
       hasReply: !!aiReply, 
       sessionComplete, 
+      hasCooldownInfo: !!responseData.cooldownInfo,
+      cooldownInfo: responseData.cooldownInfo,
       hasAnalysis: !!responseData.aiAnalysis,
       generateAnalysis,
       aiAnalysisLength: responseData.aiAnalysis ? responseData.aiAnalysis.length : 0

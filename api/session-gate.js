@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import OpenAI from "openai";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -72,7 +73,7 @@ export async function POST(req) {
     // 🚪 GATE 2: Check cooldown status
     const { data: completedSessions, error: completedError } = await supabase
       .from('chat_sessions')
-      .select('id, is_complete, cooldown_until, updated_at')
+      .select('id, is_complete, cooldown_until, updated_at, ended_at, cooldown_started_at')
       .eq('user_id', userId)
       .eq('is_complete', true)
       .order('updated_at', { ascending: false })
@@ -98,13 +99,19 @@ export async function POST(req) {
           const minutes = Math.floor(remainingMs / (1000 * 60));
           const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
           
+          // CRITICAL FIX: Return structured cooldown response
           return Response.json({
             canStart: false,
+            status: "cooldown",
             reason: 'Cooldown active',
             message: `Your previous session just ended. Please wait for the 10-minute cooldown to finish before starting your next session.`,
             cooldownRemaining: { minutes, seconds },
-            cooldownEndsAt: cooldownUntil.toISOString()
+            cooldownEndsAt: cooldownUntil.toISOString(),
+            cooldownStartedAt: latestSession.cooldown_started_at,
+            sessionEndedAt: latestSession.ended_at
           }, { status: 403 });
+        } else {
+          console.log('✅ Cooldown period has ended - proceeding to payment check');
         }
       }
     }
@@ -128,6 +135,7 @@ export async function POST(req) {
       console.log('🚫 No unredeemed credits found - payment required');
       return Response.json({
         canStart: false,
+        status: "payment_required",
         reason: 'Payment required',
         message: 'Payment required ($5.99) to start your next session.',
         paymentAmount: 5.99,
@@ -193,6 +201,7 @@ export async function POST(req) {
       
       // Get session summary from previous session for continuity
       let sessionSummary = '';
+      let firstMessage = '';
       try {
         const { data: previousSession, error: summaryError } = await supabase
           .from('chat_sessions')
@@ -205,16 +214,70 @@ export async function POST(req) {
         
         if (!summaryError && previousSession?.session_summary) {
           sessionSummary = previousSession.session_summary;
+          
+          // CRITICAL FIX: Generate personalized first message using session summary
+          try {
+            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            
+            const firstMessagePrompt = `You are a professional therapist continuing a therapy session. The user has completed a previous session with this summary:
+
+${sessionSummary}
+
+Generate a warm, personalized welcome message that:
+1. Acknowledges their previous work and progress
+2. References specific themes or insights from their last session
+3. Creates continuity and connection
+4. Invites them to continue their therapeutic journey
+5. Is 2-3 sentences maximum
+6. Maintains the therapeutic voice and tone
+
+Keep it natural, warm, and focused on their specific journey:`;
+            
+            const firstMessageResponse = await openai.chat.completions.create({
+              model: "gpt-4o",
+              messages: [
+                { role: 'system', content: firstMessagePrompt },
+                { role: 'user', content: 'Generate a personalized welcome message for my next therapy session.' }
+              ],
+              temperature: 0.7,
+              max_tokens: 150
+            });
+            
+            firstMessage = firstMessageResponse.choices[0].message.content.trim();
+            console.log('✅ Generated personalized first message using session summary');
+          } catch (error) {
+            console.error('❌ Error generating personalized first message:', error);
+            firstMessage = "🌟 **Welcome back to your therapy session!**\n\nI'm here to continue supporting you on your healing journey. What would you like to work on today?";
+          }
+        } else {
+          firstMessage = "🌟 **Welcome to Your New Therapy Session**\n\nI'm here to support you on your healing journey. What would you like to work on today?";
         }
       } catch (error) {
         console.error('❌ Error fetching session summary:', error);
+        firstMessage = "🌟 **Welcome to Your New Therapy Session**\n\nI'm here to support you on your healing journey. What would you like to work on today?";
+      }
+      
+      // CRITICAL FIX: Save the first message to the new session
+      try {
+        await supabase
+          .from('chat_sessions')
+          .update({ 
+            session_first_message: firstMessage,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', newSession.id);
+        
+        console.log('✅ First message saved to new session');
+      } catch (error) {
+        console.error('❌ Error saving first message to session:', error);
       }
       
       // Return success with session info
       return Response.json({
         canStart: true,
+        status: "ready",
         sessionId: newSession.id,
-        firstMessage: "🌟 **Welcome to Your New Therapy Session**\n\nI'm here to support you on your healing journey. What would you like to work on today?",
+        firstMessage: firstMessage,
         message: "Starting your next session...",
         creditRedeemed: creditToRedeem.id,
         remainingCredits: credits.length - 1,

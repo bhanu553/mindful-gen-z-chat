@@ -138,6 +138,7 @@ export const EnhancedCooldownCountdown = ({
     }
   }, [user?.id, showPayPal, onError]);
 
+  // CRITICAL FIX: Enhanced session unlock with proper error handling
   const unlockSession = async () => {
     if (!user) return;
     
@@ -155,12 +156,20 @@ export const EnhancedCooldownCountdown = ({
 
       const data = await response.json();
 
-      if (response.ok && data.canStart) {
+      if (response.ok && data.canStart && data.status === 'ready') {
         console.log('✅ Session unlocked successfully:', data);
         onSessionUnlock(data);
       } else {
         console.error('❌ Failed to unlock session:', data);
-        onError(data.message || 'Failed to unlock session. Please try again.');
+        
+        // Handle different response statuses
+        if (data.status === 'cooldown') {
+          onError('Cooldown is still active. Please wait for it to complete.');
+        } else if (data.status === 'payment_required') {
+          onError('Payment is still required. Please complete your payment.');
+        } else {
+          onError(data.message || 'Failed to unlock session. Please try again.');
+        }
       }
     } catch (error) {
       console.error('❌ Error unlocking session:', error);
@@ -248,7 +257,7 @@ export const EnhancedCooldownCountdown = ({
         </div>
         <CardTitle className="text-orange-400 text-lg">⏳ Session Cooldown</CardTitle>
         <CardDescription className="text-orange-300/80 text-sm">
-          Your next session will unlock in:
+          ⏰ Your next session will unlock in:
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center space-y-4">

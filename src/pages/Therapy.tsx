@@ -482,23 +482,70 @@ You can pay now and your session will start automatically when the cooldown ends
         setSessionComplete(true);
         setIsRestricted(true);
         
-        // Show "Session Ended" message first
-        const sessionEndedMessage: Message = {
-          id: 'session-ended-notification',
-          text: '🌟 **Session Ended**\n\nYour therapy session has concluded. Take time to reflect on today\'s insights.',
-          isUser: false,
-          timestamp: new Date()
-        };
-        
-        // Add the session ended message
-        setMessages(prev => [...prev, sessionEndedMessage]);
-        
-        // Then add cooldown/restriction message after a brief delay
-        setTimeout(() => {
-          // Unified model: 10-minute cooldown for all users
-          const cooldownMessage: Message = {
-            id: 'session-end',
-            text: `⏰ **Session Complete - 10-Minute Cooldown Active**
+        // CRITICAL FIX: Use cooldown info from backend if available
+        if (data.cooldownInfo) {
+          console.log('✅ Backend provided cooldown info:', data.cooldownInfo);
+          
+          // Show "Session Ended" message first
+          const sessionEndedMessage: Message = {
+            id: 'session-ended-notification',
+            text: '🌟 **Session Ended**\n\nYour therapy session has concluded. Take time to reflect on today\'s insights.',
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          // Add the session ended message
+          setMessages(prev => [...prev, sessionEndedMessage]);
+          
+          // Then add cooldown message with backend info
+          setTimeout(() => {
+            const cooldownMessage: Message = {
+              id: 'session-end',
+              text: `⏰ **Session Complete - 10-Minute Cooldown Active**
+
+You've completed your therapy session. To maintain therapeutic effectiveness and prevent session overlap, there's a 10-minute cooldown period.
+
+**Next session available in:** ${data.cooldownInfo.timeRemaining.minutes}:${data.cooldownInfo.timeRemaining.seconds.toString().padStart(2, '0')}
+**Next session cost:** $5.99 per session
+
+*This spacing ensures each session builds on the previous one without emotional overwhelm.*
+
+You can pay now and your session will start automatically when the cooldown ends.`,
+              isUser: false,
+              timestamp: new Date()
+            };
+            
+            setRestrictionInfo({
+              type: 'cooldown',
+              message: data.cooldownInfo.message,
+              cooldownRemaining: data.cooldownInfo.timeRemaining,
+              cooldownEndsAt: data.cooldownInfo.cooldownEndTime
+            });
+            
+            setMessages(prev => [...prev, cooldownMessage]);
+            setIsRestricted(true);
+          }, 2000); // 2 second delay to show session ended message first
+        } else {
+          // Fallback: Use default cooldown logic
+          console.log('⚠️ No backend cooldown info - using fallback logic');
+          
+          // Show "Session Ended" message first
+          const sessionEndedMessage: Message = {
+            id: 'session-ended-notification',
+            text: '🌟 **Session Ended**\n\nYour therapy session has concluded. Take time to reflect on today\'s insights.',
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          // Add the session ended message
+          setMessages(prev => [...prev, sessionEndedMessage]);
+          
+          // Then add cooldown/restriction message after a brief delay
+          setTimeout(() => {
+            // Unified model: 10-minute cooldown for all users
+            const cooldownMessage: Message = {
+              id: 'session-end',
+              text: `⏰ **Session Complete - 10-Minute Cooldown Active**
 
 You've completed your therapy session. To maintain therapeutic effectiveness and prevent session overlap, there's a 10-minute cooldown period.
 
@@ -508,22 +555,23 @@ You've completed your therapy session. To maintain therapeutic effectiveness and
 *This spacing ensures each session builds on the previous one without emotional overwhelm.*
 
 You can pay now and your session will start automatically when the cooldown ends.`,
-            isUser: false,
-            timestamp: new Date()
-          };
-          
-          const cooldownEndTime = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
-          
-          setRestrictionInfo({
-            type: 'cooldown',
-            message: 'Session complete - 10-minute cooldown active',
-            cooldownRemaining: { minutes: 10, seconds: 0 },
-            cooldownEndsAt: cooldownEndTime
-          });
-          
-          setMessages(prev => [...prev, cooldownMessage]);
-          setIsRestricted(true);
-        }, 2000); // 2 second delay to show session ended message first
+              isUser: false,
+              timestamp: new Date()
+            };
+            
+            const cooldownEndTime = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
+            
+            setRestrictionInfo({
+              type: 'cooldown',
+              message: 'Session complete - 10-minute cooldown active',
+              cooldownRemaining: { minutes: 10, seconds: 0 },
+              cooldownEndsAt: cooldownEndTime
+            });
+            
+            setMessages(prev => [...prev, cooldownMessage]);
+            setIsRestricted(true);
+          }, 2000); // 2 second delay to show session ended message first
+        }
       } else {
         console.log('❌ Session complete NOT detected from backend response.');
       }
