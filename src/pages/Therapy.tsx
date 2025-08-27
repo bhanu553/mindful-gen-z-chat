@@ -477,24 +477,24 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
         setSessionComplete(true);
         setIsRestricted(true);
         
-        // CRITICAL FIX: Use cooldown info from backend if available
-        if (data.cooldownInfo) {
-          console.log('✅ Backend provided cooldown info:', data.cooldownInfo);
-          
-          // Show "Session Ended" message first
-          const sessionEndedMessage: Message = {
-            id: 'session-ended-notification',
-            text: '🌟 **Session Ended**\n\nYour therapy session has concluded. Take time to reflect on today\'s insights.',
-            isUser: false,
-            timestamp: new Date()
-          };
-          
-          // Add the session ended message
-          setMessages(prev => [...prev, sessionEndedMessage]);
-          
-          // Then add cooldown message with backend info
-          setTimeout(() => {
-                         const cooldownMessage: Message = {
+                 // CRITICAL FIX: Use cooldown info from backend if available
+         if (data.cooldownInfo && data.cooldownInfo.cooldownEndTime) {
+           console.log('✅ Backend provided cooldown info:', data.cooldownInfo);
+           
+           // Show "Session Ended" message first
+           const sessionEndedMessage: Message = {
+             id: 'session-ended-notification',
+             text: '🌟 **Session Ended**\n\nYour therapy session has concluded. Take time to reflect on today\'s insights.',
+             isUser: false,
+             timestamp: new Date()
+           };
+           
+           // Add the session ended message
+           setMessages(prev => [...prev, sessionEndedMessage]);
+           
+           // Then add cooldown message with backend info
+           setTimeout(() => {
+             const cooldownMessage: Message = {
                id: 'session-end',
                text: `⏰ **Session Complete**
 
@@ -506,8 +506,8 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
                isUser: false,
                timestamp: new Date()
              };
-            
-                         setRestrictionInfo({
+             
+             setRestrictionInfo({
                type: 'cooldown',
                message: data.cooldownInfo.message,
                cooldownRemaining: data.cooldownInfo.timeRemaining,
@@ -519,15 +519,24 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
              const endTime = new Date(data.cooldownInfo.cooldownEndTime).getTime();
              const difference = endTime - now;
              
+             console.log('⏰ Frontend countdown initialization:');
+             console.log(`   - Current time: ${new Date(now).toISOString()}`);
+             console.log(`   - Cooldown end time: ${data.cooldownInfo.cooldownEndTime}`);
+             console.log(`   - Time difference: ${difference}ms`);
+             
              if (difference > 0) {
                const minutes = Math.floor((difference / (1000 * 60)) % 60);
                const seconds = Math.floor((difference / (1000)) % 60);
+               console.log(`   - Setting countdown to: ${minutes}:${seconds.toString().padStart(2, '0')}`);
                setCountdownTime({ minutes, seconds });
+             } else {
+               console.log('   - Cooldown has already expired, setting to 00:00');
+               setCountdownTime({ minutes: 0, seconds: 0 });
              }
-            
-            setMessages(prev => [...prev, cooldownMessage]);
-            setIsRestricted(true);
-          }, 2000); // 2 second delay to show session ended message first
+             
+             setMessages(prev => [...prev, cooldownMessage]);
+             setIsRestricted(true);
+           }, 2000); // 2 second delay to show session ended message first
         } else {
           // Fallback: Use default cooldown logic
           console.log('⚠️ No backend cooldown info - using fallback logic');

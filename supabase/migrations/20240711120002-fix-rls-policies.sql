@@ -14,7 +14,7 @@ CREATE POLICY "Users can access their own chat messages" ON chat_messages
 DROP POLICY IF EXISTS "Users can access their own chat sessions" ON chat_sessions;
 DROP POLICY IF EXISTS "Users can access their own chat messages" ON chat_messages;
 
--- Recreate the policies
+-- Recreate the policies with proper permissions
 CREATE POLICY "Users can access their own chat sessions" ON chat_sessions
     FOR ALL USING (auth.uid() = user_id);
 
