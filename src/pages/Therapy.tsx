@@ -75,34 +75,54 @@ const Therapy = () => {
      // Store cooldown end time in localStorage for persistence
      localStorage.setItem('cooldownEndTime', restrictionInfo.cooldownEndsAt);
      
-     const calculateTimeRemaining = () => {
-       const now = new Date().getTime();
-       const endTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
-       const difference = endTime - now;
-       
-       console.log('⏰ Countdown calculation:', {
-         now: new Date(now).toISOString(),
-         endTime: new Date(endTime).toISOString(),
-         difference: difference,
-         minutes: Math.floor((difference / (1000 * 60)) % 60),
-         seconds: Math.floor((difference / (1000)) % 60)
-       });
-       
-       if (difference <= 0) {
-         console.log('⏰ Countdown completed - setting to 00:00');
+          const calculateTimeRemaining = () => {
+       try {
+         const now = new Date().getTime();
+         const endTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
+         
+         // Validate the timestamp
+         if (isNaN(endTime)) {
+           console.error('❌ Invalid cooldown end time:', restrictionInfo.cooldownEndsAt);
+           setCountdownTime({ minutes: 0, seconds: 0 });
+           return;
+         }
+         
+         const difference = endTime - now;
+         
+         console.log('⏰ Countdown calculation:', {
+           now: new Date(now).toISOString(),
+           endTime: new Date(endTime).toISOString(),
+           difference: difference,
+           minutes: Math.floor((difference / (1000 * 60)) % 60),
+           seconds: Math.floor((difference / (1000)) % 60)
+         });
+         
+         if (difference <= 0) {
+           console.log('⏰ Countdown completed - setting to 00:00');
+           setCountdownTime({ minutes: 0, seconds: 0 });
+           localStorage.removeItem('cooldownEndTime');
+           // Auto-start new session when countdown completes
+           console.log('⏰ Countdown completed - checking session gate');
+           // Use setTimeout to avoid calling function before it's defined
+           setTimeout(() => {
+             if (typeof checkSessionGate === 'function') {
+               checkSessionGate();
+             } else {
+               console.log('⚠️ checkSessionGate not available yet, will retry on next render');
+             }
+           }, 100);
+           return;
+         }
+         
+         const minutes = Math.floor((difference / (1000 * 60)) % 60);
+         const seconds = Math.floor((difference / (1000)) % 60);
+         
+         console.log(`⏰ Setting countdown to: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+         setCountdownTime({ minutes, seconds });
+       } catch (error) {
+         console.error('❌ Error in countdown calculation:', error);
          setCountdownTime({ minutes: 0, seconds: 0 });
-         localStorage.removeItem('cooldownEndTime');
-         // Auto-start new session when countdown completes
-         console.log('⏰ Countdown completed - auto-starting new session');
-         handleStartNewSession();
-         return;
        }
-       
-       const minutes = Math.floor((difference / (1000 * 60)) % 60);
-       const seconds = Math.floor((difference / (1000)) % 60);
-       
-       console.log(`⏰ Setting countdown to: ${minutes}:${seconds.toString().padStart(2, '0')}`);
-       setCountdownTime({ minutes, seconds });
      };
      
      // Calculate immediately
@@ -111,10 +131,10 @@ const Therapy = () => {
      // Update every second
      const interval = setInterval(calculateTimeRemaining, 1000);
      
-     console.log('⏰ Countdown timer interval set up');
+     console.log('⏰ Countdown timer interval set up with ID:', interval);
      
      return () => {
-       console.log('⏰ Cleaning up countdown timer interval');
+       console.log('⏰ Cleaning up countdown timer interval:', interval);
        clearInterval(interval);
      };
    }, [sessionComplete, restrictionInfo?.cooldownEndsAt]);
@@ -163,15 +183,28 @@ const Therapy = () => {
     scrollToBottom();
   }, [messages, forceUpdate]);
 
-  // Auto-trigger first AI message when component mounts and user is available
-  useEffect(() => {
-    if (user && !hasInitialized && messages.length === 0) {
-      setHasInitialized(true);
-      // Check session gate to determine current state
-      checkSessionGate();
-      console.log("🎯 Therapy page initialized, checking session gate");
-    }
-  }, [user, hasInitialized, messages.length]);
+     // Auto-trigger first AI message when component mounts and user is available
+   useEffect(() => {
+     if (user && !hasInitialized && messages.length === 0) {
+       setHasInitialized(true);
+       // Check session gate to determine current state
+       checkSessionGate();
+       console.log("🎯 Therapy page initialized, checking session gate");
+     }
+   }, [user, hasInitialized, messages.length]);
+
+   // Auto-check session gate when component mounts to handle edge cases
+   useEffect(() => {
+     if (user && hasInitialized) {
+       // Check if we're in a cooldown or payment state that needs verification
+       if (sessionComplete || isRestricted) {
+         console.log('🔄 Auto-checking session gate for existing state');
+         setTimeout(() => {
+           checkSessionGate();
+         }, 1000); // Small delay to ensure component is fully mounted
+       }
+     }
+   }, [user, hasInitialized, sessionComplete, isRestricted]);
 
   // Add this useEffect after messages state is defined
   useEffect(() => {
@@ -210,34 +243,79 @@ const Therapy = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.canStart) {
-        // User can start new session
-        console.log('✅ Session gate passed - can start new session');
-        setSessionComplete(false);
-        setMessages([]);
-        setHasInitialized(false);
-        setForceUpdate(prev => prev + 1);
-      } else {
-        // User cannot start new session (cooldown or payment required)
-        console.log('❌ Session gate blocked:', data.reason);
-        if (data.reason === 'Cooldown active') {
-          // Still in cooldown
-          setSessionComplete(true);
-          setRestrictionInfo({
-            type: 'cooldown',
-            message: data.message,
-            cooldownRemaining: data.cooldownRemaining,
-            cooldownEndsAt: data.cooldownEndsAt
-          });
-        } else if (data.reason === 'Payment required') {
-          // Payment required
-          setRestrictionInfo({
-            type: 'payment',
-            message: data.message,
-            paymentAmount: data.paymentAmount
-          });
-        }
-      }
+             if (response.ok && data.canStart) {
+         // User can start new session
+         console.log('✅ Session gate passed - can start new session');
+         setSessionComplete(false);
+         setIsRestricted(false);
+         setRestrictionInfo(null);
+         setMessages([]);
+         setHasInitialized(false);
+         setForceUpdate(prev => prev + 1);
+         
+         // Show session summary if available
+         if (data.sessionSummary) {
+           const summaryMessage: Message = {
+             id: 'session-summary',
+             text: `✅ **Your New Session Has Started!**
+
+Here's a quick summary of your last session:
+
+${data.sessionSummary}
+
+I'm here to continue supporting you on your healing journey. What would you like to work on today?`,
+             isUser: false,
+             timestamp: new Date()
+           };
+           setMessages([summaryMessage]);
+         } else if (data.firstMessage) {
+           const firstMessage: Message = {
+             id: 'session-first-message',
+             text: data.firstMessage,
+             isUser: false,
+             timestamp: new Date()
+           };
+           setMessages([firstMessage]);
+         }
+       } else {
+         // User cannot start new session (cooldown or payment required)
+         console.log('❌ Session gate blocked:', data.reason);
+         if (data.reason === 'Cooldown active') {
+           // Still in cooldown
+           setSessionComplete(true);
+           setIsRestricted(true);
+           setRestrictionInfo({
+             type: 'cooldown',
+             message: data.message,
+             cooldownRemaining: data.cooldownRemaining,
+             cooldownEndsAt: data.cooldownEndsAt
+           });
+         } else if (data.reason === 'Payment required') {
+           // Payment required - cooldown is over but payment needed
+           setSessionComplete(false); // Allow new session after payment
+           setIsRestricted(true);
+           setRestrictionInfo({
+             type: 'payment',
+             message: data.message,
+             paymentAmount: data.paymentAmount
+           });
+           
+           // Show payment required message
+           const paymentMessage: Message = {
+             id: 'payment-required',
+             text: `💳 **Payment Required**
+
+Your cooldown period has ended! To continue your therapeutic journey, please complete payment for your next session.
+
+**Session Cost:** $${data.paymentAmount || 5.99}
+
+Click "Pay Now" below to proceed.`,
+             isUser: false,
+             timestamp: new Date()
+           };
+           setMessages([paymentMessage]);
+         }
+       }
     } catch (error) {
       console.error('❌ Error checking session gate:', error);
     }
@@ -558,6 +636,9 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
                setCountdownTime({ minutes: 0, seconds: 0 });
              }
              
+             // CRITICAL: Set session complete state to trigger countdown timer
+             setSessionComplete(true);
+             
              // CRITICAL: Set restrictionInfo BEFORE the countdown timer useEffect runs
              setRestrictionInfo({
                type: 'cooldown',
@@ -565,6 +646,9 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
                cooldownRemaining: data.cooldownInfo.timeRemaining,
                cooldownEndsAt: data.cooldownInfo.cooldownEndTime
              });
+             
+             // CRITICAL: Set restricted state to trigger countdown timer
+             setIsRestricted(true);
              
              setMessages(prev => [...prev, cooldownMessage]);
            }, 2000); // 2 second delay to show session ended message first
@@ -612,6 +696,9 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
             // Initialize countdown timer immediately for fallback case
             setCountdownTime({ minutes: 10, seconds: 0 });
             
+            // CRITICAL: Set session complete state for fallback case
+            setSessionComplete(true);
+            
             setMessages(prev => [...prev, cooldownMessage]);
             setIsRestricted(true);
           }, 2000); // 2 second delay to show session ended message first
@@ -637,47 +724,109 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
     }
   };
 
-  // Handle session unlock after payment completion
-  const handleSessionUnlock = (sessionData: any) => {
-    console.log('🔓 Session unlocked with data:', sessionData);
-    
-    // Clear cooldown state and localStorage
-    setSessionComplete(false);
-    setIsRestricted(false);
-    setRestrictionInfo(null);
-    localStorage.removeItem('cooldownEndTime');
-    
-    // Show session summary if available
-    if (sessionData.sessionSummary) {
-      setSessionSummary(sessionData.sessionSummary);
-      const summaryMessage: Message = {
-        id: 'session-summary',
-        text: `✅ **Your New Session Has Started!**
+     // Handle session unlock after payment completion
+   const handleSessionUnlock = (sessionData: any) => {
+     console.log('🔓 Session unlocked with data:', sessionData);
+     
+     // Clear cooldown state and localStorage
+     setSessionComplete(false);
+     setIsRestricted(false);
+     setRestrictionInfo(null);
+     localStorage.removeItem('cooldownEndTime');
+     
+     // Show session summary if available
+     if (sessionData.sessionSummary) {
+       setSessionSummary(sessionData.sessionSummary);
+       const summaryMessage: Message = {
+         id: 'session-summary',
+         text: `✅ **Your New Session Has Started!**
 
 Here's a quick summary of your last session:
 
 ${sessionData.sessionSummary}
 
 I'm here to continue supporting you on your healing journey. What would you like to work on today?`,
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages([summaryMessage]);
-    } else {
-      // Show welcome message for new session
-      const welcomeMessage: Message = {
-        id: 'new-session-welcome',
-        text: sessionData.firstMessage || "🌟 **Welcome to Your New Therapy Session**\n\nI'm here to support you on your healing journey. What would you like to work on today?",
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages([welcomeMessage]);
-    }
-    
-    // Reset initialization state
-    setHasInitialized(false);
-    setForceUpdate(prev => prev + 1);
-  };
+         isUser: false,
+         timestamp: new Date()
+       };
+       setMessages([summaryMessage]);
+     } else {
+       // Show welcome message for new session
+       const welcomeMessage: Message = {
+         id: 'new-session-welcome',
+         text: sessionData.firstMessage || "🌟 **Welcome to Your New Therapy Session**\n\nI'm here to support you on your healing journey. What would you like to work on today?",
+         isUser: false,
+         timestamp: new Date()
+       };
+       setMessages([welcomeMessage]);
+     }
+     
+     // Reset initialization state
+     setHasInitialized(false);
+     setForceUpdate(prev => prev + 1);
+   };
+
+   // Handle payment completion and session unlock
+   const handlePaymentCompletion = async () => {
+     console.log('💳 Payment completed - checking session gate');
+     setIsLoading(true);
+     
+     try {
+       // Check session gate to see if we can start a new session
+       const response = await fetch('/api/session-gate', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({ userId: user?.id }),
+       });
+
+       const data = await response.json();
+
+       if (response.ok && data.canStart) {
+         // Payment successful - unlock session
+         console.log('✅ Payment successful - session unlocked');
+         handleSessionUnlock(data);
+         toast.success('Payment successful! Your new session is ready.');
+       } else {
+         // Payment failed or other issue
+         console.log('❌ Payment completion issue:', data.reason);
+         if (data.reason === 'Payment required') {
+           toast.error('Payment verification failed. Please try again or contact support.');
+         } else {
+           toast.error('Unable to start session. Please try again.');
+         }
+       }
+     } catch (error) {
+       console.error('❌ Error handling payment completion:', error);
+       toast.error('Payment verification failed. Please refresh and try again.');
+     } finally {
+       setIsLoading(false);
+     }
+   };
+
+   // Handle payment failure
+   const handlePaymentFailure = (error: string) => {
+     console.error('❌ Payment failed:', error);
+     toast.error('Payment failed. Please try again or contact support.');
+     
+     // Show payment retry message
+     const retryMessage: Message = {
+       id: 'payment-retry',
+       text: `❌ **Payment Failed**
+
+We couldn't process your payment. This could be due to:
+• Insufficient funds
+• Card declined
+• Network issues
+
+Please try again or contact support if the problem persists.`,
+       isUser: false,
+       timestamp: new Date()
+     };
+     
+     setMessages(prev => [...prev, retryMessage]);
+   };
 
   // Handle errors from cooldown component
   const handleCooldownError = (error: string) => {
