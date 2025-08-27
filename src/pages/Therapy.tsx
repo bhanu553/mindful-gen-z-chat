@@ -59,19 +59,19 @@ const Therapy = () => {
     console.log('🔄 last message:', messages[messages.length - 1]);
   }, [messages]);
   
-  // Real-time countdown timer
-  useEffect(() => {
-    if (!sessionComplete || !restrictionInfo?.cooldownEndsAt) return;
-    
-    // Store cooldown end time in localStorage for persistence
-    localStorage.setItem('cooldownEndTime', restrictionInfo.cooldownEndsAt);
-    
-    const calculateTimeRemaining = () => {
-      const now = new Date().getTime();
-      const endTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
-      const difference = endTime - now;
-      
-             if (difference <= 0) {
+     // Real-time countdown timer
+   useEffect(() => {
+     if (!sessionComplete || !restrictionInfo?.cooldownEndsAt) return;
+     
+     // Store cooldown end time in localStorage for persistence
+     localStorage.setItem('cooldownEndTime', restrictionInfo.cooldownEndsAt);
+     
+     const calculateTimeRemaining = () => {
+       const now = new Date().getTime();
+       const endTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
+       const difference = endTime - now;
+       
+       if (difference <= 0) {
          setCountdownTime({ minutes: 0, seconds: 0 });
          localStorage.removeItem('cooldownEndTime');
          // Auto-start new session when countdown completes
@@ -79,21 +79,21 @@ const Therapy = () => {
          handleStartNewSession();
          return;
        }
-      
-      const minutes = Math.floor((difference / (1000 * 60)) % 60);
-      const seconds = Math.floor((difference / (1000)) % 60);
-      
-      setCountdownTime({ minutes, seconds });
-    };
-    
-    // Calculate immediately
-    calculateTimeRemaining();
-    
-    // Update every second
-    const interval = setInterval(calculateTimeRemaining, 1000);
-    
-    return () => clearInterval(interval);
-  }, [sessionComplete, restrictionInfo?.cooldownEndsAt]);
+       
+       const minutes = Math.floor((difference / (1000 * 60)) % 60);
+       const seconds = Math.floor((difference / (1000)) % 60);
+       
+       setCountdownTime({ minutes, seconds });
+     };
+     
+     // Calculate immediately
+     calculateTimeRemaining();
+     
+     // Update every second
+     const interval = setInterval(calculateTimeRemaining, 1000);
+     
+     return () => clearInterval(interval);
+   }, [sessionComplete, restrictionInfo?.cooldownEndsAt]);
   
   // Restore countdown from localStorage on page load
   useEffect(() => {
@@ -507,12 +507,23 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
                timestamp: new Date()
              };
             
-            setRestrictionInfo({
-              type: 'cooldown',
-              message: data.cooldownInfo.message,
-              cooldownRemaining: data.cooldownInfo.timeRemaining,
-              cooldownEndsAt: data.cooldownInfo.cooldownEndTime
-            });
+                         setRestrictionInfo({
+               type: 'cooldown',
+               message: data.cooldownInfo.message,
+               cooldownRemaining: data.cooldownInfo.timeRemaining,
+               cooldownEndsAt: data.cooldownInfo.cooldownEndTime
+             });
+             
+             // Initialize countdown timer immediately
+             const now = new Date().getTime();
+             const endTime = new Date(data.cooldownInfo.cooldownEndTime).getTime();
+             const difference = endTime - now;
+             
+             if (difference > 0) {
+               const minutes = Math.floor((difference / (1000 * 60)) % 60);
+               const seconds = Math.floor((difference / (1000)) % 60);
+               setCountdownTime({ minutes, seconds });
+             }
             
             setMessages(prev => [...prev, cooldownMessage]);
             setIsRestricted(true);
@@ -550,12 +561,15 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
             
             const cooldownEndTime = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
             
-            setRestrictionInfo({
-              type: 'cooldown',
-              message: 'Session complete - 10-minute cooldown active',
-              cooldownRemaining: { minutes: 10, seconds: 0 },
-              cooldownEndsAt: cooldownEndTime
-            });
+                         setRestrictionInfo({
+               type: 'cooldown',
+               message: 'Session complete - 10-minute cooldown active',
+               cooldownRemaining: { minutes: 10, seconds: 0 },
+               cooldownEndsAt: cooldownEndTime
+             });
+             
+             // Initialize countdown timer immediately for fallback case
+             setCountdownTime({ minutes: 10, seconds: 0 });
             
             setMessages(prev => [...prev, cooldownMessage]);
             setIsRestricted(true);
@@ -719,50 +733,50 @@ I'm here to continue supporting you on your healing journey. What would you like
         {/* Main Chat Container */}
         <div className="w-full max-w-5xl h-[90vh] md:h-[85vh] premium-glass rounded-3xl flex flex-col">
           
-          {/* Chat Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scrollable-container scroll-smooth">
-            {messages.length === 0 ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center text-white/70">
-                  <p className="text-lg md:text-xl lg:text-2xl mb-2 font-serif">Your therapeutic session begins now</p>
-                  <p className="text-sm md:text-base lg:text-lg text-white/50">What's the most important emotional challenge you're ready to work on today?</p>
-                  {isLoading && (
-                    <div className="mt-4 flex justify-center">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
-                        <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                        <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                      </div>
-                    </div>
-                  )}
-                  {errorMessage && (
-                    <div className="mt-4 text-red-400 text-sm font-semibold">{errorMessage}</div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4 md:space-y-6">
-                {messages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[90%] md:max-w-[85%] lg:max-w-2xl ${message.isUser ? 'order-2' : 'order-1'}`}>
-                      <div
-                        className={`p-3 md:p-4 lg:p-5 rounded-2xl backdrop-blur-sm ${
-                          message.isUser
-                            ? 'bg-white/15 border border-white/20 text-white ml-2 md:ml-4'
-                            : 'bg-black/20 border border-white/10 text-white/95 mr-2 md:mr-4'
-                        }`}
-                      >
-                        <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                          {message.isUser ? message.text : highlightTherapyQuestion(message.text)}
-                        </p>
-                        
-                        <p className="text-xs text-white/50 mt-2">
-                          {formatTimestamp(message.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                     {/* Chat Messages Area */}
+           <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scrollable-container scroll-smooth">
+             {messages.length === 0 ? (
+               <div className="h-full flex items-center justify-center">
+                 <div className="text-center text-white/70">
+                   <p className="text-lg md:text-xl lg:text-2xl mb-2 font-serif">Your therapeutic session begins now</p>
+                   <p className="text-sm md:text-base lg:text-lg text-white/50">What's the most important emotional challenge you're ready to work on today?</p>
+                   {isLoading && (
+                     <div className="mt-4 flex justify-center">
+                       <div className="flex items-center space-x-2">
+                         <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+                         <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                         <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                       </div>
+                     </div>
+                   )}
+                   {errorMessage && (
+                     <div className="mt-4 text-red-400 text-sm font-semibold">{errorMessage}</div>
+                   )}
+                 </div>
+               </div>
+             ) : (
+               <div className="space-y-4 md:space-y-6 flex flex-col items-center">
+                 {messages.map((message) => (
+                   <div key={message.id} className={`flex w-full ${message.isUser ? 'justify-end' : 'justify-center'}`}>
+                     <div className={`max-w-[90%] md:max-w-[85%] lg:max-w-2xl ${message.isUser ? 'order-2' : 'order-1'}`}>
+                       <div
+                         className={`p-3 md:p-4 lg:p-5 rounded-2xl backdrop-blur-sm ${
+                           message.isUser
+                             ? 'bg-white/15 border border-white/20 text-white ml-2 md:ml-4'
+                             : 'bg-black/20 border border-white/10 text-white/95 mr-2 md:mr-4'
+                         }`}
+                       >
+                         <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+                           {message.isUser ? message.text : highlightTherapyQuestion(message.text)}
+                         </p>
+                         
+                         <p className="text-xs text-white/50 mt-2">
+                           {formatTimestamp(message.timestamp)}
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
                 
                 {isLoading && (
                   <div className="flex justify-start">
