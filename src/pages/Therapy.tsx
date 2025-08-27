@@ -71,13 +71,14 @@ const Therapy = () => {
       const endTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
       const difference = endTime - now;
       
-      if (difference <= 0) {
-        setCountdownTime({ minutes: 0, seconds: 0 });
-        localStorage.removeItem('cooldownEndTime');
-        // Check if we can start a new session
-        checkSessionGate();
-        return;
-      }
+             if (difference <= 0) {
+         setCountdownTime({ minutes: 0, seconds: 0 });
+         localStorage.removeItem('cooldownEndTime');
+         // Auto-start new session when countdown completes
+         console.log('⏰ Countdown completed - auto-starting new session');
+         handleStartNewSession();
+         return;
+       }
       
       const minutes = Math.floor((difference / (1000 * 60)) % 60);
       const seconds = Math.floor((difference / (1000)) % 60);
@@ -788,57 +789,57 @@ I'm here to continue supporting you on your healing journey. What would you like
             )}
           </div>
           
-          {/* Input Section or Cooldown Timer */}
-          {!sessionComplete && !isRestricted ? (
-            <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-              <div className="relative">
-                <div className="premium-glass rounded-2xl border border-white/20 p-3 md:p-4 flex items-end space-x-2 md:space-x-3">
-                  
-                  {/* Text Input */}
-                  <Textarea
-                    ref={inputRef}
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Share your thoughts..."
-                    className="flex-1 min-h-[44px] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
-                    disabled={isLoading}
-                  />
-                  
-                  {/* Send Button */}
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputText.trim() || isLoading}
-                    className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 md:p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
-                  >
-                    <Send size={18} className="md:w-5 md:h-5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : sessionComplete ? (
-            /* Premium Cooldown Timer - Clean Design */
-            <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-              <div className="flex items-center justify-center space-x-6">
-                {/* Live Timer */}
-                <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20">
-                  <Clock className="w-5 h-5 text-blue-400" />
-                  <span className="text-2xl font-mono font-bold text-white">
-                    {countdownTime.minutes.toString().padStart(2, '0')}:{countdownTime.seconds.toString().padStart(2, '0')}
-                  </span>
-                </div>
-                
-                {/* Pay Button */}
-                <Button 
-                  onClick={() => navigate('/premium-plan-details')}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-4 rounded-2xl font-semibold"
-                >
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  Pay Now
-                </Button>
-              </div>
-            </div>
-          ) : null}
+                     {/* Input Section or Cooldown Timer */}
+           {!sessionComplete && !isRestricted ? (
+             <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+               <div className="relative">
+                 <div className="premium-glass rounded-2xl border border-white/20 p-3 md:p-4 flex items-end space-x-2 md:space-x-3">
+                   
+                   {/* Text Input */}
+                   <Textarea
+                     ref={inputRef}
+                     value={inputText}
+                     onChange={(e) => setInputText(e.target.value)}
+                     onKeyPress={handleKeyPress}
+                     placeholder="Share your thoughts..."
+                     className="flex-1 min-h-[44px] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
+                     disabled={isLoading}
+                   />
+                   
+                   {/* Send Button */}
+                   <Button
+                     onClick={handleSendMessage}
+                     disabled={!inputText.trim() || isLoading}
+                     className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 md:p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
+                   >
+                     <Send size={18} className="md:w-5 md:h-5" />
+                   </Button>
+                 </div>
+               </div>
+             </div>
+           ) : sessionComplete ? (
+             /* Premium Cooldown Timer - Clean Design */
+             <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+               <div className="flex flex-col items-center justify-center space-y-6">
+                 {/* Live Timer */}
+                 <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-6 border border-white/20">
+                   <Clock className="w-6 h-6 text-blue-400" />
+                   <span className="text-3xl font-mono font-bold text-white">
+                     {countdownTime.minutes.toString().padStart(2, '0')}:{countdownTime.seconds.toString().padStart(2, '0')}
+                   </span>
+                 </div>
+                 
+                 {/* Pay Button - Centered and Bigger */}
+                 <Button 
+                   onClick={() => navigate('/premium-plan-details')}
+                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 px-12 py-6 rounded-2xl font-semibold text-lg"
+                 >
+                   <CreditCard className="w-6 h-6 mr-3" />
+                   Pay Now
+                 </Button>
+               </div>
+             </div>
+           ) : null}
         </div>
       </div>
     </div>
