@@ -191,9 +191,9 @@ export const EnhancedCooldownCountdown = ({
           <div className="mx-auto w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
             <CreditCard className="w-8 h-8 text-blue-400" />
           </div>
-          <CardTitle className="text-blue-400 text-xl">💳 Payment Required</CardTitle>
+          <CardTitle className="text-blue-400 text-xl">💎 Secure Your Next Session</CardTitle>
           <CardDescription className="text-blue-300/80">
-            Complete payment to begin your next session
+            Complete your investment to continue your healing journey
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center space-y-4">
@@ -201,7 +201,7 @@ export const EnhancedCooldownCountdown = ({
             <div className="space-y-4">
               <div className="text-2xl font-bold text-white">$5.99</div>
               <div className="text-sm text-blue-300/70">
-                One-time payment per therapy session
+                One-time investment for your next therapy session
               </div>
               <div ref={paypalButtonRef} className="mt-4" />
             </div>
@@ -221,8 +221,8 @@ export const EnhancedCooldownCountdown = ({
               <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
-              <div className="text-green-400 font-semibold">Payment Successful!</div>
-              <div className="text-sm text-green-300/70">Unlocking your session...</div>
+              <div className="text-green-400 font-semibold">Investment Complete!</div>
+              <div className="text-sm text-green-300/70">Unlocking your next therapy session...</div>
             </div>
           )}
           
@@ -255,7 +255,7 @@ export const EnhancedCooldownCountdown = ({
           {/* Pulsing animation */}
           <div className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping" />
         </div>
-        <CardTitle className="text-orange-400 text-lg">⏳ Session Cooldown</CardTitle>
+        <CardTitle className="text-orange-400 text-lg">🌟 Therapeutic Integration Period</CardTitle>
         <CardDescription className="text-orange-300/80 text-sm">
           ⏰ Your next session will unlock in:
         </CardDescription>
@@ -279,15 +279,15 @@ export const EnhancedCooldownCountdown = ({
         </div>
         
         <div className="text-sm text-orange-300/70 leading-relaxed">
-          This brief pause helps your insights settle and ensures optimal therapeutic effectiveness.
+          This intentional pause allows your insights to settle and your nervous system to process what we've explored, ensuring optimal therapeutic effectiveness.
         </div>
         
         <div className="space-y-3">
           <div className="text-xs text-orange-300/50">
-            You can pay now; your session will start automatically when the cooldown ends.
+            ✨ Ready to continue your healing journey? Secure your next session now - it will begin automatically when the integration period ends.
           </div>
           <Button 
-            onClick={() => window.location.href = '/premium'}
+            onClick={() => setShowPayPal(true)}
             className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <CreditCard className="w-4 h-4 mr-2" />

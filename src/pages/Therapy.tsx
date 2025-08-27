@@ -264,16 +264,16 @@ const Therapy = () => {
         setSessionComplete(true);
         
         // Unified model: 10-minute cooldown for all users
-        const restrictionText = `⏰ **Session Cooldown - Integration Time**
+        const restrictionText = `🌟 **Therapeutic Integration Period** ⏰
 
-Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
+Your session is complete and you're now in the **integration period** - a crucial therapeutic practice that allows your insights to settle and your nervous system to process what we've explored.
 
-**Next session available in:** ${data.restrictionInfo.minutesRemaining || 10} minutes
-**Next session cost:** $5.99 per session
+**⏱️ Next Session Available:** ${data.restrictionInfo.minutesRemaining || 10} minutes
+**💎 Session Investment:** $5.99 (one-time payment)
 
-*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*
+*This intentional pause ensures each session builds meaningfully on the previous one, preventing emotional overwhelm and maximizing therapeutic effectiveness.*
 
-You can pay now and your session will start automatically when the cooldown ends.`;
+✨ **Ready to continue your healing journey?** You can secure your next session now - it will begin automatically when the integration period ends.`;
         
         const restrictionMessage: Message = {
           id: 'restriction-message',
@@ -501,16 +501,16 @@ You can pay now and your session will start automatically when the cooldown ends
           setTimeout(() => {
             const cooldownMessage: Message = {
               id: 'session-end',
-              text: `⏰ **Session Complete - 10-Minute Cooldown Active**
+              text: `🌟 **Therapeutic Integration Period** ⏰
 
-You've completed your therapy session. To maintain therapeutic effectiveness and prevent session overlap, there's a 10-minute cooldown period.
+Your session has concluded successfully. You're now entering a **10-minute integration period** - a crucial therapeutic practice that allows your insights to settle and your nervous system to process what we've explored.
 
-**Next session available in:** ${data.cooldownInfo.timeRemaining.minutes}:${data.cooldownInfo.timeRemaining.seconds.toString().padStart(2, '0')}
-**Next session cost:** $5.99 per session
+**⏱️ Next Session Available:** ${data.cooldownInfo.timeRemaining.minutes}:${data.cooldownInfo.timeRemaining.seconds.toString().padStart(2, '0')}
+**💎 Session Investment:** $5.99 (one-time payment)
 
-*This spacing ensures each session builds on the previous one without emotional overwhelm.*
+*This intentional pause ensures each session builds meaningfully on the previous one, preventing emotional overwhelm and maximizing therapeutic effectiveness.*
 
-You can pay now and your session will start automatically when the cooldown ends.`,
+✨ **Ready to continue your healing journey?** You can secure your next session now - it will begin automatically when the integration period ends.`,
               isUser: false,
               timestamp: new Date()
             };
@@ -545,16 +545,16 @@ You can pay now and your session will start automatically when the cooldown ends
             // Unified model: 10-minute cooldown for all users
             const cooldownMessage: Message = {
               id: 'session-end',
-              text: `⏰ **Session Complete - 10-Minute Cooldown Active**
+              text: `🌟 **Therapeutic Integration Period** ⏰
 
-You've completed your therapy session. To maintain therapeutic effectiveness and prevent session overlap, there's a 10-minute cooldown period.
+Your session has concluded successfully. You're now entering a **10-minute integration period** - a crucial therapeutic practice that allows your insights to settle and your nervous system to process what we've explored.
 
-**Next session available in:** 10 minutes
-**Next session cost:** $5.99 per session
+**⏱️ Next Session Available:** 10 minutes
+**💎 Session Investment:** $5.99 (one-time payment)
 
-*This spacing ensures each session builds on the previous one without emotional overwhelm.*
+*This intentional pause ensures each session builds meaningfully on the previous one, preventing emotional overwhelm and maximizing therapeutic effectiveness.*
 
-You can pay now and your session will start automatically when the cooldown ends.`,
+✨ **Ready to continue your healing journey?** You can secure your next session now - it will begin automatically when the integration period ends.`,
               isUser: false,
               timestamp: new Date()
             };
