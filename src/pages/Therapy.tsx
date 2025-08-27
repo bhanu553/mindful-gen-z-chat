@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { EnhancedCooldownCountdown } from '@/components/therapy/EnhancedCooldownCountdown';
+
 
 interface Message {
   id: string;
@@ -263,17 +263,14 @@ const Therapy = () => {
         setRestrictionInfo(data.restrictionInfo);
         setSessionComplete(true);
         
-        // Unified model: 10-minute cooldown for all users
-        const restrictionText = `🌟 **Therapeutic Integration Period** ⏰
+                 // Clean, minimal cooldown message
+         const restrictionText = `⏰ **Session Complete**
 
-Your session is complete and you're now in the **integration period** - a crucial therapeutic practice that allows your insights to settle and your nervous system to process what we've explored.
+Your therapy session has concluded. A brief integration period allows your insights to settle.
 
-**⏱️ Next Session Available:** ${data.restrictionInfo.minutesRemaining || 10} minutes
-**💎 Session Investment:** $5.99 (one-time payment)
+**Next session available in:** ${data.restrictionInfo.minutesRemaining || 10} minutes
 
-*This intentional pause ensures each session builds meaningfully on the previous one, preventing emotional overwhelm and maximizing therapeutic effectiveness.*
-
-✨ **Ready to continue your healing journey?** You can secure your next session now - it will begin automatically when the integration period ends.`;
+Ready to continue? Click "Pay Now" below to secure your next session.`;
         
         const restrictionMessage: Message = {
           id: 'restriction-message',
@@ -304,22 +301,19 @@ Your session is complete and you're now in the **integration period** - a crucia
         console.log('✅ Session complete detected! Setting sessionComplete state to true.');
         setSessionComplete(true);
         
-        // Unified model: 10-minute cooldown for all users
-        const sessionEndMessage: Message = {
-          id: 'session-end',
-          text: `⏰ **Session Complete - Integration Time**
+                 // Clean, minimal session end message
+         const sessionEndMessage: Message = {
+           id: 'session-end',
+           text: `⏰ **Session Complete**
 
-Your session is complete and you're now in the integration period. This brief pause helps your insights settle and your nervous system process what we explored.
+Your therapy session has concluded. A brief integration period allows your insights to settle.
 
 **Next session available in:** 10 minutes
-**Next session cost:** $5.99 per session
 
-*This isn't a limitation - it's intentional therapeutic design to ensure optimal healing.*
-
-You can pay now and your session will start automatically when the cooldown ends.`,
-          isUser: false,
-          timestamp: new Date()
-        };
+Ready to continue? Click "Pay Now" below to secure your next session.`,
+           isUser: false,
+           timestamp: new Date()
+         };
         
         setMessages(prev => [...prev, sessionEndMessage]);
         setIsRestricted(true);
@@ -499,21 +493,18 @@ You can pay now and your session will start automatically when the cooldown ends
           
           // Then add cooldown message with backend info
           setTimeout(() => {
-            const cooldownMessage: Message = {
-              id: 'session-end',
-              text: `🌟 **Therapeutic Integration Period** ⏰
+                         const cooldownMessage: Message = {
+               id: 'session-end',
+               text: `⏰ **Session Complete**
 
-Your session has concluded successfully. You're now entering a **10-minute integration period** - a crucial therapeutic practice that allows your insights to settle and your nervous system to process what we've explored.
+Your therapy session has concluded. A brief integration period allows your insights to settle.
 
-**⏱️ Next Session Available:** ${data.cooldownInfo.timeRemaining.minutes}:${data.cooldownInfo.timeRemaining.seconds.toString().padStart(2, '0')}
-**💎 Session Investment:** $5.99 (one-time payment)
+**Next session available in:** ${data.cooldownInfo.timeRemaining.minutes}:${data.cooldownInfo.timeRemaining.seconds.toString().padStart(2, '0')}
 
-*This intentional pause ensures each session builds meaningfully on the previous one, preventing emotional overwhelm and maximizing therapeutic effectiveness.*
-
-✨ **Ready to continue your healing journey?** You can secure your next session now - it will begin automatically when the integration period ends.`,
-              isUser: false,
-              timestamp: new Date()
-            };
+Ready to continue? Click "Pay Now" below to secure your next session.`,
+               isUser: false,
+               timestamp: new Date()
+             };
             
             setRestrictionInfo({
               type: 'cooldown',
@@ -542,22 +533,19 @@ Your session has concluded successfully. You're now entering a **10-minute integ
           
           // Then add cooldown/restriction message after a brief delay
           setTimeout(() => {
-            // Unified model: 10-minute cooldown for all users
-            const cooldownMessage: Message = {
-              id: 'session-end',
-              text: `🌟 **Therapeutic Integration Period** ⏰
+                         // Clean, minimal fallback cooldown message
+             const cooldownMessage: Message = {
+               id: 'session-end',
+               text: `⏰ **Session Complete**
 
-Your session has concluded successfully. You're now entering a **10-minute integration period** - a crucial therapeutic practice that allows your insights to settle and your nervous system to process what we've explored.
+Your therapy session has concluded. A brief integration period allows your insights to settle.
 
-**⏱️ Next Session Available:** 10 minutes
-**💎 Session Investment:** $5.99 (one-time payment)
+**Next session available in:** 10 minutes
 
-*This intentional pause ensures each session builds meaningfully on the previous one, preventing emotional overwhelm and maximizing therapeutic effectiveness.*
-
-✨ **Ready to continue your healing journey?** You can secure your next session now - it will begin automatically when the integration period ends.`,
-              isUser: false,
-              timestamp: new Date()
-            };
+Ready to continue? Click "Pay Now" below to secure your next session.`,
+               isUser: false,
+               timestamp: new Date()
+             };
             
             const cooldownEndTime = new Date(Date.now() + (10 * 60 * 1000)).toISOString();
             
@@ -727,7 +715,6 @@ I'm here to continue supporting you on your healing journey. What would you like
       {/* Centered Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
         
-        
         {/* Main Chat Container */}
         <div className="w-full max-w-5xl h-[90vh] md:h-[85vh] premium-glass rounded-3xl flex flex-col">
           
@@ -768,8 +755,6 @@ I'm here to continue supporting you on your healing journey. What would you like
                           {message.isUser ? message.text : highlightTherapyQuestion(message.text)}
                         </p>
                         
-
-                        
                         <p className="text-xs text-white/50 mt-2">
                           {formatTimestamp(message.timestamp)}
                         </p>
@@ -798,86 +783,62 @@ I'm here to continue supporting you on your healing journey. What would you like
                   </div>
                 )}
                 
-                
-                
                 <div ref={messagesEndRef} />
               </div>
             )}
           </div>
           
-                     {/* Input Section */}
-           {!sessionComplete && !isRestricted && (
-             <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-               <div className="relative">
-                 <div className="premium-glass rounded-2xl border border-white/20 p-3 md:p-4 flex items-end space-x-2 md:space-x-3">
-                   
-                   {/* Text Input */}
-                   <Textarea
-                     ref={inputRef}
-                     value={inputText}
-                     onChange={(e) => setInputText(e.target.value)}
-                     onKeyPress={handleKeyPress}
-                     placeholder="Share your thoughts..."
-                     className="flex-1 min-h-[44px] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
-                     disabled={isLoading}
-                   />
-                   
-                   {/* Send Button */}
-                   <Button
-                     onClick={handleSendMessage}
-                     disabled={!inputText.trim() || isLoading}
-                     className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 md:p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
-                   >
-                     <Send size={18} className="md:w-5 md:h-5" />
-                   </Button>
-                 </div>
-               </div>
-             </div>
-           )}
-           
-           {/* Cooldown Blocked Input */}
-           {sessionComplete && (
-             <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-               <div className="text-center text-white/80 bg-orange-900/20 rounded-2xl p-6 border border-orange-500/30">
-                 <Lock className="w-8 h-8 mx-auto mb-3 opacity-70" />
-                 <p className="text-base font-medium mb-2">Your cooldown is active. Please wait or complete payment to unlock your next session.</p>
-                 
-                 {/* Compact Countdown Timer */}
-                 <div className="inline-flex items-center justify-center bg-orange-900/30 rounded-xl px-4 py-2 mb-4">
-                   <Clock className="w-4 h-4 text-orange-400 mr-2" />
-                   <span className="text-orange-300 font-mono font-semibold">
-                     {countdownTime.minutes.toString().padStart(2, '0')}:{countdownTime.seconds.toString().padStart(2, '0')}
-                   </span>
-                 </div>
-                 
-                 {/* Payment Button */}
-                 <Button 
-                   onClick={() => window.location.href = '/premium'}
-                   className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                 >
-                   <CreditCard className="w-4 h-4 mr-2" />
-                   Complete Payment
-                 </Button>
-               </div>
-             </div>
-           )}
-           
-                       {/* Enhanced Session Cooldown Display */}
-        {sessionComplete && (
-          <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
-            <div className="flex justify-center">
-              <EnhancedCooldownCountdown
-                cooldownEndTime={restrictionInfo?.cooldownEndsAt || new Date(Date.now() + (10 * 60 * 1000)).toISOString()}
-                onSessionUnlock={handleSessionUnlock}
-                onError={handleCooldownError}
-              />
+          {/* Input Section or Cooldown Timer */}
+          {!sessionComplete && !isRestricted ? (
+            <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+              <div className="relative">
+                <div className="premium-glass rounded-2xl border border-white/20 p-3 md:p-4 flex items-end space-x-2 md:space-x-3">
+                  
+                  {/* Text Input */}
+                  <Textarea
+                    ref={inputRef}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Share your thoughts..."
+                    className="flex-1 min-h-[44px] max-h-32 bg-transparent border-0 text-white placeholder-white/50 resize-none focus-visible:ring-0 text-sm md:text-base p-0 disabled:opacity-60"
+                    disabled={isLoading}
+                  />
+                  
+                  {/* Send Button */}
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!inputText.trim() || isLoading}
+                    className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl p-2 md:p-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
+                  >
+                    <Send size={18} className="md:w-5 md:h-5" />
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-          
-          
-          
-          
+          ) : sessionComplete ? (
+            /* Premium Cooldown Timer - Clean Design */
+            <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
+              <div className="flex items-center justify-center space-x-6">
+                {/* Live Timer */}
+                <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20">
+                  <Clock className="w-5 h-5 text-blue-400" />
+                  <span className="text-2xl font-mono font-bold text-white">
+                    {countdownTime.minutes.toString().padStart(2, '0')}:{countdownTime.seconds.toString().padStart(2, '0')}
+                  </span>
+                </div>
+                
+                {/* Pay Button */}
+                <Button 
+                  onClick={() => navigate('/premium-plan-details')}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-4 rounded-2xl font-semibold"
+                >
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Pay Now
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
