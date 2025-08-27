@@ -77,8 +77,12 @@ const Navigation = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2 md:space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <img 
+                  src="/newlogo.jpg" 
+                  alt="EchoMind Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="font-semibold text-lg md:text-xl text-foreground">EchoMind</span>
             </Link>

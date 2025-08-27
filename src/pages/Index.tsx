@@ -94,8 +94,12 @@ const Index = () => {
         {/* Content */}
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex justify-center mb-6 md:mb-8">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Brain className="w-6 h-6 md:w-8 md:h-8 text-white" />
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl shadow-lg overflow-hidden">
+              <img 
+                src="/newlogo.jpg" 
+                alt="EchoMind Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
           

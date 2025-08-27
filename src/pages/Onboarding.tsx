@@ -650,8 +650,12 @@ const Onboarding = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-400/80 to-purple-500/80 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-2xl border border-white/20">
-              <Brain className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+              <img 
+                src="/newlogo.jpg" 
+                alt="EchoMind Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2 text-shadow-lg">EchoMind</h1>

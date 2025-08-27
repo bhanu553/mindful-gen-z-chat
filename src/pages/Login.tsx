@@ -48,8 +48,12 @@ const Login = () => {
         <div className="gradient-card p-8 rounded-xl border border-border/50 text-center">
           {/* Logo */}
           <div className="flex items-center justify-center space-x-3 mb-8">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-              <Brain className="w-7 h-7 text-white" />
+            <div className="w-12 h-12 rounded-lg overflow-hidden">
+              <img 
+                src="/newlogo.jpg" 
+                alt="EchoMind Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <span className="font-semibold text-2xl text-foreground">EchoMind</span>
           </div>

@@ -16,8 +16,12 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 bg-gradient-to-br from-primary to-purple-600 rounded-md flex items-center justify-center">
-              <Brain className="w-4 h-4 text-white" />
+            <div className="w-6 h-6 rounded-md overflow-hidden">
+              <img 
+                src="/newlogo.jpg" 
+                alt="EchoMind Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <span className="font-semibold text-foreground">EchoMind</span>
           </div>
