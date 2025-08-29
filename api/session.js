@@ -628,15 +628,45 @@ Always end each session with:
       }
     }
     
-    // For free users, use existing logic
-    // Fetch all messages for this session
-    const { data: messages, error: msgError } = await supabase
-      .from('chat_messages')
-      .select('id, role, content, created_at')
-      .eq('session_id', session.id)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true });
-    if (msgError) throw msgError;
+    // CRITICAL FIX: Use the new database function for reliable message retrieval
+    console.log(`🔍 Fetching messages for session: ${session.id}, user: ${userId}`);
+    
+    let messages = [];
+    try {
+      // Use the new database function for reliable message retrieval
+      const { data: functionResult, error: functionError } = await supabase
+        .rpc('get_session_chat_history', {
+          session_uuid: session.id,
+          user_uuid: userId
+        });
+      
+      if (functionError) {
+        console.error('❌ Database function failed:', functionError);
+        
+        // Fallback to direct query
+        console.log('🔄 Attempting fallback direct query...');
+        const { data: fallbackMessages, error: fallbackError } = await supabase
+          .from('chat_messages')
+          .select('id, role, content, created_at, mode')
+          .eq('session_id', session.id)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true });
+        
+        if (fallbackError) {
+          console.error('❌ Fallback query also failed:', fallbackError);
+          throw fallbackError;
+        }
+        
+        messages = fallbackMessages || [];
+        console.log(`✅ Fallback query successful: ${messages.length} messages`);
+      } else {
+        messages = functionResult || [];
+        console.log(`✅ Database function successful: ${messages.length} messages`);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching messages:', error);
+      throw error;
+    }
     
     // Fetch AI analysis message from onboarding
     const { data: onboarding, error: onboardingError } = await supabase
