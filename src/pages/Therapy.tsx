@@ -532,6 +532,43 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
           setSessionComplete(false);
         }
       }
+      
+      // 🔧 CRITICAL FIX: Always check for existing messages regardless of other conditions
+      // This ensures chat history is never lost
+      if (data.messages && data.messages.length > 0) {
+        console.log(`🔍 Chat history preservation check: Found ${data.messages.length} existing messages`);
+        
+        // Map backend messages to local format with proper error handling
+        const existingMessages = data.messages.map((msg: any) => {
+          try {
+            return {
+              id: msg.id || `msg-${Date.now()}-${Math.random()}`,
+              text: msg.content || '',
+              isUser: msg.role === 'user',
+              timestamp: msg.created_at ? new Date(msg.created_at) : new Date()
+            };
+          } catch (mapError) {
+            console.error('❌ Error mapping message:', mapError, msg);
+            // Return a safe fallback message
+            return {
+              id: `fallback-${Date.now()}`,
+              text: msg.content || 'Message content unavailable',
+              isUser: msg.role === 'user',
+              timestamp: new Date()
+            };
+          }
+        }).filter(msg => msg.text && msg.text.trim() !== ''); // Filter out empty messages
+        
+        console.log(`✅ Successfully mapped ${existingMessages.length} messages for chat history preservation`);
+        
+        // Always set messages to preserve chat history, regardless of other conditions
+        setMessages(existingMessages);
+        setSessionComplete(false);
+        
+        // If we have existing messages, we don't need to show firstMessage or sessionComplete
+        console.log('✅ Chat history preserved - returning early to prevent overwriting');
+        return;
+      }
     } catch (error: any) {
       // Suppress onboarding errors from user view
       const errMsg = (error.message || '').toLowerCase();

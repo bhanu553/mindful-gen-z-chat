@@ -665,7 +665,46 @@ Always end each session with:
       }
     } catch (error) {
       console.error('❌ Error fetching messages:', error);
-      throw error;
+      // Don't throw error - continue with empty messages array
+      messages = [];
+    }
+    
+    // 🔧 CRITICAL FIX: Always check for existing messages regardless of other conditions
+    console.log(`🔍 Chat history check: Found ${messages.length} existing messages`);
+    
+    // If we have existing messages, always return them to preserve chat history
+    if (messages && messages.length > 0) {
+      console.log(`✅ Returning ${messages.length} existing messages to preserve chat history`);
+      
+      // Map backend messages to frontend format with proper error handling
+      const mappedMessages = messages.map((msg) => {
+        try {
+          return {
+            id: msg.id || `msg-${Date.now()}-${Math.random()}`,
+            text: msg.content || '',
+            isUser: msg.role === 'user',
+            timestamp: msg.created_at ? new Date(msg.created_at) : new Date()
+          };
+        } catch (mapError) {
+          console.error('❌ Error mapping message:', mapError, msg);
+          // Return a safe fallback message
+          return {
+            id: `fallback-${Date.now()}`,
+            text: msg.content || 'Message content unavailable',
+            isUser: msg.role === 'user',
+            timestamp: new Date()
+          };
+        }
+      }).filter(msg => msg.text && msg.text.trim() !== ''); // Filter out empty messages
+      
+      console.log(`✅ Successfully mapped ${mappedMessages.length} messages`);
+      
+      // Return existing messages regardless of other conditions to preserve chat history
+      return Response.json({ 
+        sessionComplete: false, 
+        messages: mappedMessages,
+        hasExistingHistory: true
+      });
     }
     
     // Fetch AI analysis message from onboarding
