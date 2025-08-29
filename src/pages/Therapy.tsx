@@ -416,8 +416,51 @@ Click "Pay Now" below to proceed.`,
       }
       const data = await response.json();
       
-      // Check for restriction info first
-      console.log('🔍 Checking restriction info:', data.restrictionInfo);
+      console.log('🔍 Session API response:', {
+        sessionComplete: data.sessionComplete,
+        hasMessages: data.messages && data.messages.length > 0,
+        messageCount: data.messages ? data.messages.length : 0,
+        hasFirstMessage: !!data.firstMessage,
+        hasExistingHistory: data.hasExistingHistory
+      });
+      
+      // 🔧 CRITICAL FIX: PRIORITY 1 - Always load existing messages first if they exist
+      if (data.messages && data.messages.length > 0) {
+        console.log(`✅ Found ${data.messages.length} existing messages - loading them FIRST`);
+        
+        // Map backend messages to local format with proper error handling
+        const existingMessages = data.messages.map((msg: any) => {
+          try {
+            return {
+              id: msg.id || `msg-${Date.now()}-${Math.random()}`,
+              text: msg.content || msg.text || '',
+              isUser: msg.role === 'user',
+              timestamp: msg.created_at ? new Date(msg.created_at) : new Date()
+            };
+          } catch (mapError) {
+            console.error('❌ Error mapping message:', mapError, msg);
+            // Return a safe fallback message
+            return {
+              id: `fallback-${Date.now()}`,
+              text: msg.content || msg.text || 'Message content unavailable',
+              isUser: msg.role === 'user',
+              timestamp: new Date()
+            };
+          }
+        }).filter(msg => msg.text && msg.text.trim() !== ''); // Filter out empty messages
+        
+        console.log(`✅ Successfully mapped ${existingMessages.length} messages for chat history preservation`);
+        
+        // Always set messages to preserve chat history, regardless of other conditions
+        setMessages(existingMessages);
+        setSessionComplete(false);
+        
+        // If we have existing messages, we don't need to show firstMessage or sessionComplete
+        console.log('✅ Chat history preserved - returning early to prevent overwriting');
+        return;
+      }
+      
+      // 🔧 CRITICAL FIX: PRIORITY 2 - Check for restriction info if no existing messages
       if (data.restrictionInfo && data.restrictionInfo.isRestricted) {
         console.log('🚫 User is restricted - showing restriction message only');
         console.log('🔍 Restriction details:', {
@@ -429,8 +472,8 @@ Click "Pay Now" below to proceed.`,
         setRestrictionInfo(data.restrictionInfo);
         setSessionComplete(true);
         
-                 // Clean, minimal cooldown message
-         const restrictionText = `⏰ **Session Complete**
+        // Clean, minimal cooldown message
+        const restrictionText = `⏰ **Session Complete**
 
 Your therapy session has concluded. A brief integration period allows your insights to settle.
 
@@ -449,7 +492,7 @@ Ready to continue? Click "Pay Now" below to secure your next session.`;
         return;
       }
       
-      // Handle users with firstMessage (both premium and free)
+      // 🔧 CRITICAL FIX: PRIORITY 3 - Handle users with firstMessage (both premium and free)
       if (data.firstMessage) {
         console.log(`✅ User - displaying first message from session_first_message`);
         const firstMessage: Message = {
@@ -463,112 +506,60 @@ Ready to continue? Click "Pay Now" below to secure your next session.`;
         return;
       }
       
-               if (data.sessionComplete) {
-           console.log('✅ Session complete detected! Setting sessionComplete state to true.');
-           setSessionComplete(true);
-           
-           // 🔧 FIXED: Use backend ended_at and cooldown_until timestamps
-           const backendEndedAt = data.ended_at || new Date().toISOString();
-           const backendCooldownUntil = data.cooldown_until || new Date(Date.now() + (10 * 60 * 1000)).toISOString();
-           
-           console.log('⏰ Backend timestamps:', {
-             ended_at: backendEndedAt,
-             cooldown_until: backendCooldownUntil
-           });
-           
-           // Clean, minimal session end message
-           const sessionEndMessage: Message = {
-             id: 'session-end',
-             text: `⏰ **Session Complete**
+      // 🔧 CRITICAL FIX: PRIORITY 4 - Handle session complete if no existing messages
+      if (data.sessionComplete) {
+        console.log('✅ Session complete detected! Setting sessionComplete state to true.');
+        setSessionComplete(true);
+        
+        // 🔧 FIXED: Use backend ended_at and cooldown_until timestamps
+        const backendEndedAt = data.ended_at || new Date().toISOString();
+        const backendCooldownUntil = data.cooldown_until || new Date(Date.now() + (10 * 60 * 1000)).toISOString();
+        
+        console.log('⏰ Backend timestamps:', {
+          ended_at: backendEndedAt,
+          cooldown_until: backendCooldownUntil
+        });
+        
+        // Clean, minimal session end message
+        const sessionEndMessage: Message = {
+          id: 'session-end',
+          text: `⏰ **Session Complete**
 
 Your therapy session has concluded. A brief integration period allows your insights to settle.
 
 **Next session available in:** 10 minutes
 
 Ready to continue? Click "Pay Now" below to secure your next session.`,
-             isUser: false,
-             timestamp: new Date()
-           };
-           
-           setMessages(prev => [...prev, sessionEndMessage]);
-           setIsRestricted(true);
-           setRestrictionInfo({
-             type: 'cooldown',
-             message: 'Session complete - 10-minute cooldown active (backend-linked)',
-             cooldownRemaining: { minutes: 10, seconds: 0 },
-             cooldownEndsAt: backendCooldownUntil // Use backend cooldown_until timestamp
-           });
-           
-           // 🔧 FIXED: Use the new backend-linked timer function
-           startBackendLinkedTimer(backendCooldownUntil);
-         } else {
-           console.log('❌ Session complete NOT detected from backend.');
-         }
-      
-      // FALLBACK: If no firstMessage and no sessionComplete, check for existing messages
-      if (!data.firstMessage && !data.sessionComplete) {
-        console.log('🔍 No firstMessage or sessionComplete - checking for existing messages');
-        if (data.messages && data.messages.length > 0) {
-          console.log(`✅ Found ${data.messages.length} existing messages - loading them`);
-          // Map backend messages to local format
-          const existingMessages = data.messages.map((msg: any) => ({
-            id: msg.id,
-            text: msg.content,
-            isUser: msg.role === 'user',
-            timestamp: new Date(msg.created_at)
-          }));
-          setMessages(existingMessages);
-          setSessionComplete(false);
-        } else {
-          console.log('⚠️ No existing messages found - this might be a new session');
-          // For new sessions, show a welcome message
-          const welcomeMessage: Message = {
-            id: 'welcome-message',
-            text: 'Welcome to your therapy session! I\'m here to support you on your healing journey. How are you feeling today?',
-            isUser: false,
-            timestamp: new Date()
-          };
-          setMessages([welcomeMessage]);
-          setSessionComplete(false);
-        }
-      }
-      
-      // 🔧 CRITICAL FIX: Always check for existing messages regardless of other conditions
-      // This ensures chat history is never lost
-      if (data.messages && data.messages.length > 0) {
-        console.log(`🔍 Chat history preservation check: Found ${data.messages.length} existing messages`);
+          isUser: false,
+          timestamp: new Date()
+        };
         
-        // Map backend messages to local format with proper error handling
-        const existingMessages = data.messages.map((msg: any) => {
-          try {
-            return {
-              id: msg.id || `msg-${Date.now()}-${Math.random()}`,
-              text: msg.content || '',
-              isUser: msg.role === 'user',
-              timestamp: msg.created_at ? new Date(msg.created_at) : new Date()
-            };
-          } catch (mapError) {
-            console.error('❌ Error mapping message:', mapError, msg);
-            // Return a safe fallback message
-            return {
-              id: `fallback-${Date.now()}`,
-              text: msg.content || 'Message content unavailable',
-              isUser: msg.role === 'user',
-              timestamp: new Date()
-            };
-          }
-        }).filter(msg => msg.text && msg.text.trim() !== ''); // Filter out empty messages
+        setMessages([sessionEndMessage]);
+        setIsRestricted(true);
+        setRestrictionInfo({
+          type: 'cooldown',
+          message: 'Session complete - 10-minute cooldown active (backend-linked)',
+          cooldownRemaining: { minutes: 10, seconds: 0 },
+          cooldownEndsAt: backendCooldownUntil // Use backend cooldown_until timestamp
+        });
         
-        console.log(`✅ Successfully mapped ${existingMessages.length} messages for chat history preservation`);
-        
-        // Always set messages to preserve chat history, regardless of other conditions
-        setMessages(existingMessages);
-        setSessionComplete(false);
-        
-        // If we have existing messages, we don't need to show firstMessage or sessionComplete
-        console.log('✅ Chat history preserved - returning early to prevent overwriting');
+        // 🔧 FIXED: Use the new backend-linked timer function
+        startBackendLinkedTimer(backendCooldownUntil);
         return;
       }
+      
+      // 🔧 CRITICAL FIX: PRIORITY 5 - Fallback for new sessions with no messages
+      console.log('⚠️ No existing messages, firstMessage, or sessionComplete - this is a new session');
+      // For new sessions, show a welcome message
+      const welcomeMessage: Message = {
+        id: 'welcome-message',
+        text: 'Welcome to your therapy session! I\'m here to support you on your healing journey. How are you feeling today?',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      setSessionComplete(false);
+      
     } catch (error: any) {
       // Suppress onboarding errors from user view
       const errMsg = (error.message || '').toLowerCase();

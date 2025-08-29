@@ -783,7 +783,11 @@ Always end each session with:
     }
     
     // If onboarding is missing or onboardingError, just proceed with allMessages (no error)
-    return Response.json({ sessionComplete: false, messages: allMessages });
+    return Response.json({ 
+      sessionComplete: false, 
+      messages: allMessages || [],
+      hasExistingHistory: allMessages && allMessages.length > 0
+    });
   } catch (error) {
     console.error('❌ Error in /api/session:', error);
     return Response.json({ error: error.message || 'Internal server error' }, { status: 500 });
