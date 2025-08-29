@@ -46,6 +46,7 @@ const Therapy = () => {
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [sessionSummary, setSessionSummary] = useState<string>('');
   const [countdownTime, setCountdownTime] = useState({ minutes: 10, seconds: 0 });
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
   
   // Debug sessionComplete state changes
@@ -59,51 +60,64 @@ const Therapy = () => {
     console.log('🔄 last message:', messages[messages.length - 1]);
   }, [messages]);
   
-     // Real-time countdown timer
+     // 🔧 COMPLETELY REBUILT: Live cooldown timer linked to backend ended_at and cooldown_until
    useEffect(() => {
      console.log('⏰ Countdown timer useEffect triggered');
      console.log('⏰ sessionComplete:', sessionComplete);
      console.log('⏰ restrictionInfo?.cooldownEndsAt:', restrictionInfo?.cooldownEndsAt);
+     
+     // Clear any existing timer first
+     if (timerInterval) {
+       clearInterval(timerInterval);
+       setTimerInterval(null);
+     }
      
      if (!sessionComplete || !restrictionInfo?.cooldownEndsAt) {
        console.log('⏰ Countdown timer not started - missing required conditions');
        return;
      }
      
-     console.log('⏰ Starting live countdown timer');
+     console.log('⏰ Starting live countdown timer linked to backend cooldown_until');
      
      // Store cooldown end time in localStorage for persistence
      localStorage.setItem('cooldownEndTime', restrictionInfo.cooldownEndsAt);
      
-          const calculateTimeRemaining = () => {
+     // 🔧 FIXED: Proper timer calculation function that uses backend cooldown_until time
+     const calculateTimeRemaining = () => {
        try {
          const now = new Date().getTime();
-         const endTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
+         const cooldownEndTime = new Date(restrictionInfo.cooldownEndsAt).getTime();
          
          // Validate the timestamp
-         if (isNaN(endTime)) {
-           console.error('❌ Invalid cooldown end time:', restrictionInfo.cooldownEndsAt);
+         if (isNaN(cooldownEndTime)) {
+           console.error('❌ Invalid cooldown end time from backend:', restrictionInfo.cooldownEndsAt);
            setCountdownTime({ minutes: 0, seconds: 0 });
            return;
          }
          
-         const difference = endTime - now;
+         const difference = cooldownEndTime - now;
          
-         console.log('⏰ Countdown calculation:', {
+         console.log('⏰ Backend-linked countdown calculation:', {
            now: new Date(now).toISOString(),
-           endTime: new Date(endTime).toISOString(),
+           backendCooldownUntil: new Date(cooldownEndTime).toISOString(),
            difference: difference,
            minutes: Math.floor((difference / (1000 * 60)) % 60),
            seconds: Math.floor((difference / (1000)) % 60)
          });
          
          if (difference <= 0) {
-           console.log('⏰ Countdown completed - setting to 00:00');
+           console.log('⏰ Backend cooldown completed - setting to 00:00');
            setCountdownTime({ minutes: 0, seconds: 0 });
            localStorage.removeItem('cooldownEndTime');
+           
+           // Clear the timer
+           if (timerInterval) {
+             clearInterval(timerInterval);
+             setTimerInterval(null);
+           }
+           
            // Auto-start new session when countdown completes
-           console.log('⏰ Countdown completed - checking session gate');
-           // Use setTimeout to avoid calling function before it's defined
+           console.log('⏰ Backend cooldown completed - checking session gate');
            setTimeout(() => {
              if (typeof checkSessionGate === 'function') {
                checkSessionGate();
@@ -117,10 +131,10 @@ const Therapy = () => {
          const minutes = Math.floor((difference / (1000 * 60)) % 60);
          const seconds = Math.floor((difference / (1000)) % 60);
          
-         console.log(`⏰ Setting countdown to: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+         console.log(`⏰ Setting countdown to: ${minutes}:${seconds.toString().padStart(2, '0')} (from backend cooldown_until)`);
          setCountdownTime({ minutes, seconds });
        } catch (error) {
-         console.error('❌ Error in countdown calculation:', error);
+         console.error('❌ Error in backend-linked countdown calculation:', error);
          setCountdownTime({ minutes: 0, seconds: 0 });
        }
      };
@@ -128,46 +142,54 @@ const Therapy = () => {
      // Calculate immediately
      calculateTimeRemaining();
      
-     // Update every second
+     // Update every second and store interval reference
      const interval = setInterval(calculateTimeRemaining, 1000);
+     setTimerInterval(interval);
      
-     console.log('⏰ Countdown timer interval set up with ID:', interval);
+     console.log('⏰ Backend-linked countdown timer interval set up with ID:', interval);
      
      return () => {
-       console.log('⏰ Cleaning up countdown timer interval:', interval);
+       console.log('⏰ Cleaning up backend-linked countdown timer interval:', interval);
        clearInterval(interval);
+       setTimerInterval(null);
      };
-   }, [sessionComplete, restrictionInfo?.cooldownEndsAt]);
+   }, [sessionComplete, restrictionInfo?.cooldownEndsAt, timerInterval]);
   
-  // Restore countdown from localStorage on page load
-  useEffect(() => {
-    const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
-    if (savedCooldownEndTime && !sessionComplete) {
-      const now = new Date().getTime();
-      const endTime = new Date(savedCooldownEndTime).getTime();
-      const difference = endTime - now;
-      
-      if (difference > 0) {
-        // Cooldown is still active, restore the state
-        setSessionComplete(true);
-        setIsRestricted(true);
-        setRestrictionInfo({
-          type: 'cooldown',
-          message: 'Session complete - cooldown active',
-          cooldownRemaining: { minutes: 0, seconds: 0 },
-          cooldownEndsAt: savedCooldownEndTime
-        });
-        
-        // Calculate initial countdown time
-        const minutes = Math.floor((difference / (1000 * 60)) % 60);
-        const seconds = Math.floor((difference / (1000)) % 60);
-        setCountdownTime({ minutes, seconds });
-      } else {
-        // Cooldown has expired, clean up
-        localStorage.removeItem('cooldownEndTime');
-      }
-    }
-  }, []);
+     // 🔧 REBUILT: Restore countdown from localStorage on page load with proper backend timestamp handling
+   useEffect(() => {
+     const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
+     if (savedCooldownEndTime) {
+       const now = new Date().getTime();
+       const backendCooldownUntil = new Date(savedCooldownEndTime).getTime();
+       const difference = backendCooldownUntil - now;
+       
+       if (difference > 0) {
+         console.log('⏰ Restoring cooldown from localStorage - backend time remaining:', difference);
+         console.log('⏰ Backend cooldown_until:', new Date(savedCooldownEndTime).toISOString());
+         
+         // Cooldown is still active, restore the state with backend timestamp
+         setSessionComplete(true);
+         setIsRestricted(true);
+         setRestrictionInfo({
+           type: 'cooldown',
+           message: 'Session complete - cooldown active (restored from backend)',
+           cooldownRemaining: { minutes: 0, seconds: 0 },
+           cooldownEndsAt: savedCooldownEndTime // This is the backend cooldown_until timestamp
+         });
+         
+         // Calculate initial countdown time from backend timestamp
+         const minutes = Math.floor((difference / (1000 * 60)) % 60);
+         const seconds = Math.floor((difference / (1000)) % 60);
+         setCountdownTime({ minutes, seconds });
+         
+         console.log('⏰ Backend cooldown state restored - timer will start automatically from backend cooldown_until');
+       } else {
+         // Backend cooldown has expired, clean up
+         console.log('⏰ Backend cooldown expired, cleaning up localStorage');
+         localStorage.removeItem('cooldownEndTime');
+       }
+     }
+   }, []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
@@ -227,6 +249,47 @@ const Therapy = () => {
       checkSessionGate();
     }
   }, [countdownCompleted]);
+
+  // 🔧 NEW: Cleanup timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (timerInterval) {
+        console.log('⏰ Component unmounting - cleaning up timer');
+        clearInterval(timerInterval);
+        setTimerInterval(null);
+      }
+    };
+  }, [timerInterval]);
+
+  // 🔧 NEW: Ensure timer starts immediately when backend session completes
+  const startBackendLinkedTimer = (cooldownEndTime: string) => {
+    console.log('⏰ Starting backend-linked timer with cooldown_until:', cooldownEndTime);
+    
+    // Clear any existing timer
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
+    
+    // Calculate initial time from backend timestamp
+    const now = new Date().getTime();
+    const backendCooldownUntil = new Date(cooldownEndTime).getTime();
+    const difference = backendCooldownUntil - now;
+    
+    if (difference > 0) {
+      const minutes = Math.floor((difference / (1000 * 60)) % 60);
+      const seconds = Math.floor((difference / (1000)) % 60);
+      setCountdownTime({ minutes, seconds });
+      
+      console.log(`⏰ Backend-linked timer started: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('cooldownEndTime', cooldownEndTime);
+    } else {
+      console.log('⏰ Backend cooldown already expired');
+      setCountdownTime({ minutes: 0, seconds: 0 });
+    }
+  };
 
   // Check session gate before allowing new sessions
   const checkSessionGate = async () => {
@@ -400,35 +463,47 @@ Ready to continue? Click "Pay Now" below to secure your next session.`;
         return;
       }
       
-      if (data.sessionComplete) {
-        console.log('✅ Session complete detected! Setting sessionComplete state to true.');
-        setSessionComplete(true);
-        
-                 // Clean, minimal session end message
-         const sessionEndMessage: Message = {
-           id: 'session-end',
-           text: `⏰ **Session Complete**
+               if (data.sessionComplete) {
+           console.log('✅ Session complete detected! Setting sessionComplete state to true.');
+           setSessionComplete(true);
+           
+           // 🔧 FIXED: Use backend ended_at and cooldown_until timestamps
+           const backendEndedAt = data.ended_at || new Date().toISOString();
+           const backendCooldownUntil = data.cooldown_until || new Date(Date.now() + (10 * 60 * 1000)).toISOString();
+           
+           console.log('⏰ Backend timestamps:', {
+             ended_at: backendEndedAt,
+             cooldown_until: backendCooldownUntil
+           });
+           
+           // Clean, minimal session end message
+           const sessionEndMessage: Message = {
+             id: 'session-end',
+             text: `⏰ **Session Complete**
 
 Your therapy session has concluded. A brief integration period allows your insights to settle.
 
 **Next session available in:** 10 minutes
 
 Ready to continue? Click "Pay Now" below to secure your next session.`,
-           isUser: false,
-           timestamp: new Date()
-         };
-        
-        setMessages(prev => [...prev, sessionEndMessage]);
-        setIsRestricted(true);
-        setRestrictionInfo({
-          type: 'cooldown',
-          message: 'Session complete - 10-minute cooldown active',
-          cooldownRemaining: { minutes: 10, seconds: 0 },
-          cooldownEndsAt: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
-        });
-      } else {
-        console.log('❌ Session complete NOT detected from backend.');
-      }
+             isUser: false,
+             timestamp: new Date()
+           };
+           
+           setMessages(prev => [...prev, sessionEndMessage]);
+           setIsRestricted(true);
+           setRestrictionInfo({
+             type: 'cooldown',
+             message: 'Session complete - 10-minute cooldown active (backend-linked)',
+             cooldownRemaining: { minutes: 10, seconds: 0 },
+             cooldownEndsAt: backendCooldownUntil // Use backend cooldown_until timestamp
+           });
+           
+           // 🔧 FIXED: Use the new backend-linked timer function
+           startBackendLinkedTimer(backendCooldownUntil);
+         } else {
+           console.log('❌ Session complete NOT detected from backend.');
+         }
       
       // FALLBACK: If no firstMessage and no sessionComplete, check for existing messages
       if (!data.firstMessage && !data.sessionComplete) {
@@ -650,6 +725,9 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
              // CRITICAL: Set restricted state to trigger countdown timer
              setIsRestricted(true);
              
+             // 🔧 FIXED: Ensure timer starts immediately with proper state
+             setCountdownTime({ minutes: 10, seconds: 0 });
+             
              setMessages(prev => [...prev, cooldownMessage]);
            }, 2000); // 2 second delay to show session ended message first
         } else {
@@ -699,6 +777,9 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
             // CRITICAL: Set session complete state for fallback case
             setSessionComplete(true);
             
+            // 🔧 FIXED: Ensure timer starts immediately for fallback case
+            setCountdownTime({ minutes: 10, seconds: 0 });
+            
             setMessages(prev => [...prev, cooldownMessage]);
             setIsRestricted(true);
           }, 2000); // 2 second delay to show session ended message first
@@ -733,6 +814,13 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
      setIsRestricted(false);
      setRestrictionInfo(null);
      localStorage.removeItem('cooldownEndTime');
+     
+     // 🔧 FIXED: Clear timer state
+     if (timerInterval) {
+       clearInterval(timerInterval);
+       setTimerInterval(null);
+     }
+     setCountdownTime({ minutes: 10, seconds: 0 });
      
      // Show session summary if available
      if (sessionData.sessionSummary) {
@@ -878,6 +966,14 @@ Please try again or contact support if the problem persists.`,
         setSessionComplete(false);
         setIsRestricted(false);
         setInputText('');
+        
+        // 🔧 FIXED: Clear timer state when starting new session
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          setTimerInterval(null);
+        }
+        setCountdownTime({ minutes: 10, seconds: 0 });
+        
         toast.success(data.message || 'Session started successfully!');
       } else {
         throw new Error(data.message || 'Cannot start session at this time.');
@@ -1032,12 +1128,19 @@ Please try again or contact support if the problem persists.`,
              /* Premium Cooldown Timer - Clean Design */
              <div className="p-4 md:p-8 lg:p-10 border-t border-white/10">
                <div className="flex flex-col items-center justify-center space-y-6">
-                 {/* Live Timer */}
+                 {/* 🔧 FIXED: Live Timer with proper formatting */}
                  <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-6 border border-white/20">
                    <Clock className="w-6 h-6 text-blue-400" />
                    <span className="text-3xl font-mono font-bold text-white">
                      {countdownTime.minutes.toString().padStart(2, '0')}:{countdownTime.seconds.toString().padStart(2, '0')}
                    </span>
+                 </div>
+                 
+                 {/* 🔧 NEW: Timer status indicator */}
+                 <div className="text-center text-white/70 text-sm">
+                   {countdownTime.minutes === 0 && countdownTime.seconds === 0 
+                     ? 'Session ready to start!' 
+                     : 'Next session available in'}
                  </div>
                  
                  {/* Pay Button - Centered and Bigger */}
