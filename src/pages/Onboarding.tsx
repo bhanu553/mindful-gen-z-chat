@@ -489,32 +489,22 @@ const Onboarding = () => {
 
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Label>Have you ever had thoughts of harming yourself or others? <span className="text-sm text-gray-400">(Optional)</span></Label>
+          <Label>Have you ever had thoughts of harming yourself or others?</Label>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
                 <Info className="w-4 h-4 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>This information helps us provide appropriate care and resources. You can skip this question if you prefer.</p>
+                <p>This information helps us provide appropriate care and resources</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
         <RadioGroup 
-          value={formData.self_harm_thoughts === null ? "" : formData.self_harm_thoughts.toString()} 
-          onValueChange={(value) => {
-            if (value === "") {
-              updateFormData('self_harm_thoughts', null);
-            } else {
-              updateFormData('self_harm_thoughts', value === 'true');
-            }
-          }}
+          value={formData.self_harm_thoughts === null ? undefined : formData.self_harm_thoughts.toString()} 
+          onValueChange={(value) => updateFormData('self_harm_thoughts', value === 'true')}
         >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="" id="self-harm-none" />
-            <Label htmlFor="self-harm-none" className="text-gray-300">No selection (Skip this question)</Label>
-          </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="self-harm-yes" />
             <Label htmlFor="self-harm-yes">Yes</Label>
@@ -539,21 +529,11 @@ const Onboarding = () => {
       )}
 
       <div className="space-y-3">
-        <Label>Are you currently in a crisis or suicidal state? <span className="text-sm text-gray-400">(Optional)</span></Label>
+        <Label>Are you currently in a crisis or suicidal state?</Label>
         <RadioGroup 
-          value={formData.current_crisis === null ? "" : formData.current_crisis.toString()} 
-          onValueChange={(value) => {
-            if (value === "") {
-              updateFormData('current_crisis', null);
-            } else {
-              updateFormData('current_crisis', value === 'true');
-            }
-          }}
+          value={formData.current_crisis === null ? undefined : formData.current_crisis.toString()} 
+          onValueChange={(value) => updateFormData('current_crisis', value === 'true')}
         >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="" id="crisis-none" />
-            <Label htmlFor="crisis-none" className="text-gray-300">No selection (Skip this question)</Label>
-          </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="crisis-yes" />
             <Label htmlFor="crisis-yes">Yes</Label>
