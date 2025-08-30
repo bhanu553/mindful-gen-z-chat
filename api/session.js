@@ -644,13 +644,14 @@ Always end each session with:
       }
     }
     
-    // CRITICAL FIX: Use the new database function for reliable message retrieval
-    console.log(`🔍 Fetching messages for session: ${session.id}, user: ${userId}`);
-    
+    // 🔧 COMPLETELY REBUILT MESSAGE LOADING LOGIC FROM SCRATCH
     let messages = [];
+    
     try {
-      // 🔧 CRITICAL FIX: Always try direct query first for maximum reliability
-      console.log('🔄 Attempting direct query first for maximum reliability...');
+      console.log('🔄 REBUILT: Starting fresh message retrieval for session:', session.id);
+      
+      // STEP 1: Direct database query - most reliable method
+      console.log('📡 STEP 1: Direct database query...');
       const { data: directMessages, error: directError } = await supabase
         .from('chat_messages')
         .select('id, role, content, created_at, mode')
@@ -663,12 +664,22 @@ Always end each session with:
         messages = [];
       } else {
         messages = directMessages || [];
-        console.log(`✅ Direct query successful: ${messages.length} messages found`);
+        console.log(`✅ Direct query successful: Found ${messages.length} messages`);
+        
+        // Log first few messages for debugging
+        if (messages.length > 0) {
+          console.log('📝 Sample messages found:', messages.slice(0, 3).map(m => ({
+            id: m.id,
+            role: m.role,
+            content: m.content?.substring(0, 50) + '...',
+            created_at: m.created_at
+          })));
+        }
       }
       
-      // If direct query found messages, use them. Otherwise try the function as fallback
+      // STEP 2: If no messages found, try database function as backup
       if (messages.length === 0) {
-        console.log('🔄 No messages from direct query, trying database function as fallback...');
+        console.log('🔄 STEP 2: No direct messages, trying database function...');
         
         try {
           const { data: functionResult, error: functionError } = await supabase
@@ -690,7 +701,7 @@ Always end each session with:
             
             if (backupError) {
               console.error('❌ Backup function also failed:', backupError);
-              console.log('⚠️ Both functions failed - messages array will be empty');
+              console.log('⚠️ All retrieval methods failed - messages array will be empty');
             } else {
               messages = backupResult || [];
               console.log(`✅ Backup function successful: ${messages.length} messages found`);
@@ -705,72 +716,61 @@ Always end each session with:
         }
       }
       
-      // 🔧 CRITICAL FIX: Verify message integrity
-      if (messages.length > 0) {
-        console.log('🔍 Verifying message integrity...');
-        try {
-          const { data: integrityCheck, error: integrityError } = await supabase
-            .rpc('verify_message_integrity', {
-              session_uuid: session.id,
-              user_uuid: userId
-            });
+      // STEP 3: Verify we have messages and they're valid
+      if (messages && messages.length > 0) {
+        console.log(`✅ REBUILT LOGIC: Successfully retrieved ${messages.length} messages`);
+        
+        // Filter out any invalid messages
+        const validMessages = messages.filter(msg => 
+          msg && 
+          msg.content && 
+          msg.content.trim() !== '' && 
+          msg.role && 
+          ['user', 'assistant'].includes(msg.role)
+        );
+        
+        console.log(`✅ Valid messages: ${validMessages.length} out of ${messages.length}`);
+        
+        if (validMessages.length > 0) {
+          // Map backend messages to frontend format with robust error handling
+          const mappedMessages = validMessages.map((msg) => {
+            try {
+              return {
+                id: msg.id || `msg-${Date.now()}-${Math.random()}`,
+                text: msg.content || '',
+                isUser: msg.role === 'user',
+                timestamp: msg.created_at ? new Date(msg.created_at) : new Date()
+              };
+            } catch (mapError) {
+              console.error('❌ Error mapping message:', mapError, msg);
+              // Return a safe fallback message
+              return {
+                id: `fallback-${Date.now()}`,
+                text: msg.content || 'Message content unavailable',
+                isUser: msg.role === 'user',
+                timestamp: new Date()
+              };
+            }
+          }).filter(msg => msg.text && msg.text.trim() !== '');
           
-          if (!integrityError && integrityCheck && integrityCheck.length > 0) {
-            const integrity = integrityCheck[0];
-            console.log('✅ Message integrity check:', {
-              total: integrity.total_messages,
-              user: integrity.user_messages,
-              assistant: integrity.assistant_messages,
-              hasOrphaned: integrity.has_orphaned_messages,
-              hasEmpty: integrity.has_empty_content
-            });
-          }
-        } catch (integrityError) {
-          console.log('⚠️ Integrity check failed (non-critical):', integrityError);
+          console.log(`✅ Successfully mapped ${mappedMessages.length} messages for frontend`);
+          
+          // CRITICAL: Return existing messages immediately to preserve chat history
+          return Response.json({ 
+            sessionComplete: false, 
+            messages: mappedMessages,
+            hasExistingHistory: true,
+            messageCount: mappedMessages.length
+          });
         }
       }
+      
+      console.log('⚠️ REBUILT LOGIC: No valid messages found, proceeding to other logic...');
+      
     } catch (error) {
-      console.error('❌ Error fetching messages:', error);
+      console.error('❌ REBUILT LOGIC: Error in message retrieval:', error);
       // Don't throw error - continue with empty messages array
       messages = [];
-    }
-    
-    // 🔧 CRITICAL FIX: Always check for existing messages regardless of other conditions
-    console.log(`🔍 Chat history check: Found ${messages.length} existing messages`);
-    
-    // If we have existing messages, always return them to preserve chat history
-    if (messages && messages.length > 0) {
-      console.log(`✅ Returning ${messages.length} existing messages to preserve chat history`);
-      
-      // Map backend messages to frontend format with proper error handling
-      const mappedMessages = messages.map((msg) => {
-        try {
-          return {
-            id: msg.id || `msg-${Date.now()}-${Math.random()}`,
-            text: msg.content || '',
-            isUser: msg.role === 'user',
-            timestamp: msg.created_at ? new Date(msg.created_at) : new Date()
-          };
-        } catch (mapError) {
-          console.error('❌ Error mapping message:', mapError, msg);
-          // Return a safe fallback message
-          return {
-            id: `fallback-${Date.now()}`,
-            text: msg.content || 'Message content unavailable',
-            isUser: msg.role === 'user',
-            timestamp: new Date()
-          };
-        }
-      }).filter(msg => msg.text && msg.text.trim() !== ''); // Filter out empty messages
-      
-      console.log(`✅ Successfully mapped ${mappedMessages.length} messages`);
-      
-      // Return existing messages regardless of other conditions to preserve chat history
-      return Response.json({ 
-        sessionComplete: false, 
-        messages: mappedMessages,
-        hasExistingHistory: true
-      });
     }
     
     // Fetch AI analysis message from onboarding

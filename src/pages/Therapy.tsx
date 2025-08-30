@@ -194,6 +194,14 @@ const Therapy = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
 
+  // 🔧 REBUILT: Ensure messages are loaded when component mounts
+  useEffect(() => {
+    if (user?.id && !isLoading) {
+      console.log('🔄 REBUILT: Component mounted or user changed, loading messages...');
+      fetchSessionAndMessages();
+    }
+  }, [user?.id]); // Only depend on user ID to avoid infinite loops
+
   // OpenAI API calls are handled by the backend - no client-side API keys needed
 
   // In scrollToBottom, ensure smooth behavior is set
