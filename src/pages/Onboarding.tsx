@@ -489,14 +489,14 @@ const Onboarding = () => {
 
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Label>Have you ever had thoughts of harming yourself or others?</Label>
+          <Label>Have you ever had thoughts of harming yourself or others? <span className="text-sm text-gray-400">(Optional)</span></Label>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
                 <Info className="w-4 h-4 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>This information helps us provide appropriate care and resources</p>
+                <p>This information helps us provide appropriate care and resources. You can skip this question if you prefer.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -513,7 +513,7 @@ const Onboarding = () => {
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="" id="self-harm-none" />
-            <Label htmlFor="self-harm-none">No selection</Label>
+            <Label htmlFor="self-harm-none" className="text-gray-300">No selection (Skip this question)</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="self-harm-yes" />
@@ -539,7 +539,7 @@ const Onboarding = () => {
       )}
 
       <div className="space-y-3">
-        <Label>Are you currently in a crisis or suicidal state?</Label>
+        <Label>Are you currently in a crisis or suicidal state? <span className="text-sm text-gray-400">(Optional)</span></Label>
         <RadioGroup 
           value={formData.current_crisis === null ? "" : formData.current_crisis.toString()} 
           onValueChange={(value) => {
@@ -552,7 +552,7 @@ const Onboarding = () => {
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="" id="crisis-none" />
-            <Label htmlFor="crisis-none">No selection</Label>
+            <Label htmlFor="crisis-none" className="text-gray-300">No selection (Skip this question)</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="crisis-yes" />
@@ -677,7 +677,9 @@ const Onboarding = () => {
       case 1:
         return formData.previous_therapy !== null && formData.current_medication !== null;
       case 2:
-        return formData.self_harm_thoughts !== null && formData.current_crisis !== null;
+        // 🔧 FIXED: Make safety questions truly optional - allow null values
+        // Users can proceed without answering these sensitive questions
+        return true; // Always allow proceeding from safety section
       case 3:
         return formData.ai_substitute_consent && formData.data_processing_consent && formData.emergency_responsibility_consent;
       default:
