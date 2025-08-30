@@ -401,11 +401,15 @@ Click "Pay Now" below to proceed.`,
     setIsLoading(true);
     setErrorMessage(null);
     try {
+      console.log('🔄 Starting fetchSessionAndMessages...');
+      console.log('🔄 Current user ID:', user?.id);
+      
       const response = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user?.id })
       });
+      
       if (!response.ok) {
         let errorMsg = 'Failed to load session.';
         try {
@@ -414,6 +418,7 @@ Click "Pay Now" below to proceed.`,
         } catch {}
         throw new Error(errorMsg);
       }
+      
       const data = await response.json();
       
       console.log('🔍 Session API response:', {
@@ -421,12 +426,13 @@ Click "Pay Now" below to proceed.`,
         hasMessages: data.messages && data.messages.length > 0,
         messageCount: data.messages ? data.messages.length : 0,
         hasFirstMessage: !!data.firstMessage,
-        hasExistingHistory: data.hasExistingHistory
+        hasExistingHistory: data.hasExistingHistory,
+        messages: data.messages ? data.messages.slice(0, 3) : [] // Log first 3 messages for debugging
       });
       
       // 🔧 CRITICAL FIX: PRIORITY 1 - Always load existing messages first if they exist
       if (data.messages && data.messages.length > 0) {
-        console.log(`✅ Found ${data.messages.length} existing messages - loading them FIRST`);
+        console.log(`✅ PRIORITY 1: Found ${data.messages.length} existing messages - loading them FIRST`);
         
         // Map backend messages to local format with proper error handling
         const existingMessages = data.messages.map((msg: any) => {
@@ -450,6 +456,7 @@ Click "Pay Now" below to proceed.`,
         }).filter(msg => msg.text && msg.text.trim() !== ''); // Filter out empty messages
         
         console.log(`✅ Successfully mapped ${existingMessages.length} messages for chat history preservation`);
+        console.log('📝 Sample mapped messages:', existingMessages.slice(0, 2));
         
         // Always set messages to preserve chat history, regardless of other conditions
         setMessages(existingMessages);
@@ -460,9 +467,11 @@ Click "Pay Now" below to proceed.`,
         return;
       }
       
+      console.log('⚠️ No existing messages found, proceeding to other priorities...');
+      
       // 🔧 CRITICAL FIX: PRIORITY 2 - Check for restriction info if no existing messages
       if (data.restrictionInfo && data.restrictionInfo.isRestricted) {
-        console.log('🚫 User is restricted - showing restriction message only');
+        console.log('🚫 PRIORITY 2: User is restricted - showing restriction message only');
         console.log('🔍 Restriction details:', {
           type: data.restrictionInfo.type || 'cooldown',
           minutesRemaining: data.restrictionInfo.minutesRemaining,
@@ -494,7 +503,7 @@ Ready to continue? Click "Pay Now" below to secure your next session.`;
       
       // 🔧 CRITICAL FIX: PRIORITY 3 - Handle users with firstMessage (both premium and free)
       if (data.firstMessage) {
-        console.log(`✅ User - displaying first message from session_first_message`);
+        console.log(`✅ PRIORITY 3: User - displaying first message from session_first_message`);
         const firstMessage: Message = {
           id: 'session-first-message',
           text: data.firstMessage,
@@ -508,7 +517,7 @@ Ready to continue? Click "Pay Now" below to secure your next session.`;
       
       // 🔧 CRITICAL FIX: PRIORITY 4 - Handle session complete if no existing messages
       if (data.sessionComplete) {
-        console.log('✅ Session complete detected! Setting sessionComplete state to true.');
+        console.log('✅ PRIORITY 4: Session complete detected! Setting sessionComplete state to true.');
         setSessionComplete(true);
         
         // 🔧 FIXED: Use backend ended_at and cooldown_until timestamps
@@ -549,7 +558,7 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
       }
       
       // 🔧 CRITICAL FIX: PRIORITY 5 - Fallback for new sessions with no messages
-      console.log('⚠️ No existing messages, firstMessage, or sessionComplete - this is a new session');
+      console.log('⚠️ PRIORITY 5: No existing messages, firstMessage, or sessionComplete - this is a new session');
       // For new sessions, show a welcome message
       const welcomeMessage: Message = {
         id: 'welcome-message',
@@ -561,6 +570,7 @@ Ready to continue? Click "Pay Now" below to secure your next session.`,
       setSessionComplete(false);
       
     } catch (error: any) {
+      console.error('❌ Error in fetchSessionAndMessages:', error);
       // Suppress onboarding errors from user view
       const errMsg = (error.message || '').toLowerCase();
       if (errMsg.includes('onboarding')) {

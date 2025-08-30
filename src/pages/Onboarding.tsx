@@ -392,7 +392,20 @@ const Onboarding = () => {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <RadioGroup value={formData.previous_therapy?.toString()} onValueChange={(value) => updateFormData('previous_therapy', value === 'true')}>
+        <RadioGroup 
+          value={formData.previous_therapy === null ? "" : formData.previous_therapy.toString()} 
+          onValueChange={(value) => {
+            if (value === "") {
+              updateFormData('previous_therapy', null);
+            } else {
+              updateFormData('previous_therapy', value === 'true');
+            }
+          }}
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="" id="therapy-none" />
+            <Label htmlFor="therapy-none">No selection</Label>
+          </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="therapy-yes" />
             <Label htmlFor="therapy-yes">Yes</Label>
@@ -408,7 +421,20 @@ const Onboarding = () => {
 
       <div className="space-y-3">
         <Label>Are you currently on medication for any mental health issue?</Label>
-        <RadioGroup value={formData.current_medication?.toString()} onValueChange={(value) => updateFormData('current_medication', value === 'true')}>
+        <RadioGroup 
+          value={formData.current_medication === null ? "" : formData.current_medication.toString()} 
+          onValueChange={(value) => {
+            if (value === "") {
+              updateFormData('current_medication', null);
+            } else {
+              updateFormData('current_medication', value === 'true');
+            }
+          }}
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="" id="medication-none" />
+            <Label htmlFor="medication-none">No selection</Label>
+          </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="medication-yes" />
             <Label htmlFor="medication-yes">Yes</Label>
@@ -475,7 +501,20 @@ const Onboarding = () => {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <RadioGroup value={formData.self_harm_thoughts === null ? undefined : formData.self_harm_thoughts.toString()} onValueChange={(value) => updateFormData('self_harm_thoughts', value === 'true')}>
+        <RadioGroup 
+          value={formData.self_harm_thoughts === null ? "" : formData.self_harm_thoughts.toString()} 
+          onValueChange={(value) => {
+            if (value === "") {
+              updateFormData('self_harm_thoughts', null);
+            } else {
+              updateFormData('self_harm_thoughts', value === 'true');
+            }
+          }}
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="" id="self-harm-none" />
+            <Label htmlFor="self-harm-none">No selection</Label>
+          </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="self-harm-yes" />
             <Label htmlFor="self-harm-yes">Yes</Label>
@@ -501,7 +540,20 @@ const Onboarding = () => {
 
       <div className="space-y-3">
         <Label>Are you currently in a crisis or suicidal state?</Label>
-        <RadioGroup value={formData.current_crisis?.toString()} onValueChange={(value) => updateFormData('current_crisis', value === 'true')}>
+        <RadioGroup 
+          value={formData.current_crisis === null ? "" : formData.current_crisis.toString()} 
+          onValueChange={(value) => {
+            if (value === "") {
+              updateFormData('current_crisis', null);
+            } else {
+              updateFormData('current_crisis', value === 'true');
+            }
+          }}
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="" id="crisis-none" />
+            <Label htmlFor="crisis-none">No selection</Label>
+          </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="crisis-yes" />
             <Label htmlFor="crisis-yes">Yes</Label>

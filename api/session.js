@@ -669,18 +669,64 @@ Always end each session with:
       // If direct query found messages, use them. Otherwise try the function as fallback
       if (messages.length === 0) {
         console.log('🔄 No messages from direct query, trying database function as fallback...');
-        const { data: functionResult, error: functionError } = await supabase
-          .rpc('get_session_chat_history', {
-            session_uuid: session.id,
-            user_uuid: userId
-          });
         
-        if (functionError) {
-          console.error('❌ Database function also failed:', functionError);
-          console.log('⚠️ Both direct query and function failed - messages array will be empty');
-        } else {
-          messages = functionResult || [];
-          console.log(`✅ Database function fallback successful: ${messages.length} messages found`);
+        try {
+          const { data: functionResult, error: functionError } = await supabase
+            .rpc('get_session_chat_history', {
+              session_uuid: session.id,
+              user_uuid: userId
+            });
+          
+          if (functionError) {
+            console.error('❌ Database function failed:', functionError);
+            console.log('🔄 Trying backup function...');
+            
+            // Try backup function
+            const { data: backupResult, error: backupError } = await supabase
+              .rpc('get_session_chat_history_backup', {
+                session_uuid: session.id,
+                user_uuid: userId
+              });
+            
+            if (backupError) {
+              console.error('❌ Backup function also failed:', backupError);
+              console.log('⚠️ Both functions failed - messages array will be empty');
+            } else {
+              messages = backupResult || [];
+              console.log(`✅ Backup function successful: ${messages.length} messages found`);
+            }
+          } else {
+            messages = functionResult || [];
+            console.log(`✅ Database function successful: ${messages.length} messages found`);
+          }
+        } catch (functionCallError) {
+          console.error('❌ Error calling database function:', functionCallError);
+          messages = [];
+        }
+      }
+      
+      // 🔧 CRITICAL FIX: Verify message integrity
+      if (messages.length > 0) {
+        console.log('🔍 Verifying message integrity...');
+        try {
+          const { data: integrityCheck, error: integrityError } = await supabase
+            .rpc('verify_message_integrity', {
+              session_uuid: session.id,
+              user_uuid: userId
+            });
+          
+          if (!integrityError && integrityCheck && integrityCheck.length > 0) {
+            const integrity = integrityCheck[0];
+            console.log('✅ Message integrity check:', {
+              total: integrity.total_messages,
+              user: integrity.user_messages,
+              assistant: integrity.assistant_messages,
+              hasOrphaned: integrity.has_orphaned_messages,
+              hasEmpty: integrity.has_empty_content
+            });
+          }
+        } catch (integrityError) {
+          console.log('⚠️ Integrity check failed (non-critical):', integrityError);
         }
       }
     } catch (error) {
