@@ -810,27 +810,14 @@ export async function POST(req) {
         
         if (saveError) {
           console.error('❌ Error saving user message:', saveError);
-          throw new Error(`Failed to save user message: ${saveError.message}`);
+          // Don't throw error here - we still want to continue with the chat
+          console.log('⚠️ User message not saved, but continuing with chat...');
+        } else {
+          console.log('✅ User message saved successfully:', savedMessage.id);
         }
-        
-        console.log('✅ User message saved successfully:', savedMessage.id);
-        
-        // Update session message count
-        const { error: countError } = await supabase
-          .from('chat_sessions')
-          .update({ 
-            message_count: (session.message_count || 0) + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', session.id);
-        
-        if (countError) {
-          console.error('⚠️ Warning: Failed to update message count:', countError);
-        }
-        
-      } catch (error) {
-        console.error('❌ Critical error saving user message:', error);
-        throw error;
+      } catch (saveException) {
+        console.error('❌ Exception saving user message:', saveException);
+        // Don't throw error - continue with chat
       }
     }
 
@@ -1003,15 +990,49 @@ export async function POST(req) {
     }
 
     // --- SAVE AI REPLY ---
-    if (session && userId) {
-      await supabase.from('chat_messages').insert({
-        session_id: session.id,
-        user_id: userId,
-        content: aiReply,
-        role: 'assistant',
-        mode: 'therapy',
-        created_at: new Date().toISOString()
-      });
+    if (session && userId && aiReply) {
+      console.log(`💾 Saving AI response for session: ${session.id}, user: ${userId}`);
+      
+      try {
+        const { data: savedAIMessage, error: saveAIError } = await supabase
+          .from('chat_messages')
+          .insert({
+            session_id: session.id,
+            user_id: userId,
+            content: aiReply, // Save the full AI response before filtering
+            role: 'assistant',
+            mode: 'therapy',
+            created_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        if (saveAIError) {
+          console.error('❌ Error saving AI message:', saveAIError);
+          // Don't throw error here - we still want to return the response
+          console.warn('⚠️ AI message not saved, but continuing with response');
+        } else {
+          console.log('✅ AI message saved successfully:', savedAIMessage.id);
+          
+          // Update session message count
+          const { error: countError } = await supabase
+            .from('chat_sessions')
+            .update({ 
+              message_count: (session.message_count || 0) + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', session.id);
+          
+          if (countError) {
+            console.error('⚠️ Warning: Failed to update message count:', countError);
+          }
+        }
+        
+      } catch (error) {
+        console.error('❌ Error saving AI message:', error);
+        // Don't throw error here - we still want to return the response
+        console.warn('⚠️ AI message not saved, but continuing with response');
+      }
     }
          // --- SESSION COMPLETION DETECTION (SAME FOR ALL USERS) ---
      let sessionComplete = false;

@@ -650,21 +650,16 @@ Always end each session with:
     try {
       console.log('🔄 REBUILT: Starting fresh message retrieval for session:', session.id);
       
-      // STEP 1: Direct database query - most reliable method
-      console.log('📡 STEP 1: Direct database query...');
-      const { data: directMessages, error: directError } = await supabase
-        .from('chat_messages')
-        .select('id, role, content, created_at, mode')
-        .eq('session_id', session.id)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: true });
+      // STEP 1: Try the new database function first - most reliable method
+      console.log('📡 STEP 1: Using new database function get_current_session_messages...');
+      const { data: functionMessages, error: functionError } = await supabase
+        .rpc('get_current_session_messages', {
+          user_uuid: userId
+        });
       
-      if (directError) {
-        console.error('❌ Direct query failed:', directError);
-        messages = [];
-      } else {
-        messages = directMessages || [];
-        console.log(`✅ Direct query successful: Found ${messages.length} messages`);
+      if (!functionError && functionMessages && functionMessages.length > 0) {
+        messages = functionMessages;
+        console.log(`✅ New database function successful: Found ${messages.length} messages`);
         
         // Log first few messages for debugging
         if (messages.length > 0) {
@@ -675,48 +670,49 @@ Always end each session with:
             created_at: m.created_at
           })));
         }
+      } else {
+        console.log('🔄 STEP 2: Database function returned no messages, trying direct query...');
+        
+        // STEP 2: Direct database query as backup
+        const { data: directMessages, error: directError } = await supabase
+          .from('chat_messages')
+          .select('id, role, content, created_at, mode')
+          .eq('session_id', session.id)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true });
+        
+        if (directError) {
+          console.error('❌ Direct query failed:', directError);
+          messages = [];
+        } else {
+          messages = directMessages || [];
+          console.log(`✅ Direct query successful: Found ${messages.length} messages`);
+        }
       }
       
-      // STEP 2: If no messages found, try database function as backup
+      // STEP 3: If still no messages, try the session-specific function
       if (messages.length === 0) {
-        console.log('🔄 STEP 2: No direct messages, trying database function...');
+        console.log('🔄 STEP 3: Still no messages, trying session-specific function...');
         
         try {
-          const { data: functionResult, error: functionError } = await supabase
-            .rpc('get_session_chat_history', {
+          const { data: sessionMessages, error: sessionError } = await supabase
+            .rpc('get_session_messages', {
               session_uuid: session.id,
               user_uuid: userId
             });
           
-          if (functionError) {
-            console.error('❌ Database function failed:', functionError);
-            console.log('🔄 Trying backup function...');
-            
-            // Try backup function
-            const { data: backupResult, error: backupError } = await supabase
-              .rpc('get_session_chat_history_backup', {
-                session_uuid: session.id,
-                user_uuid: userId
-              });
-            
-            if (backupError) {
-              console.error('❌ Backup function also failed:', backupError);
-              console.log('⚠️ All retrieval methods failed - messages array will be empty');
-            } else {
-              messages = backupResult || [];
-              console.log(`✅ Backup function successful: ${messages.length} messages found`);
-            }
+          if (!sessionError && sessionMessages && sessionMessages.length > 0) {
+            messages = sessionMessages;
+            console.log(`✅ Session-specific function successful: ${messages.length} messages found`);
           } else {
-            messages = functionResult || [];
-            console.log(`✅ Database function successful: ${messages.length} messages found`);
+            console.log('⚠️ All retrieval methods failed - messages array will be empty');
           }
         } catch (functionCallError) {
-          console.error('❌ Error calling database function:', functionCallError);
-          messages = [];
+          console.error('❌ Error calling session-specific function:', functionCallError);
         }
       }
       
-      // STEP 3: Verify we have messages and they're valid
+      // STEP 4: Verify we have messages and they're valid
       if (messages && messages.length > 0) {
         console.log(`✅ REBUILT LOGIC: Successfully retrieved ${messages.length} messages`);
         
