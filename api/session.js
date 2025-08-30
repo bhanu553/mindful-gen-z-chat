@@ -144,6 +144,7 @@ async function checkUserRestriction(userId) {
 async function getOrCreateCurrentSession(userId) {
   // Check if user is premium
   const isPremium = await checkUserPremiumStatus(userId);
+  console.log(`🔍 getOrCreateCurrentSession: User ${userId} isPremium: ${isPremium}`);
   
   // For restriction checking, we need ALL sessions, not just current month
   const { data: sessions, error } = await supabase
@@ -152,6 +153,13 @@ async function getOrCreateCurrentSession(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;
+  
+  console.log(`🔍 Found ${sessions?.length || 0} sessions for user ${userId}`);
+  if (sessions && sessions.length > 0) {
+    sessions.forEach((session, index) => {
+      console.log(`   Session ${index + 1}: ID=${session.id}, is_complete=${session.is_complete}, created_at=${session.created_at}`);
+    });
+  }
   
   if (sessions && sessions.length > 0) {
     // For premium users, check if the most recent session is complete
@@ -249,6 +257,14 @@ export async function POST(req) {
     
     // Get or create session (existing logic unchanged)
     const session = await getOrCreateCurrentSession(userId);
+    
+    console.log(`🔍 Session selection result:`, {
+      sessionId: session?.id,
+      isComplete: session?.is_complete,
+      userId: session?.user_id,
+      createdAt: session?.created_at,
+      hasSession: !!session
+    });
     
     // If session is null, it means the user is restricted (free user within cooldown)
     if (!session) {
@@ -633,35 +649,39 @@ Always end each session with:
     
     let messages = [];
     try {
-      // Use the new database function for reliable message retrieval
-      const { data: functionResult, error: functionError } = await supabase
-        .rpc('get_session_chat_history', {
-          session_uuid: session.id,
-          user_uuid: userId
-        });
+      // 🔧 CRITICAL FIX: Always try direct query first for maximum reliability
+      console.log('🔄 Attempting direct query first for maximum reliability...');
+      const { data: directMessages, error: directError } = await supabase
+        .from('chat_messages')
+        .select('id, role, content, created_at, mode')
+        .eq('session_id', session.id)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true });
       
-      if (functionError) {
-        console.error('❌ Database function failed:', functionError);
-        
-        // Fallback to direct query
-        console.log('🔄 Attempting fallback direct query...');
-        const { data: fallbackMessages, error: fallbackError } = await supabase
-          .from('chat_messages')
-          .select('id, role, content, created_at, mode')
-          .eq('session_id', session.id)
-          .eq('user_id', userId)
-          .order('created_at', { ascending: true });
-        
-        if (fallbackError) {
-          console.error('❌ Fallback query also failed:', fallbackError);
-          throw fallbackError;
-        }
-        
-        messages = fallbackMessages || [];
-        console.log(`✅ Fallback query successful: ${messages.length} messages`);
+      if (directError) {
+        console.error('❌ Direct query failed:', directError);
+        messages = [];
       } else {
-        messages = functionResult || [];
-        console.log(`✅ Database function successful: ${messages.length} messages`);
+        messages = directMessages || [];
+        console.log(`✅ Direct query successful: ${messages.length} messages found`);
+      }
+      
+      // If direct query found messages, use them. Otherwise try the function as fallback
+      if (messages.length === 0) {
+        console.log('🔄 No messages from direct query, trying database function as fallback...');
+        const { data: functionResult, error: functionError } = await supabase
+          .rpc('get_session_chat_history', {
+            session_uuid: session.id,
+            user_uuid: userId
+          });
+        
+        if (functionError) {
+          console.error('❌ Database function also failed:', functionError);
+          console.log('⚠️ Both direct query and function failed - messages array will be empty');
+        } else {
+          messages = functionResult || [];
+          console.log(`✅ Database function fallback successful: ${messages.length} messages found`);
+        }
       }
     } catch (error) {
       console.error('❌ Error fetching messages:', error);
